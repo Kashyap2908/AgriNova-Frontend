@@ -83,6 +83,7 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isDark, setIsDark] = useState(false);
+  const [error, setError] = useState('');
   
   const { login } = useContext(AuthContext);
   const navigate = useNavigate();
@@ -102,14 +103,15 @@ const Login = () => {
     }
   };
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setTimeout(() => {
-      login('Farmer John', password);
-      setLoading(false);
-      // Removed navigate('/dashboard') because AuthContext login() already navigates.
-    }, 1500);
+    setError('');
+    const result = await login(email, password);
+    setLoading(false);
+    if (!result.success) {
+      setError(result.error);
+    }
   };
 
   const handleGoogleLogin = () => {
@@ -179,6 +181,11 @@ const Login = () => {
           </div>
 
           <form onSubmit={handleLogin} className="space-y-5">
+            {error && (
+              <div className="p-4 text-sm text-rose-500 bg-rose-500/10 border border-rose-500/20 rounded-xl font-semibold">
+                {error}
+              </div>
+            )}
             <div>
               <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Email Address</label>
               <div className="relative group">

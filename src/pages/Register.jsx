@@ -84,6 +84,7 @@ const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isDark, setIsDark] = useState(false);
+  const [error, setError] = useState('');
   
   const { register } = useContext(AuthContext);
   const navigate = useNavigate();
@@ -103,13 +104,15 @@ const Register = () => {
     }
   };
 
-  const handleRegister = (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setTimeout(() => {
-      register(name, password);
-      setLoading(false);
-    }, 1500);
+    setError('');
+    const result = await register(name, email, password);
+    setLoading(false);
+    if (!result.success) {
+      setError(result.error);
+    }
   };
 
   const handleGoogleLogin = () => {
@@ -179,6 +182,11 @@ const Register = () => {
           </div>
 
           <form onSubmit={handleRegister} className="space-y-5">
+            {error && (
+              <div className="p-4 text-sm text-rose-500 bg-rose-500/10 border border-rose-500/20 rounded-xl font-semibold">
+                {error}
+              </div>
+            )}
             
             <div>
               <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Full Name</label>

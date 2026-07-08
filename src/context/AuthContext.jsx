@@ -11,43 +11,91 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     // Check if user is already logged in by validating token or fetching profile
-    const token = localStorage.getItem('access_token');
-    const profileCompleted = localStorage.getItem('profile_completed') === 'true';
-    if (token) {
-      setUser({ username: 'Farmer User', id: 1, profileCompleted });
-    }
-    setLoading(false);
+    const loadUser = async () => {
+      const token = localStorage.getItem('access_token');
+      if (token) {
+        try {
+          const response = await api.get('/auth/profile/');
+          if (response.data && response.data.success) {
+            setUser({ ...response.data.data, profileCompleted: true });
+          } else {
+            throw new Error('Profile load failed');
+          }
+        } catch (error) {
+          console.error('Failed to load user profile on startup', error);
+          // Token is invalid/expired
+          localStorage.removeItem('access_token');
+          localStorage.removeItem('refresh_token');
+          setUser(null);
+        }
+      }
+      setLoading(false);
+    };
+
+    loadUser();
   }, []);
 
-  const login = async (username, password) => {
+  const login = async (usernameOrEmail, password) => {
     try {
-      // Mock Data
-      const access = 'mock_access_token';
-      const refresh = 'mock_refresh_token';
-      
-      // Assume a fresh login has a completed profile for returning users, 
-      // but let's default to whatever is in localStorage or false for demo purposes.
-      const profileCompleted = localStorage.getItem('profile_completed') === 'true';
-      
-      localStorage.setItem('access_token', access);
-      localStorage.setItem('refresh_token', refresh);
-      setUser({ username, profileCompleted });
-      navigate('/dashboard');
-      return { success: true };
+      const response = await api.post('/auth/login/', {
+        username: usernameOrEmail,
+        password: password,
+      });
+
+      if (response.data && response.data.success) {
+        const { access, refresh, user: userData } = response.data.data;
+        
+        localStorage.setItem('access_token', access);
+        localStorage.setItem('refresh_token', refresh);
+        localStorage.setItem('profile_completed', 'true');
+        
+        const loggedInUser = { ...userData, profileCompleted: true };
+        setUser(loggedInUser);
+        navigate('/dashboard');
+        return { success: true };
+      } else {
+        return { success: false, error: response.data.message || 'Login failed' };
+      }
     } catch (error) {
       console.error('Login error', error);
-      return { success: false, error: 'Login failed' };
+      const errorMessage = error.response?.data?.message || 'Invalid credentials. Please try again.';
+      return { success: false, error: errorMessage };
     }
   };
 
-  const register = async (username, password) => {
+  const register = async (name, email, password) => {
     try {
-      // New users definitely haven't completed their profile
-      localStorage.setItem('profile_completed', 'false');
-      return await login(username, password);
+      // Auto-generate Django-compatible username from Full Name or email prefix
+      const username = name.toLowerCase().replace(/[^a-z0-9_.-]/g, '') || email.split('@')[0].toLowerCase().replace(/[^a-z0-9_.-]/g, '');
+
+      const response = await api.post('/auth/register/', {
+        username,
+        email,
+        password,
+        confirm_password: password
+      });
+
+      if (response.data && response.data.success) {
+        // Automatically login user upon successful registration
+        return await login(email, password);
+      } else {
+        return { success: false, error: response.data.message || 'Registration failed' };
+      }
     } catch (error) {
       console.error('Registration error', error);
-      return { success: false, error: 'Registration failed' };
+      
+      // Extract specific field errors if available
+      let errorMessage = 'Registration failed. Please check inputs.';
+      if (error.response?.data?.errors) {
+        const errors = error.response.data.errors;
+        const firstField = Object.keys(errors)[0];
+        const firstErr = errors[firstField];
+        errorMessage = Array.isArray(firstErr) ? firstErr[0] : firstErr;
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      }
+      
+      return { success: false, error: errorMessage };
     }
   };
 
@@ -56,9 +104,18 @@ export const AuthProvider = ({ children }) => {
     setUser(prev => ({ ...prev, profileCompleted: true }));
   };
 
-  const logout = () => {
+  const logout = async () => {
+    const refreshToken = localStorage.getItem('refresh_token');
+    if (refreshToken) {
+      try {
+        await api.post('/auth/logout/', { refresh: refreshToken });
+      } catch (error) {
+        console.error('Logout request failed', error);
+      }
+    }
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
+    localStorage.removeItem('profile_completed');
     setUser(null);
     navigate('/login');
   };
@@ -69,3 +126,4 @@ export const AuthProvider = ({ children }) => {
     </AuthContext.Provider>
   );
 };
+
