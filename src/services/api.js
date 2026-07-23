@@ -54,10 +54,20 @@ api.interceptors.response.use(
   }
 );
 
-// API Service Helpers for Profile and Farm Management
+// API Service Helpers for Profile, Farm Management, and Dashboard
+export const fetchUserProfile = async () => {
+  try {
+    const response = await api.get('/profile/');
+    return response.data;
+  } catch (error) {
+    console.warn('Backend API fetch profile failed, using local context:', error);
+    return null;
+  }
+};
+
 export const updateUserProfile = async (profileData) => {
   try {
-    const response = await api.put('/auth/profile/update/', profileData);
+    const response = await api.put('/profile/', profileData);
     return response.data;
   } catch (error) {
     console.warn('Backend API update failed, continuing locally:', error);
@@ -85,6 +95,16 @@ export const createFarmApi = async (farmData) => {
   }
 };
 
+export const selectFarmApi = async (farmId) => {
+  try {
+    const response = await api.post(`/farms/select/${farmId}/`);
+    return response.data;
+  } catch (error) {
+    console.warn('Backend API select farm failed, continuing locally:', error);
+    return { success: true };
+  }
+};
+
 export const deleteFarmApi = async (farmId) => {
   try {
     const response = await api.delete(`/farms/${farmId}/`);
@@ -92,6 +112,16 @@ export const deleteFarmApi = async (farmId) => {
   } catch (error) {
     console.warn('Backend API delete farm failed, continuing locally:', error);
     return { success: true };
+  }
+};
+
+export const fetchDashboardApi = async () => {
+  try {
+    const response = await api.get('/dashboard/');
+    return response.data;
+  } catch (error) {
+    console.warn('Backend API fetch dashboard failed, using local context:', error);
+    return null;
   }
 };
 

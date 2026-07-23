@@ -35,6 +35,17 @@ const MainLayout = () => {
   const [aiChatOpen, setAiChatOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
 
+  const avatarPhoto = user?.avatar || user?.profile_photo || null;
+  const fullNameVal = user?.fullName || user?.full_name || '';
+  const usernameVal = user?.username || '';
+
+  const avatarInitial = fullNameVal.trim()
+    ? fullNameVal.trim().charAt(0).toUpperCase()
+    : (usernameVal.trim() ? usernameVal.trim().charAt(0).toUpperCase() : 'U');
+
+  const displayName = fullNameVal.trim() || usernameVal || 'User';
+  const displayEmail = user?.email || '';
+
   useEffect(() => {
     if (document.documentElement.classList.contains('dark')) {
       setIsDark(true);
@@ -243,9 +254,13 @@ const MainLayout = () => {
                   onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
                   className="w-9 h-9 rounded-full bg-gradient-to-r from-primary to-emerald-400 border-2 border-white dark:border-slate-800 shadow-sm overflow-hidden"
                 >
-                   <div className="w-full h-full flex items-center justify-center text-white font-bold text-sm">
-                     {user?.username?.charAt(0) || 'U'}
-                   </div>
+                  {avatarPhoto ? (
+                    <img src={avatarPhoto} alt={displayName} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-white font-bold text-sm">
+                      {avatarInitial}
+                    </div>
+                  )}
                 </button>
                 
                 <AnimatePresence>
@@ -255,8 +270,8 @@ const MainLayout = () => {
                       className="absolute top-full right-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-100 dark:border-slate-700 overflow-hidden z-50"
                     >
                       <div className="p-3 border-b border-slate-100 dark:border-slate-700">
-                        <p className="text-sm font-bold text-slate-800 dark:text-white truncate">{user?.username}</p>
-                        <p className="text-xs text-slate-500 truncate">farmer@agrinova.com</p>
+                        <p className="text-sm font-bold text-slate-800 dark:text-white truncate">{displayName}</p>
+                        {displayEmail && <p className="text-xs text-slate-500 truncate">{displayEmail}</p>}
                       </div>
                       <div className="p-2">
                         <Link to="/profile" onClick={() => setProfileDropdownOpen(false)} className="w-full flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-primary rounded-lg transition-colors">

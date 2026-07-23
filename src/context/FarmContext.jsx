@@ -1,9 +1,9 @@
 import React, { createContext, useState, useEffect } from 'react';
+import { fetchFarms, selectFarmApi } from '../services/api';
 
 export const FarmContext = createContext();
 
 export const FarmProvider = ({ children }) => {
-  // Load farms from localStorage if available
   const [farms, setFarms] = useState(() => {
     try {
       const saved = localStorage.getItem('agrinova_farms');
@@ -27,6 +27,46 @@ export const FarmProvider = ({ children }) => {
     }
   });
 
+  // Fetch farms from backend on mount or login
+  useEffect(() => {
+    const loadBackendFarms = async () => {
+      const token = localStorage.getItem('access_token');
+      if (token && token !== 'mock_access_token') {
+        const res = await fetchFarms();
+        const farmList = res?.data || res || [];
+        if (Array.isArray(farmList) && farmList.length > 0) {
+          const mappedFarms = farmList.map(f => ({
+            id: f.id,
+            name: f.farm_name || f.name || 'Unnamed Farm',
+            state: f.state || '',
+            district: f.district || '',
+            taluka: f.taluka || '',
+            village: f.village || '',
+            pinCode: f.pincode || f.pinCode || '',
+            area: f.farm_area || f.area || '0',
+            areaUnit: f.area_unit || f.areaUnit || 'Acres',
+            soil: f.soil_type || f.soil || 'Black Soil',
+            soilType: f.soil_type || f.soilType || 'Black Soil',
+            irrigation: f.irrigation_type || f.irrigation || 'Drip Irrigation',
+            irrigationType: f.irrigation_type || f.irrigationType || 'Drip Irrigation',
+            waterAvailability: f.water_availability || f.waterAvailability || 'Seasonal',
+            latitude: f.latitude,
+            longitude: f.longitude,
+            location: f.location || `${f.village || ''}, ${f.district || ''}, ${f.state || ''}`.replace(/^, |, $/g, ''),
+            is_active: f.is_active || false,
+            createdAt: f.created_at || new Date().toISOString()
+          }));
+
+          setFarms(mappedFarms);
+          const activeFarm = mappedFarms.find(f => f.is_active) || mappedFarms[0];
+          if (activeFarm) setSelectedFarm(activeFarm);
+        }
+      }
+    };
+
+    loadBackendFarms();
+  }, []);
+
   // Sync state to localStorage whenever farms or selectedFarm change
   useEffect(() => {
     localStorage.setItem('agrinova_farms', JSON.stringify(farms));
@@ -46,6 +86,8 @@ export const FarmProvider = ({ children }) => {
     const farm = farms.find(f => f.id === numericId);
     if (farm) {
       setSelectedFarm(farm);
+      setFarms(prev => prev.map(f => ({ ...f, is_active: f.id === numericId })));
+      selectFarmApi(numericId).catch(err => console.warn('API select farm error:', err));
     }
   };
 

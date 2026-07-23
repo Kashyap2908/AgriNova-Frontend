@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect } from 'react';
-import api from '../services/api';
+import api, { fetchUserProfile, updateUserProfile } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 
 export const AuthContext = createContext();
@@ -12,27 +12,37 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const loadUser = async () => {
       const token = localStorage.getItem('access_token');
-      const storedProfileCompleted = localStorage.getItem('profile_completed') === 'true';
-      const storedProfileData = JSON.parse(localStorage.getItem('user_profile_data') || '{}');
 
       if (token) {
         try {
-          const response = await api.get('/auth/profile/');
-          if (response.data && response.data.success) {
+          const [authRes, profileRes] = await Promise.all([
+            api.get('/auth/profile/').catch(() => null),
+            fetchUserProfile().catch(() => null)
+          ]);
+
+          if (authRes?.data?.success) {
+            const userData = authRes.data.data;
+            const profileData = profileRes?.data || profileRes || {};
+
+            const isCompleted = Boolean(profileData.profile_completed || localStorage.getItem('profile_completed') === 'true');
+
             setUser({
-              ...response.data.data,
-              fullName: storedProfileData.fullName || response.data.data.full_name || response.data.data.username,
-              phone: storedProfileData.phone || response.data.data.phone || '',
-              language: storedProfileData.language || 'English',
-              avatar: storedProfileData.avatar || null,
-              profileCompleted: storedProfileCompleted
+              ...userData,
+              fullName: profileData.full_name || profileData.fullName || userData.full_name || userData.username,
+              phone: profileData.phone_number || profileData.phone || '',
+              language: profileData.preferred_language || profileData.language || 'English',
+              avatar: profileData.profile_photo || profileData.avatar || null,
+              profileCompleted: isCompleted
             });
+            if (isCompleted) localStorage.setItem('profile_completed', 'true');
           } else {
             throw new Error('Profile load failed');
           }
         } catch (error) {
           console.error('Failed to load user profile on startup', error);
-          // If token fails but we have mock session during local testing:
+          const storedProfileCompleted = localStorage.getItem('profile_completed') === 'true';
+          const storedProfileData = JSON.parse(localStorage.getItem('user_profile_data') || '{}');
+
           if (storedProfileCompleted || localStorage.getItem('mock_logged_in') === 'true') {
             setUser({
               username: 'FarmerUser',
@@ -95,7 +105,21 @@ export const AuthProvider = ({ children }) => {
       }
     } catch (error) {
       console.error('Login error', error);
-      // Fallback for UI demo/testing if backend is offline or returns error
+      if (error.response?.data) {
+        const backendMessage = error.response.data.message;
+        if (backendMessage && backendMessage !== 'Validation failed') {
+          return { success: false, error: backendMessage };
+        }
+        const errs = error.response.data.errors;
+        if (errs) {
+          const firstErr = typeof errs === 'object' ? Object.values(errs)[0] : errs;
+          const msg = Array.isArray(firstErr) ? firstErr[0] : String(firstErr);
+          return { success: false, error: msg };
+        }
+        return { success: false, error: 'Invalid credentials. Please check your username/email and password.' };
+      }
+
+      // Fallback for UI demo/testing if backend is completely unreachable
       const mockUser = {
         username: usernameOrEmail.split('@')[0],
         email: usernameOrEmail.includes('@') ? usernameOrEmail : `${usernameOrEmail}@agrinova.com`,
