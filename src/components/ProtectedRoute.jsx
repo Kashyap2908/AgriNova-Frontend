@@ -5,11 +5,16 @@ import { FarmContext } from '../context/FarmContext';
 
 const ProtectedRoute = () => {
   const { user, loading } = useContext(AuthContext);
-  const { farms } = useContext(FarmContext);
+  const { farms, selectedFarm } = useContext(FarmContext);
   const location = useLocation();
 
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-300">
+        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mb-3"></div>
+        <p className="font-bold text-sm">Loading AgriNova session...</p>
+      </div>
+    );
   }
 
   // 1. Not logged in -> go to login
@@ -17,19 +22,29 @@ const ProtectedRoute = () => {
     return <Navigate to="/login" replace />;
   }
 
-  // 2. Logged in, but profile not completed -> force to /profile
-  if (!user.profileCompleted && location.pathname !== '/profile') {
-    return <Navigate to="/profile" replace />;
+  const currentPath = location.pathname;
+  const isProfileRoute = currentPath === '/profile' || currentPath === '/complete-profile';
+  const isAddFarmRoute = currentPath === '/add-farm';
+  const isSelectFarmRoute = currentPath === '/select-farm' || currentPath === '/manage-farms';
+
+  // 2. Logged in, but profile not completed -> force to /complete-profile
+  if (!user.profileCompleted && !isProfileRoute) {
+    return <Navigate to="/complete-profile" replace />;
   }
 
   // 3. Profile completed, but no farms -> force to /add-farm
-  // (Skip this check if they are already on /add-farm, otherwise infinite loop)
-  if (user.profileCompleted && farms.length === 0 && location.pathname !== '/add-farm' && location.pathname !== '/profile') {
+  if (user.profileCompleted && farms.length === 0 && !isAddFarmRoute && !isProfileRoute) {
     return <Navigate to="/add-farm" replace />;
   }
 
-  // 4. Otherwise, allow them to view the protected route
+  // 4. Profile completed & farms exist, but no active selected farm -> force to /select-farm
+  if (user.profileCompleted && farms.length > 0 && !selectedFarm && !isSelectFarmRoute && !isAddFarmRoute && !isProfileRoute) {
+    return <Navigate to="/select-farm" replace />;
+  }
+
+  // 5. Otherwise, allow access to protected route
   return <Outlet />;
 };
 
 export default ProtectedRoute;
+

@@ -193,22 +193,36 @@ const MainLayout = () => {
                 {farmDropdownOpen && (
                   <motion.div 
                     initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }}
-                    className="absolute top-full right-0 mt-2 w-56 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-100 dark:border-slate-700 overflow-hidden z-50"
+                    className="absolute top-full right-0 mt-2 w-60 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-100 dark:border-slate-700 overflow-hidden z-50"
                   >
+                    <div className="p-2 border-b border-slate-100 dark:border-slate-700 font-bold text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wider px-3">
+                      Select Active Farm
+                    </div>
                     {farms.map(farm => (
                       <button 
                         key={farm.id}
                         onClick={() => { changeFarm(farm.id); setFarmDropdownOpen(false); }}
-                        className={`w-full text-left px-4 py-3 text-sm flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors
+                        className={`w-full text-left px-4 py-2.5 text-sm flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors
                           ${selectedFarm?.id === farm.id ? 'text-primary font-bold bg-primary/5' : 'text-slate-700 dark:text-slate-300'}`}
                       >
                         <span className="truncate">{farm.name}</span>
                         {selectedFarm?.id === farm.id && <div className="w-2 h-2 rounded-full bg-primary"></div>}
                       </button>
                     ))}
-                    <div className="border-t border-slate-100 dark:border-slate-700 p-2">
-                      <Link to="/add-farm" className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary transition-colors">
-                        <PlusSquare className="w-4 h-4" /> Add New Farm
+                    <div className="border-t border-slate-100 dark:border-slate-700 p-2 space-y-1">
+                      <Link 
+                        to="/select-farm" 
+                        onClick={() => setFarmDropdownOpen(false)}
+                        className="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+                      >
+                        <MapIcon className="w-3.5 h-3.5" /> Manage All Farms
+                      </Link>
+                      <Link 
+                        to="/add-farm" 
+                        onClick={() => setFarmDropdownOpen(false)}
+                        className="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-bold text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                      >
+                        <PlusSquare className="w-3.5 h-3.5" /> Add New Farm
                       </Link>
                     </div>
                   </motion.div>

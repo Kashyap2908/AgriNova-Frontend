@@ -14,6 +14,7 @@ import Dashboard from './pages/Dashboard';
 import CropRecommendation from './pages/CropRecommendation';
 import DiseaseDetection from './pages/DiseaseDetection';
 import AddFarm from './pages/AddFarm';
+import SelectFarm from './pages/SelectFarm';
 
 // Only used on Landing Page
 const LandingNavigation = () => {
@@ -148,7 +149,7 @@ const AnimatedRoutes = () => {
       <Routes location={location} key={location.pathname}>
         <Route path="/" element={<LandingPage />} />
         
-        {/* Auth routes are now strictly full-screen */}
+        {/* Auth routes */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         
@@ -157,12 +158,15 @@ const AnimatedRoutes = () => {
           <Route element={<MainLayout />}>
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/complete-profile" element={<Profile />} />
+            <Route path="/add-farm" element={<AddFarm />} />
+            <Route path="/select-farm" element={<SelectFarm />} />
+            <Route path="/manage-farms" element={<SelectFarm />} />
+            <Route path="/farms" element={<SelectFarm />} />
             <Route path="/crop-recommendation" element={<CropRecommendation />} />
             <Route path="/disease-detection" element={<DiseaseDetection />} />
             
-            {/* Placeholders for new links to avoid 404s while clicking around */}
-            <Route path="/farms" element={<Dashboard />} />
-            <Route path="/add-farm" element={<AddFarm />} />
+            {/* Nav placeholders */}
             <Route path="/weather" element={<Dashboard />} />
             <Route path="/yield-prediction" element={<Dashboard />} />
             <Route path="/profit-prediction" element={<Dashboard />} />
@@ -193,3 +197,4 @@ function App() {
 }
 
 export default App;
+

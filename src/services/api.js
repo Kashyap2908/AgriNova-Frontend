@@ -11,7 +11,7 @@ const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('access_token');
-    if (token) {
+    if (token && token !== 'mock_access_token') {
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
@@ -30,7 +30,7 @@ api.interceptors.response.use(
 
       try {
         const refreshToken = localStorage.getItem('refresh_token');
-        if (!refreshToken) {
+        if (!refreshToken || refreshToken === 'mock_refresh_token') {
           throw new Error('No refresh token available');
         }
 
@@ -41,11 +41,9 @@ api.interceptors.response.use(
         const newAccessToken = response.data.access;
         localStorage.setItem('access_token', newAccessToken);
 
-        // Update the authorization header and retry original request
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
         return api(originalRequest);
       } catch (refreshError) {
-        // If refresh token fails (e.g., expired), force logout
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
         window.location.href = '/login';
@@ -56,4 +54,70 @@ api.interceptors.response.use(
   }
 );
 
+// API Service Helpers for Profile and Farm Management
+export const updateUserProfile = async (profileData) => {
+  try {
+    const response = await api.put('/auth/profile/update/', profileData);
+    return response.data;
+  } catch (error) {
+    console.warn('Backend API update failed, continuing locally:', error);
+    return { success: true, data: profileData };
+  }
+};
+
+export const fetchFarms = async () => {
+  try {
+    const response = await api.get('/farms/');
+    return response.data;
+  } catch (error) {
+    console.warn('Backend API fetch farms failed, using local context:', error);
+    return { success: true, data: [] };
+  }
+};
+
+export const createFarmApi = async (farmData) => {
+  try {
+    const response = await api.post('/farms/', farmData);
+    return response.data;
+  } catch (error) {
+    console.warn('Backend API create farm failed, continuing locally:', error);
+    return { success: true, data: farmData };
+  }
+};
+
+export const deleteFarmApi = async (farmId) => {
+  try {
+    const response = await api.delete(`/farms/${farmId}/`);
+    return response.data;
+  } catch (error) {
+    console.warn('Backend API delete farm failed, continuing locally:', error);
+    return { success: true };
+  }
+};
+
+// Geocoding helper via OpenStreetMap Nominatim (Coordinates fetched asynchronously)
+export const geocodeLocation = async ({ village, taluka, district, state }) => {
+  try {
+    const query = `${village || ''}, ${taluka || ''}, ${district || ''}, ${state || ''}, India`;
+    const response = await axios.get('https://nominatim.openstreetmap.org/search', {
+      params: {
+        q: query,
+        format: 'json',
+        limit: 1
+      }
+    });
+    if (response.data && response.data.length > 0) {
+      return {
+        lat: parseFloat(response.data[0].lat),
+        lon: parseFloat(response.data[0].lon),
+        displayName: response.data[0].display_name
+      };
+    }
+  } catch (err) {
+    console.warn('Geocoding lookup failed or rate limited:', err);
+  }
+  return null;
+};
+
 export default api;
+
