@@ -22,23 +22,25 @@ const ProtectedRoute = () => {
     return <Navigate to="/login" replace />;
   }
 
+  const isProfileCompleted = Boolean(user.profileCompleted || user.profile_completed);
+
   const currentPath = location.pathname;
   const isProfileRoute = currentPath === '/profile' || currentPath === '/complete-profile';
   const isAddFarmRoute = currentPath === '/add-farm';
-  const isSelectFarmRoute = currentPath === '/select-farm' || currentPath === '/manage-farms';
+  const isSelectFarmRoute = currentPath === '/select-farm' || currentPath === '/manage-farms' || currentPath === '/farms';
 
   // 2. Logged in, but profile not completed -> force to /complete-profile
-  if (!user.profileCompleted && !isProfileRoute) {
+  if (!isProfileCompleted && !isProfileRoute) {
     return <Navigate to="/complete-profile" replace />;
   }
 
   // 3. Profile completed, but no farms -> force to /add-farm
-  if (user.profileCompleted && farms.length === 0 && !isAddFarmRoute && !isProfileRoute) {
+  if (isProfileCompleted && farms.length === 0 && !isAddFarmRoute && !isProfileRoute) {
     return <Navigate to="/add-farm" replace />;
   }
 
   // 4. Profile completed & farms exist, but no active selected farm -> force to /select-farm
-  if (user.profileCompleted && farms.length > 0 && !selectedFarm && !isSelectFarmRoute && !isAddFarmRoute && !isProfileRoute) {
+  if (isProfileCompleted && farms.length > 0 && !selectedFarm && !isSelectFarmRoute && !isAddFarmRoute && !isProfileRoute) {
     return <Navigate to="/select-farm" replace />;
   }
 

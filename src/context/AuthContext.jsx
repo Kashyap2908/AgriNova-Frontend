@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect } from 'react';
-import api, { fetchUserProfile, updateUserProfile } from '../services/api';
+import api, { fetchUserProfile } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 
 export const AuthContext = createContext();
@@ -9,61 +9,64 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
+  // Unified mapper function to create single user object
+  const mapUserData = (profileData) => {
+    if (!profileData) return null;
+    const isCompleted = Boolean(profileData.profile_completed);
+    return {
+      id: profileData.user_id || profileData.id,
+      username: profileData.username || '',
+      email: profileData.email || '',
+      full_name: profileData.full_name || profileData.fullName || '',
+      phone_number: profileData.phone_number || profileData.phone || '',
+      preferred_language: profileData.preferred_language || profileData.language || 'English',
+      profile_photo: profileData.profile_photo || profileData.avatar || null,
+      profile_completed: isCompleted,
+      // Field aliases for compatibility with UI components
+      fullName: profileData.full_name || profileData.fullName || '',
+      phone: profileData.phone_number || profileData.phone || '',
+      language: profileData.preferred_language || profileData.language || 'English',
+      avatar: profileData.profile_photo || profileData.avatar || null,
+      profileCompleted: isCompleted
+    };
+  };
+
+  // Fetch and update user profile from SQLite backend
+  const refreshUserProfile = async () => {
+    const token = localStorage.getItem('access_token');
+    if (!token) {
+      setUser(null);
+      return null;
+    }
+    try {
+      const res = await fetchUserProfile();
+      const profileData = res?.data || res;
+      if (profileData) {
+        const mappedUser = mapUserData(profileData);
+        setUser(mappedUser);
+        return mappedUser;
+      }
+    } catch (error) {
+      console.error('Failed to load user profile from backend', error);
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
+      setUser(null);
+    }
+    return null;
+  };
+
   useEffect(() => {
-    const loadUser = async () => {
+    const initAuth = async () => {
       const token = localStorage.getItem('access_token');
-
       if (token) {
-        try {
-          const [authRes, profileRes] = await Promise.all([
-            api.get('/auth/profile/').catch(() => null),
-            fetchUserProfile().catch(() => null)
-          ]);
-
-          if (authRes?.data?.success) {
-            const userData = authRes.data.data;
-            const profileData = profileRes?.data || profileRes || {};
-
-            const isCompleted = Boolean(profileData.profile_completed || localStorage.getItem('profile_completed') === 'true');
-
-            setUser({
-              ...userData,
-              fullName: profileData.full_name || profileData.fullName || userData.full_name || userData.username,
-              phone: profileData.phone_number || profileData.phone || '',
-              language: profileData.preferred_language || profileData.language || 'English',
-              avatar: profileData.profile_photo || profileData.avatar || null,
-              profileCompleted: isCompleted
-            });
-            if (isCompleted) localStorage.setItem('profile_completed', 'true');
-          } else {
-            throw new Error('Profile load failed');
-          }
-        } catch (error) {
-          console.error('Failed to load user profile on startup', error);
-          const storedProfileCompleted = localStorage.getItem('profile_completed') === 'true';
-          const storedProfileData = JSON.parse(localStorage.getItem('user_profile_data') || '{}');
-
-          if (storedProfileCompleted || localStorage.getItem('mock_logged_in') === 'true') {
-            setUser({
-              username: 'FarmerUser',
-              email: 'farmer@agrinova.com',
-              fullName: storedProfileData.fullName || 'Farmer User',
-              phone: storedProfileData.phone || '',
-              language: storedProfileData.language || 'English',
-              avatar: storedProfileData.avatar || null,
-              profileCompleted: storedProfileCompleted
-            });
-          } else {
-            localStorage.removeItem('access_token');
-            localStorage.removeItem('refresh_token');
-            setUser(null);
-          }
-        }
+        await refreshUserProfile();
+      } else {
+        setUser(null);
       }
       setLoading(false);
     };
 
-    loadUser();
+    initAuth();
   }, []);
 
   const login = async (usernameOrEmail, password) => {
@@ -74,38 +77,24 @@ export const AuthProvider = ({ children }) => {
       });
 
       if (response.data && response.data.success) {
-        const { access, refresh, user: userData } = response.data.data;
+        const { access, refresh } = response.data.data;
         
         localStorage.setItem('access_token', access);
         localStorage.setItem('refresh_token', refresh);
-        localStorage.setItem('mock_logged_in', 'true');
         
-        // Check backend first, fallback to false for fresh login
-        const isProfileCompleted = userData.profile_completed || false;
-        
-        // Clear old stale local storage just in case
-        if (!isProfileCompleted) {
-          localStorage.removeItem('profile_completed');
-          localStorage.removeItem('user_profile_data');
-        }
+        // Load clean profile from GET /api/profile/ (SQLite source of truth)
+        const loggedInUser = await refreshUserProfile();
 
-        const loggedInUser = {
-          ...userData,
-          fullName: userData.full_name || userData.username,
-          phone: userData.phone || '',
-          language: userData.language || 'English',
-          avatar: userData.avatar || null,
-          profileCompleted: isProfileCompleted
-        };
-        
-        setUser(loggedInUser);
-        
-        if (!isProfileCompleted) {
-          navigate('/complete-profile');
+        if (loggedInUser) {
+          if (!loggedInUser.profile_completed) {
+            navigate('/complete-profile');
+          } else {
+            navigate('/dashboard');
+          }
+          return { success: true };
         } else {
-          navigate('/dashboard');
+          return { success: false, error: 'Failed to retrieve profile after login' };
         }
-        return { success: true };
       } else {
         return { success: false, error: response.data.message || 'Login failed' };
       }
@@ -122,31 +111,8 @@ export const AuthProvider = ({ children }) => {
           const msg = Array.isArray(firstErr) ? firstErr[0] : String(firstErr);
           return { success: false, error: msg };
         }
-        return { success: false, error: 'Invalid credentials. Please check your username/email and password.' };
       }
-
-      // Fallback for UI demo/testing if backend is completely unreachable
-      const mockUser = {
-        username: usernameOrEmail.split('@')[0],
-        email: usernameOrEmail.includes('@') ? usernameOrEmail : `${usernameOrEmail}@agrinova.com`,
-        fullName: '',
-        phone: '',
-        language: 'English',
-        avatar: null,
-        profileCompleted: localStorage.getItem('profile_completed') === 'true'
-      };
-      
-      localStorage.setItem('access_token', 'mock_access_token');
-      localStorage.setItem('refresh_token', 'mock_refresh_token');
-      localStorage.setItem('mock_logged_in', 'true');
-      
-      setUser(mockUser);
-      if (!mockUser.profileCompleted) {
-        navigate('/complete-profile');
-      } else {
-        navigate('/dashboard');
-      }
-      return { success: true };
+      return { success: false, error: 'Invalid credentials. Please check your username/email and password.' };
     }
   };
 
@@ -168,36 +134,25 @@ export const AuthProvider = ({ children }) => {
       }
     } catch (error) {
       console.error('Registration error', error);
-      // Fallback to seamless login for demo/offline frontend dev
-      return await login(email, password);
+      if (error.response?.data) {
+        const backendMessage = error.response.data.message;
+        if (backendMessage && backendMessage !== 'Validation failed') {
+          return { success: false, error: backendMessage };
+        }
+        const errs = error.response.data.errors;
+        if (errs) {
+          const firstErr = typeof errs === 'object' ? Object.values(errs)[0] : errs;
+          const msg = Array.isArray(firstErr) ? firstErr[0] : String(firstErr);
+          return { success: false, error: msg };
+        }
+      }
+      return { success: false, error: 'Registration failed. Please check your input fields.' };
     }
-  };
-
-  const completeProfile = (profileData = {}) => {
-    localStorage.setItem('profile_completed', 'true');
-    if (Object.keys(profileData).length > 0) {
-      localStorage.setItem('user_profile_data', JSON.stringify(profileData));
-    }
-    setUser(prev => ({
-      ...prev,
-      ...profileData,
-      profileCompleted: true
-    }));
-  };
-
-  const updateProfile = (profileData) => {
-    const existing = JSON.parse(localStorage.getItem('user_profile_data') || '{}');
-    const updated = { ...existing, ...profileData };
-    localStorage.setItem('user_profile_data', JSON.stringify(updated));
-    setUser(prev => ({
-      ...prev,
-      ...profileData
-    }));
   };
 
   const logout = async () => {
     const refreshToken = localStorage.getItem('refresh_token');
-    if (refreshToken && refreshToken !== 'mock_refresh_token') {
+    if (refreshToken) {
       try {
         await api.post('/auth/logout/', { refresh: refreshToken });
       } catch (error) {
@@ -206,18 +161,13 @@ export const AuthProvider = ({ children }) => {
     }
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
-    localStorage.removeItem('mock_logged_in');
-    localStorage.removeItem('profile_completed');
-    localStorage.removeItem('user_profile_data');
     setUser(null);
     navigate('/login');
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, loading, completeProfile, updateProfile }}>
+    <AuthContext.Provider value={{ user, login, register, logout, loading, refreshUserProfile }}>
       {!loading && children}
     </AuthContext.Provider>
   );
 };
-
-

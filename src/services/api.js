@@ -1,7 +1,11 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api' || 'http://10.104.108.192:8000/api',
+  // this url is for wifi-hosting
+  // baseURL: import.meta.env.VITE_API_BASE_URL
+
+  // this url is for localhost
+  baseURL: 'http://localhost:8000/api',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -11,7 +15,7 @@ const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('access_token');
-    if (token && token !== 'mock_access_token') {
+    if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
@@ -30,7 +34,7 @@ api.interceptors.response.use(
 
       try {
         const refreshToken = localStorage.getItem('refresh_token');
-        if (!refreshToken || refreshToken === 'mock_refresh_token') {
+        if (!refreshToken) {
           throw new Error('No refresh token available');
         }
 
@@ -56,76 +60,45 @@ api.interceptors.response.use(
 
 // API Service Helpers for Profile, Farm Management, and Dashboard
 export const fetchUserProfile = async () => {
-  try {
-    const response = await api.get('/profile/');
-    return response.data;
-  } catch (error) {
-    console.warn('Backend API fetch profile failed, using local context:', error);
-    return null;
-  }
+  const response = await api.get('/profile/');
+  return response.data;
 };
 
 export const updateUserProfile = async (profileData) => {
-  try {
-    const response = await api.put('/profile/', profileData);
-    return response.data;
-  } catch (error) {
-    console.warn('Backend API update failed, continuing locally:', error);
-    return { success: true, data: profileData };
+  let config = {};
+  if (profileData instanceof FormData) {
+    config.headers = { 'Content-Type': 'multipart/form-data' };
   }
+  const response = await api.put('/profile/', profileData, config);
+  return response.data;
 };
 
 export const fetchFarms = async () => {
-  try {
-    const response = await api.get('/farms/');
-    return response.data;
-  } catch (error) {
-    console.warn('Backend API fetch farms failed, using local context:', error);
-    return { success: true, data: [] };
-  }
+  const response = await api.get('/farms/');
+  return response.data;
 };
 
 export const createFarmApi = async (farmData) => {
-  try {
-    const response = await api.post('/farms/', farmData);
-    return response.data;
-  } catch (error) {
-    console.warn('Backend API create farm failed, continuing locally:', error);
-    return { success: true, data: farmData };
-  }
+  const response = await api.post('/farms/', farmData);
+  return response.data;
 };
 
 export const selectFarmApi = async (farmId) => {
-  try {
-    const response = await api.post(`/farms/select/${farmId}/`);
-    return response.data;
-  } catch (error) {
-    console.warn('Backend API select farm failed, continuing locally:', error);
-    return { success: true };
-  }
+  const response = await api.post(`/farms/select/${farmId}/`);
+  return response.data;
 };
 
 export const deleteFarmApi = async (farmId) => {
-  try {
-    const response = await api.delete(`/farms/${farmId}/`);
-    return response.data;
-  } catch (error) {
-    console.warn('Backend API delete farm failed, continuing locally:', error);
-    return { success: true };
-  }
+  const response = await api.delete(`/farms/${farmId}/`);
+  return response.data;
 };
 
 export const fetchDashboardApi = async () => {
-  try {
-    const response = await api.get('/dashboard/');
-    return response.data;
-  } catch (error) {
-    console.warn('Backend API fetch dashboard failed, using local context:', error);
-    return null;
-  }
+  const response = await api.get('/dashboard/');
+  return response.data;
 };
 
-// Geocoding helper via OpenStreetMap Nominatim (Coordinates fetched asynchronously)
+// Geocoding helper via OpenStreetMap Nominatim
 export const geocodeLocation = async ({ village, taluka, district, state }) => {
   try {
     const query = `${village || ''}, ${taluka || ''}, ${district || ''}, ${state || ''}, India`;
@@ -150,4 +123,3 @@ export const geocodeLocation = async ({ village, taluka, district, state }) => {
 };
 
 export default api;
-

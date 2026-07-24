@@ -94,13 +94,14 @@ const AddFarm = () => {
       }
     });
 
-    await createFarmApi(farmPayload);
-
-    setTimeout(() => {
-      const created = addFarm(farmPayload);
+    try {
+      await addFarm(farmPayload);
       setSaving(false);
       navigate('/select-farm');
-    }, 400);
+    } catch (err) {
+      console.error('Failed to create farm:', err);
+      setSaving(false);
+    }
   };
 
   const steps = [

@@ -6,8 +6,6 @@ import {
   CheckCircle2, PlusSquare, MapPin, Scale, Layers, Droplets, Edit3, Trash2, 
   ArrowRight, ShieldCheck, AlertTriangle, X, Check, Sprout, Map
 } from 'lucide-react';
-import { deleteFarmApi } from '../services/api';
-
 const SelectFarm = () => {
   const { farms, selectedFarm, selectFarm, editFarm, deleteFarm } = useContext(FarmContext);
   const navigate = useNavigate();
@@ -16,23 +14,22 @@ const SelectFarm = () => {
   const [deleteModalId, setDeleteModalId] = useState(null);
   const [editingFarm, setEditingFarm] = useState(null);
 
-  const handleSelectFarm = (farmId) => {
-    selectFarm(farmId);
+  const handleSelectFarm = async (farmId) => {
+    await selectFarm(farmId);
     navigate('/dashboard');
   };
 
   const handleDeleteConfirm = async () => {
     if (deleteModalId) {
-      await deleteFarmApi(deleteModalId);
-      deleteFarm(deleteModalId);
+      await deleteFarm(deleteModalId);
       setDeleteModalId(null);
     }
   };
 
-  const handleSaveEdit = (e) => {
+  const handleSaveEdit = async (e) => {
     e.preventDefault();
     if (editingFarm) {
-      editFarm(editingFarm.id, editingFarm);
+      await editFarm(editingFarm.id, editingFarm);
       setEditingFarm(null);
     }
   };

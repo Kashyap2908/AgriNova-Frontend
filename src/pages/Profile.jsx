@@ -7,26 +7,24 @@ import { Save, User, Phone, Globe, Camera, CheckCircle2, ArrowRight, ShieldCheck
 import { updateUserProfile } from '../services/api';
 
 const Profile = () => {
-  const { user, completeProfile, updateProfile } = useContext(AuthContext);
-  const { farms } = useContext(FarmContext);
+  const { user, refreshUserProfile } = useContext(AuthContext);
+  const { farms, refreshFarms } = useContext(FarmContext);
   const navigate = useNavigate();
 
-  const [fullName, setFullName] = useState(user?.fullName || user?.username || '');
-  const [phone, setPhone] = useState(user?.phone || '');
-  const [language, setLanguage] = useState(user?.language || 'English');
-  const [avatar, setAvatar] = useState(user?.avatar || null);
-  const [previewUrl, setPreviewUrl] = useState(user?.avatar || null);
+  const [fullName, setFullName] = useState(user?.fullName || user?.full_name || user?.username || '');
+  const [phone, setPhone] = useState(user?.phone || user?.phone_number || '');
+  const [language, setLanguage] = useState(user?.language || user?.preferred_language || 'English');
+  const [photoFile, setPhotoFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(user?.avatar || user?.profile_photo || null);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (user) {
-      if (user.fullName) setFullName(user.fullName);
-      if (user.phone) setPhone(user.phone);
-      if (user.language) setLanguage(user.language);
-      if (user.avatar) {
-        setAvatar(user.avatar);
-        setPreviewUrl(user.avatar);
-      }
+      if (user.fullName || user.full_name) setFullName(user.fullName || user.full_name);
+      if (user.phone || user.phone_number) setPhone(user.phone || user.phone_number);
+      if (user.language || user.preferred_language) setLanguage(user.language || user.preferred_language);
+      const photo = user.avatar || user.profile_photo || null;
+      setPreviewUrl(photo);
     }
   }, [user]);
 
@@ -34,15 +32,15 @@ const Profile = () => {
   const handlePhotoUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
+      setPhotoFile(file);
       const url = URL.createObjectURL(file);
       setPreviewUrl(url);
-      setAvatar(url);
     }
   };
 
   const handleRemovePhoto = () => {
+    setPhotoFile(null);
     setPreviewUrl(null);
-    setAvatar(null);
   };
 
   // Calculate Profile Completion Percentage
@@ -59,26 +57,33 @@ const Profile = () => {
     if (e) e.preventDefault();
     setSaving(true);
 
-    const profileData = {
-      fullName,
-      phone,
-      language,
-      avatar: previewUrl
-    };
+    try {
+      const formData = new FormData();
+      formData.append('full_name', fullName.trim());
+      formData.append('phone_number', phone.trim());
+      formData.append('preferred_language', language);
+      
+      if (photoFile) {
+        formData.append('profile_photo', photoFile);
+      } else if (previewUrl === null) {
+        formData.append('profile_photo', '');
+      }
 
-    // Try sending update to API backend asynchronously
-    await updateUserProfile(profileData);
+      await updateUserProfile(formData);
+      const updatedUser = await refreshUserProfile();
+      const updatedFarms = await refreshFarms();
 
-    setTimeout(() => {
-      completeProfile(profileData);
       setSaving(false);
 
-      if (farms && farms.length > 0) {
+      if (updatedFarms && updatedFarms.length > 0) {
         navigate('/select-farm');
       } else {
         navigate('/add-farm');
       }
-    }, 600);
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      setSaving(false);
+    }
   };
 
   const handleSkipPhoto = () => {

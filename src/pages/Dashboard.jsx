@@ -117,16 +117,16 @@ const Dashboard = () => {
             <div className="flex items-center gap-4 mb-6">
               <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-primary to-emerald-400 p-0.5 shadow-md">
                 <div className="w-full h-full bg-white dark:bg-slate-900 rounded-full flex items-center justify-center font-extrabold text-2xl text-primary overflow-hidden">
-                  {user?.avatar ? (
-                    <img src={user.avatar} alt="Avatar" className="w-full h-full object-cover" />
+                  {(user?.avatar || user?.profile_photo) ? (
+                    <img src={user.avatar || user.profile_photo} alt="Avatar" className="w-full h-full object-cover" />
                   ) : (
-                    (user?.fullName || user?.username || 'F').charAt(0).toUpperCase()
+                    ((user?.fullName || user?.full_name || '').trim() || (user?.username || '').trim() || 'F').charAt(0).toUpperCase()
                   )}
                 </div>
               </div>
               <div>
                 <h4 className="text-lg font-extrabold text-slate-900 dark:text-white">
-                  {user?.fullName || user?.username || 'Farmer User'}
+                  {user?.fullName || user?.full_name || user?.username || 'Farmer User'}
                 </h4>
                 <p className="text-xs text-slate-500 dark:text-slate-400">{user?.email}</p>
                 <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300 text-xs font-bold mt-1.5">
