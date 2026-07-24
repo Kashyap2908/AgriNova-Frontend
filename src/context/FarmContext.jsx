@@ -1,9 +1,12 @@
-import React, { createContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useEffect, useContext } from 'react';
 import { fetchFarms, selectFarmApi } from '../services/api';
+import { AuthContext } from './AuthContext';
 
 export const FarmContext = createContext();
 
 export const FarmProvider = ({ children }) => {
+  const { user } = useContext(AuthContext);
+
   const [farms, setFarms] = useState(() => {
     try {
       const saved = localStorage.getItem('agrinova_farms');
@@ -27,7 +30,7 @@ export const FarmProvider = ({ children }) => {
     }
   });
 
-  // Fetch farms from backend on mount or login
+  // Fetch farms from backend when user logs in
   useEffect(() => {
     const loadBackendFarms = async () => {
       const token = localStorage.getItem('access_token');
@@ -64,8 +67,15 @@ export const FarmProvider = ({ children }) => {
       }
     };
 
-    loadBackendFarms();
-  }, []);
+    if (user) {
+      loadBackendFarms();
+    } else {
+      setFarms([]);
+      setSelectedFarm(null);
+      localStorage.removeItem('agrinova_farms');
+      localStorage.removeItem('agrinova_selected_farm_id');
+    }
+  }, [user]);
 
   // Sync state to localStorage whenever farms or selectedFarm change
   useEffect(() => {

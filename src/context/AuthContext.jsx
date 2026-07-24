@@ -80,21 +80,27 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('refresh_token', refresh);
         localStorage.setItem('mock_logged_in', 'true');
         
-        const storedProfileCompleted = localStorage.getItem('profile_completed') === 'true';
-        const storedProfileData = JSON.parse(localStorage.getItem('user_profile_data') || '{}');
+        // Check backend first, fallback to false for fresh login
+        const isProfileCompleted = userData.profile_completed || false;
+        
+        // Clear old stale local storage just in case
+        if (!isProfileCompleted) {
+          localStorage.removeItem('profile_completed');
+          localStorage.removeItem('user_profile_data');
+        }
 
         const loggedInUser = {
           ...userData,
-          fullName: storedProfileData.fullName || userData.full_name || userData.username,
-          phone: storedProfileData.phone || userData.phone || '',
-          language: storedProfileData.language || 'English',
-          avatar: storedProfileData.avatar || null,
-          profileCompleted: storedProfileCompleted
+          fullName: userData.full_name || userData.username,
+          phone: userData.phone || '',
+          language: userData.language || 'English',
+          avatar: userData.avatar || null,
+          profileCompleted: isProfileCompleted
         };
         
         setUser(loggedInUser);
         
-        if (!storedProfileCompleted) {
+        if (!isProfileCompleted) {
           navigate('/complete-profile');
         } else {
           navigate('/dashboard');
@@ -201,6 +207,8 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
     localStorage.removeItem('mock_logged_in');
+    localStorage.removeItem('profile_completed');
+    localStorage.removeItem('user_profile_data');
     setUser(null);
     navigate('/login');
   };
