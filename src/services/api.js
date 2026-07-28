@@ -98,6 +98,28 @@ export const fetchDashboardApi = async () => {
   return response.data;
 };
 
+// Password Reset API Calls
+export const forgotPassword = async (email) => {
+  const response = await api.post('/auth/forgot-password/', { email });
+  return response.data;
+};
+
+export const verifyOTP = async (email, otp) => {
+  const response = await api.post('/auth/verify-otp/', { email, otp });
+  return response.data;
+};
+
+export const resetPassword = async (email, otp, password, confirmPassword) => {
+  const response = await api.post('/auth/reset-password/', {
+    email,
+    otp,
+    password,
+    confirm_password: confirmPassword,
+  });
+  return response.data;
+};
+
+
 // Geocoding helper via OpenStreetMap Nominatim
 export const geocodeLocation = async ({ village, taluka, district, state }) => {
   try {

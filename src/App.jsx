@@ -9,7 +9,9 @@ import { Leaf, LogIn, UserPlus, ChevronRight, Sparkles, BarChart3, CloudSun, Tar
 
 import Login from './pages/Login';
 import Register from './pages/Register';
+import ForgotPassword from './pages/ForgotPassword';
 import Profile from './pages/Profile';
+
 import Dashboard from './pages/Dashboard';
 import CropRecommendation from './pages/CropRecommendation';
 import DiseaseDetection from './pages/DiseaseDetection';
@@ -152,6 +154,8 @@ const AnimatedRoutes = () => {
         {/* Auth routes */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+
         
         {/* Protected Routes inside MainLayout */}
         <Route element={<ProtectedRoute />}>
