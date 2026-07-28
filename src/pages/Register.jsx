@@ -1,6 +1,6 @@
 import React, { useState, useContext, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { AuthContext } from '../context/AuthContext';
+import { AuthContext } from '../context/auth-context';
 import { motion } from 'framer-motion';
 import { Mail, Lock, User, Eye, EyeOff, UserPlus, Leaf, Sun, Moon, Globe } from 'lucide-react';
 

@@ -1,6 +1,6 @@
 import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FarmContext } from '../context/FarmContext';
+import { FarmContext } from '../context/farm-context';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Map, Leaf, Scale, MapPin, Sprout, ArrowRight, ArrowLeft, Check, Compass, Droplets, Layers } from 'lucide-react';
 import { createFarmApi, geocodeLocation } from '../services/api';

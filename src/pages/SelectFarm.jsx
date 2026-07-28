@@ -1,6 +1,6 @@
 import React, { useContext, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { FarmContext } from '../context/FarmContext';
+import { FarmContext } from '../context/farm-context';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   CheckCircle2, PlusSquare, MapPin, Scale, Layers, Droplets, Edit3, Trash2, 

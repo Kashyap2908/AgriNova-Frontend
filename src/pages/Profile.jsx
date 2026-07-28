@@ -1,6 +1,6 @@
 import React, { useState, useContext, useEffect } from 'react';
-import { AuthContext } from '../context/AuthContext';
-import { FarmContext } from '../context/FarmContext';
+import { AuthContext } from '../context/auth-context';
+import { FarmContext } from '../context/farm-context';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Save, User, Phone, Globe, Camera, CheckCircle2, ArrowRight, ShieldCheck, Trash2 } from 'lucide-react';

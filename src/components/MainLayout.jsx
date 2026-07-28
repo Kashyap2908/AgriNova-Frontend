@@ -1,7 +1,7 @@
 import React, { useContext, useState, useEffect } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { AuthContext } from '../context/AuthContext';
-import { FarmContext } from '../context/FarmContext';
+import { AuthContext } from '../context/auth-context';
+import { FarmContext } from '../context/farm-context';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   LayoutDashboard, Map as MapIcon, PlusSquare, CloudSun, Sprout, TrendingUp, IndianRupee, 

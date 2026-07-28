@@ -1,8 +1,7 @@
-import React, { createContext, useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import api, { fetchFarms, selectFarmApi, createFarmApi, deleteFarmApi } from '../services/api';
-import { AuthContext } from './AuthContext';
-
-export const FarmContext = createContext();
+import { AuthContext } from './auth-context';
+import { FarmContext } from './farm-context';
 
 export const FarmProvider = ({ children }) => {
   const { user } = useContext(AuthContext);

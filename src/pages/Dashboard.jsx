@@ -1,6 +1,6 @@
 import React, { useContext } from 'react';
-import { AuthContext } from '../context/AuthContext';
-import { FarmContext } from '../context/FarmContext';
+import { AuthContext } from '../context/auth-context';
+import { FarmContext } from '../context/farm-context';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { 
