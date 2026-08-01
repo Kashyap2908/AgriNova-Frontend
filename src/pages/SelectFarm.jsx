@@ -335,20 +335,20 @@ const SelectFarm = () => {
                   <h4 className="text-sm font-bold text-slate-800 dark:text-white mb-3">Soil Test Data</h4>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
                     <div>
-                      <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">Nitrogen (N) *</label>
-                      <input type="number" required min="0" max="200" step="0.1" value={editingFarm.nitrogen || ''} onChange={(e) => setEditingFarm({ ...editingFarm, nitrogen: e.target.value })} className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white" />
+                      <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">Nitrogen (N)</label>
+                      <input type="number" min="0" max="200" step="0.1" value={editingFarm.nitrogen || ''} onChange={(e) => setEditingFarm({ ...editingFarm, nitrogen: e.target.value })} className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white" />
                     </div>
                     <div>
-                      <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">Phosphorus (P) *</label>
-                      <input type="number" required min="0" max="200" step="0.1" value={editingFarm.phosphorus || ''} onChange={(e) => setEditingFarm({ ...editingFarm, phosphorus: e.target.value })} className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white" />
+                      <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">Phosphorus (P)</label>
+                      <input type="number" min="0" max="200" step="0.1" value={editingFarm.phosphorus || ''} onChange={(e) => setEditingFarm({ ...editingFarm, phosphorus: e.target.value })} className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white" />
                     </div>
                     <div>
-                      <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">Potassium (K) *</label>
-                      <input type="number" required min="0" max="300" step="0.1" value={editingFarm.potassium || ''} onChange={(e) => setEditingFarm({ ...editingFarm, potassium: e.target.value })} className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white" />
+                      <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">Potassium (K)</label>
+                      <input type="number" min="0" max="300" step="0.1" value={editingFarm.potassium || ''} onChange={(e) => setEditingFarm({ ...editingFarm, potassium: e.target.value })} className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white" />
                     </div>
                     <div>
-                      <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">Soil pH *</label>
-                      <input type="number" required min="0" max="14" step="0.1" value={editingFarm.soil_ph || ''} onChange={(e) => setEditingFarm({ ...editingFarm, soil_ph: e.target.value })} className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white" />
+                      <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">Soil pH</label>
+                      <input type="number" min="0" max="14" step="0.1" value={editingFarm.soil_ph || ''} onChange={(e) => setEditingFarm({ ...editingFarm, soil_ph: e.target.value })} className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white" />
                     </div>
                   </div>
                   <div className="grid grid-cols-3 gap-3">

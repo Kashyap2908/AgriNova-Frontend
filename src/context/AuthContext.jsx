@@ -32,7 +32,7 @@ export const AuthProvider = ({ children }) => {
 
   // Fetch and update user profile from SQLite backend
   const refreshUserProfile = async () => {
-    const token = localStorage.getItem('access_token');
+    const token = localStorage.getItem('access_token') || sessionStorage.getItem('access_token');
     if (!token) {
       setUser(null);
       return null;
@@ -49,6 +49,8 @@ export const AuthProvider = ({ children }) => {
       console.error('Failed to load user profile from backend', error);
       localStorage.removeItem('access_token');
       localStorage.removeItem('refresh_token');
+      sessionStorage.removeItem('access_token');
+      sessionStorage.removeItem('refresh_token');
       setUser(null);
     }
     return null;
@@ -56,7 +58,7 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const initAuth = async () => {
-      const token = localStorage.getItem('access_token');
+      const token = localStorage.getItem('access_token') || sessionStorage.getItem('access_token');
       if (token) {
         await refreshUserProfile();
       } else {
@@ -68,7 +70,7 @@ export const AuthProvider = ({ children }) => {
     initAuth();
   }, []);
 
-  const login = async (usernameOrEmail, password) => {
+  const login = async (usernameOrEmail, password, rememberMe = true) => {
     try {
       const response = await api.post('/auth/login/', {
         username: usernameOrEmail,
@@ -78,8 +80,13 @@ export const AuthProvider = ({ children }) => {
       if (response.data && response.data.success) {
         const { access, refresh } = response.data.data;
         
-        localStorage.setItem('access_token', access);
-        localStorage.setItem('refresh_token', refresh);
+        if (rememberMe) {
+          localStorage.setItem('access_token', access);
+          localStorage.setItem('refresh_token', refresh);
+        } else {
+          sessionStorage.setItem('access_token', access);
+          sessionStorage.setItem('refresh_token', refresh);
+        }
         
         // Load clean profile from GET /api/profile/ (SQLite source of truth)
         const loggedInUser = await refreshUserProfile();
@@ -150,7 +157,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = async () => {
-    const refreshToken = localStorage.getItem('refresh_token');
+    const refreshToken = localStorage.getItem('refresh_token') || sessionStorage.getItem('refresh_token');
     if (refreshToken) {
       try {
         await api.post('/auth/logout/', { refresh: refreshToken });
@@ -160,6 +167,8 @@ export const AuthProvider = ({ children }) => {
     }
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
+    sessionStorage.removeItem('access_token');
+    sessionStorage.removeItem('refresh_token');
     setUser(null);
     navigate('/login');
   };

@@ -81,11 +81,12 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
   const [loading, setLoading] = useState(false);
   const [isDark, setIsDark] = useState(false);
   const [error, setError] = useState('');
   
-  const { login } = useContext(AuthContext);
+  const { login, register } = useContext(AuthContext);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -98,8 +99,10 @@ const Login = () => {
     setIsDark(!isDark);
     if (!isDark) {
       document.documentElement.classList.add('dark');
+      localStorage.theme = 'dark';
     } else {
       document.documentElement.classList.remove('dark');
+      localStorage.theme = 'light';
     }
   };
 
@@ -107,19 +110,26 @@ const Login = () => {
     e.preventDefault();
     setLoading(true);
     setError('');
-    const result = await login(email, password);
+    const result = await login(email, password, rememberMe);
     setLoading(false);
     if (!result.success) {
       setError(result.error);
     }
   };
 
-  const handleGoogleLogin = () => {
+  const handleGoogleLogin = async () => {
     setLoading(true);
-    setTimeout(() => {
-      login('Google Farmer', 'google-sso');
-      setLoading(false);
-    }, 1500);
+    setError('');
+    // Try to login with mock Google account
+    const result = await login('google@agrinova.com', 'GoogleSso123!');
+    if (!result.success) {
+      // If login fails, try to register it on the fly
+      const regResult = await register('Google Farmer', 'google@agrinova.com', 'GoogleSso123!');
+      if (!regResult.success) {
+        setError(regResult.error || 'Google SSO mock failed.');
+      }
+    }
+    setLoading(false);
   };
 
   return (
@@ -229,7 +239,12 @@ const Login = () => {
 
             <div className="flex items-center justify-between text-sm">
               <label className="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" className="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary/50" />
+                <input 
+                  type="checkbox" 
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary/50" 
+                />
                 <span className="text-slate-600 dark:text-slate-400 font-medium">Remember me</span>
               </label>
               <Link to="/forgot-password" className="font-bold text-primary hover:text-primary-dark transition-colors">Forgot Password?</Link>

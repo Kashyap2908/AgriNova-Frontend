@@ -14,7 +14,7 @@ const api = axios.create({
 // Interceptor to attach access token to requests
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('access_token');
+    const token = localStorage.getItem('access_token') || sessionStorage.getItem('access_token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -33,7 +33,7 @@ api.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
-        const refreshToken = localStorage.getItem('refresh_token');
+        const refreshToken = localStorage.getItem('refresh_token') || sessionStorage.getItem('refresh_token');
         if (!refreshToken) {
           throw new Error('No refresh token available');
         }
@@ -43,13 +43,19 @@ api.interceptors.response.use(
         });
 
         const newAccessToken = response.data.access;
-        localStorage.setItem('access_token', newAccessToken);
+        if (localStorage.getItem('refresh_token')) {
+          localStorage.setItem('access_token', newAccessToken);
+        } else {
+          sessionStorage.setItem('access_token', newAccessToken);
+        }
 
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
         return api(originalRequest);
       } catch (refreshError) {
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
+        sessionStorage.removeItem('access_token');
+        sessionStorage.removeItem('refresh_token');
         window.location.href = '/login';
         return Promise.reject(refreshError);
       }

@@ -86,7 +86,7 @@ const Register = () => {
   const [isDark, setIsDark] = useState(false);
   const [error, setError] = useState('');
   
-  const { register } = useContext(AuthContext);
+  const { register, login } = useContext(AuthContext);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -99,8 +99,10 @@ const Register = () => {
     setIsDark(!isDark);
     if (!isDark) {
       document.documentElement.classList.add('dark');
+      localStorage.theme = 'dark';
     } else {
       document.documentElement.classList.remove('dark');
+      localStorage.theme = 'light';
     }
   };
 
@@ -115,12 +117,19 @@ const Register = () => {
     }
   };
 
-  const handleGoogleLogin = () => {
+  const handleGoogleLogin = async () => {
     setLoading(true);
-    setTimeout(() => {
-      register('Google Farmer', 'google-sso');
-      setLoading(false);
-    }, 1500);
+    setError('');
+    // Try to login with mock Google account
+    const result = await login('google@agrinova.com', 'GoogleSso123!');
+    if (!result.success) {
+      // If login fails, try to register it on the fly
+      const regResult = await register('Google Farmer', 'google@agrinova.com', 'GoogleSso123!');
+      if (!regResult.success) {
+        setError(regResult.error || 'Google SSO mock failed.');
+      }
+    }
+    setLoading(false);
   };
 
   return (

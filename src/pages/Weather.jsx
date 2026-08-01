@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useContext } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect, useContext, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { FarmContext } from '../context/farm-context';
 import { geocodeLocation } from '../services/api';
 import { 
@@ -12,6 +12,29 @@ const Weather = () => {
   const [weatherData, setWeatherData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  
+  const [activeDay, setActiveDay] = useState(0);
+
+  // Drag-to-scroll logic for hourly container
+  const scrollRef = useRef(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [scrollLeft, setScrollLeft] = useState(0);
+
+  const onMouseDown = (e) => {
+    setIsDragging(true);
+    setStartX(e.pageX - scrollRef.current.offsetLeft);
+    setScrollLeft(scrollRef.current.scrollLeft);
+  };
+  const onMouseLeave = () => setIsDragging(false);
+  const onMouseUp = () => setIsDragging(false);
+  const onMouseMove = (e) => {
+    if (!isDragging) return;
+    e.preventDefault();
+    const x = e.pageX - scrollRef.current.offsetLeft;
+    const walk = (x - startX) * 2; // scroll-fast multiplier
+    scrollRef.current.scrollLeft = scrollLeft - walk;
+  };
 
   const getWeatherIcon = (code, className = "w-16 h-16") => {
     if (code === 0) return <Sun className={`${className} text-amber-400 drop-shadow-md`} />;
@@ -38,6 +61,7 @@ const Weather = () => {
   };
 
   const formatTime = (isoString) => {
+    if (!isoString) return '--:--';
     return new Date(isoString).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
@@ -152,7 +176,9 @@ const Weather = () => {
   const currentHourTime = new Date();
   currentHourTime.setMinutes(0, 0, 0);
   const currentHourIndex = hourly.time.findIndex(t => new Date(t) >= currentHourTime);
-  const next24Hours = currentHourIndex !== -1 ? currentHourIndex : 0;
+  const next24Hours = activeDay === 0 
+    ? (currentHourIndex !== -1 ? currentHourIndex : 0) 
+    : activeDay * 24;
 
   return (
     <div className="py-8 max-w-[1400px] mx-auto px-4 sm:px-6">
@@ -269,7 +295,7 @@ const Weather = () => {
                 <div>
                   <p className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-1">Sunrise</p>
                   <p className="text-2xl font-black text-slate-800 dark:text-white">
-                    {formatTime(daily.sunrise[0])}
+                    {formatTime(daily.sunrise[activeDay])}
                   </p>
                 </div>
               </div>
@@ -283,7 +309,7 @@ const Weather = () => {
                 <div>
                   <p className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-1">Sunset</p>
                   <p className="text-2xl font-black text-slate-800 dark:text-white">
-                    {formatTime(daily.sunset[0])}
+                    {formatTime(daily.sunset[activeDay])}
                   </p>
                 </div>
               </div>
@@ -299,7 +325,7 @@ const Weather = () => {
             <div>
               <p className="text-amber-800 dark:text-amber-400 font-bold mb-1">UV Index Max</p>
               <p className="text-3xl font-black text-amber-600 dark:text-amber-300">
-                {daily.uv_index_max[0]}
+                {daily.uv_index_max[activeDay]}
               </p>
             </div>
             <Sun className="w-12 h-12 text-amber-400/50" />
@@ -308,18 +334,28 @@ const Weather = () => {
       </div>
 
       {/* 24-Hour Forecast Strip */}
-      <div className="mb-10">
+      <motion.div 
+        layout
+        className="mb-10"
+      >
         <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-          <Wind className="w-5 h-5 text-primary" /> Hourly Forecast (Next 24h)
+          <Wind className="w-5 h-5 text-primary" /> Hourly Forecast ({activeDay === 0 ? 'Next 24h' : new Date(daily.time[activeDay]).toLocaleDateString('en-US', { weekday: 'long' })})
         </h3>
         
-        <div className="flex overflow-x-auto pb-4 -mx-4 px-4 sm:mx-0 sm:px-0 gap-3 no-scrollbar snap-x">
+        <div 
+          ref={scrollRef}
+          onMouseDown={onMouseDown}
+          onMouseLeave={onMouseLeave}
+          onMouseUp={onMouseUp}
+          onMouseMove={onMouseMove}
+          className="flex overflow-x-auto pb-4 -mx-4 px-4 sm:mx-0 sm:px-0 gap-3 no-scrollbar cursor-grab active:cursor-grabbing"
+        >
           {Array.from({ length: 24 }).map((_, i) => {
             const idx = next24Hours + i;
             if (idx >= hourly.time.length) return null;
             
             const timeObj = new Date(hourly.time[idx]);
-            const isNow = i === 0;
+            const isNow = activeDay === 0 && i === 0;
             const timeStr = isNow ? 'Now' : timeObj.toLocaleTimeString([], { hour: 'numeric' });
             
             return (
@@ -328,7 +364,7 @@ const Weather = () => {
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: i * 0.02 + 0.2 }}
-                className={`flex-shrink-0 snap-center w-24 p-4 rounded-[1.5rem] flex flex-col items-center justify-between text-center border transition-all ${
+                className={`flex-shrink-0 w-24 p-4 rounded-[1.5rem] flex flex-col items-center justify-between text-center border transition-all select-none pointer-events-none sm:pointer-events-auto ${
                   isNow 
                     ? 'bg-primary text-white border-primary shadow-lg shadow-primary/30' 
                     : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border-slate-100 dark:border-slate-700 shadow-sm'
@@ -354,7 +390,7 @@ const Weather = () => {
             );
           })}
         </div>
-      </div>
+      </motion.div>
 
       {/* 7-Day Forecast */}
       <div className="flex items-center justify-between mb-6">
@@ -372,13 +408,15 @@ const Weather = () => {
           return (
             <motion.div 
               key={index}
+              onClick={() => setActiveDay(index)}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 + 0.3 }}
-              whileHover={{ y: -5 }}
-              className={`saas-card p-5 flex flex-col items-center justify-between text-center min-h-[220px] transition-all duration-300 ${
-                isToday 
-                  ? 'border-primary/40 bg-primary/[0.02] dark:bg-primary/10 shadow-primary/10 shadow-xl' 
+              whileHover={{ y: -5, scale: 1.02 }}
+              whileTap={{ scale: 0.95 }}
+              className={`saas-card p-5 cursor-pointer flex flex-col items-center justify-between text-center min-h-[220px] transition-all duration-300 ${
+                index === activeDay 
+                  ? 'border-primary bg-primary/[0.05] shadow-primary/20 shadow-2xl ring-2 ring-primary/50' 
                   : 'hover:shadow-xl hover:border-slate-300 dark:hover:border-slate-600'
               }`}
             >

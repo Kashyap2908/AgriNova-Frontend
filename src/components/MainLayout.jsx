@@ -56,8 +56,10 @@ const MainLayout = () => {
     setIsDark(!isDark);
     if (!isDark) {
       document.documentElement.classList.add('dark');
+      localStorage.theme = 'dark';
     } else {
       document.documentElement.classList.remove('dark');
+      localStorage.theme = 'light';
     }
   };
 
@@ -99,7 +101,7 @@ const MainLayout = () => {
   };
 
   return (
-    <div className="min-h-screen flex bg-slate-50 dark:bg-slate-900 transition-colors">
+    <div className="h-screen w-full flex bg-slate-50 dark:bg-slate-900 transition-colors overflow-hidden">
       
       {/* Mobile Sidebar Overlay */}
       <AnimatePresence>

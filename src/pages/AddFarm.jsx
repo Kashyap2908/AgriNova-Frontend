@@ -52,8 +52,7 @@ const AddFarm = () => {
   };
 
   const isStep3Valid = () => {
-    return formData.soilType !== '' && formData.irrigationType !== '' && formData.waterAvailability !== '' &&
-           formData.nitrogen !== '' && formData.phosphorus !== '' && formData.potassium !== '' && formData.soil_ph !== '';
+    return formData.soilType !== '' && formData.irrigationType !== '' && formData.waterAvailability !== '';
   };
 
   const handleNext = (e) => {
@@ -469,20 +468,20 @@ const AddFarm = () => {
                   <h4 className="text-sm font-extrabold text-slate-800 dark:text-white mb-4">Laboratory Soil Test Data</h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Nitrogen (N) <span className="text-rose-500">*</span></label>
-                      <input type="number" name="nitrogen" required min="0" max="200" step="0.1" value={formData.nitrogen} onChange={handleChange} placeholder="0-200" className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20" />
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Nitrogen (N) <span className="text-slate-400 font-normal">(Optional)</span></label>
+                      <input type="number" name="nitrogen" min="0" max="200" step="0.1" value={formData.nitrogen} onChange={handleChange} placeholder="0-200" className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20" />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Phosphorus (P) <span className="text-rose-500">*</span></label>
-                      <input type="number" name="phosphorus" required min="0" max="200" step="0.1" value={formData.phosphorus} onChange={handleChange} placeholder="0-200" className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20" />
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Phosphorus (P) <span className="text-slate-400 font-normal">(Optional)</span></label>
+                      <input type="number" name="phosphorus" min="0" max="200" step="0.1" value={formData.phosphorus} onChange={handleChange} placeholder="0-200" className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20" />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Potassium (K) <span className="text-rose-500">*</span></label>
-                      <input type="number" name="potassium" required min="0" max="300" step="0.1" value={formData.potassium} onChange={handleChange} placeholder="0-300" className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20" />
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Potassium (K) <span className="text-slate-400 font-normal">(Optional)</span></label>
+                      <input type="number" name="potassium" min="0" max="300" step="0.1" value={formData.potassium} onChange={handleChange} placeholder="0-300" className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20" />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Soil pH <span className="text-rose-500">*</span></label>
-                      <input type="number" name="soil_ph" required min="0" max="14" step="0.1" value={formData.soil_ph} onChange={handleChange} placeholder="0-14" className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20" />
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Soil pH <span className="text-slate-400 font-normal">(Optional)</span></label>
+                      <input type="number" name="soil_ph" min="0" max="14" step="0.1" value={formData.soil_ph} onChange={handleChange} placeholder="0-14" className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20" />
                     </div>
                   </div>
 
