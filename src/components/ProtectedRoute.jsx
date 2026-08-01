@@ -5,10 +5,10 @@ import { FarmContext } from '../context/farm-context';
 
 const ProtectedRoute = () => {
   const { user, loading } = useContext(AuthContext);
-  const { farms, selectedFarm } = useContext(FarmContext);
+  const { farms, selectedFarm, isFarmsLoaded } = useContext(FarmContext);
   const location = useLocation();
 
-  if (loading) {
+  if (loading || (user && !isFarmsLoaded)) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-300">
         <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mb-3"></div>

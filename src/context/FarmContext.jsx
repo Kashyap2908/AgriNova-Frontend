@@ -8,6 +8,7 @@ export const FarmProvider = ({ children }) => {
 
   const [farms, setFarms] = useState([]);
   const [selectedFarm, setSelectedFarm] = useState(null);
+  const [isFarmsLoaded, setIsFarmsLoaded] = useState(false);
 
   // Helper to extract farm list from any response payload format
   const extractFarmList = (res) => {
@@ -43,6 +44,13 @@ export const FarmProvider = ({ children }) => {
     irrigation_type: f.irrigation_type || f.irrigationType || 'Drip Irrigation',
     waterAvailability: f.water_availability || f.waterAvailability || 'Moderate / Seasonal',
     water_availability: f.water_availability || f.waterAvailability || 'Moderate / Seasonal',
+    nitrogen: f.nitrogen,
+    phosphorus: f.phosphorus,
+    potassium: f.potassium,
+    soil_ph: f.soil_ph,
+    organic_carbon: f.organic_carbon,
+    electrical_conductivity: f.electrical_conductivity,
+    last_soil_test_date: f.last_soil_test_date,
     latitude: f.latitude,
     longitude: f.longitude,
     location: `${f.village || ''}, ${f.district || ''}, ${f.state || ''}`.replace(/^, |, $/g, ''),
@@ -56,6 +64,7 @@ export const FarmProvider = ({ children }) => {
     if (!token) {
       setFarms([]);
       setSelectedFarm(null);
+      setIsFarmsLoaded(true);
       return [];
     }
 
@@ -68,12 +77,14 @@ export const FarmProvider = ({ children }) => {
       
       const activeFarm = mappedFarms.find(f => f.is_active) || mappedFarms[0] || null;
       setSelectedFarm(activeFarm);
+      setIsFarmsLoaded(true);
 
       return mappedFarms;
     } catch (error) {
       console.error('Failed to refresh farms from backend:', error);
       setFarms([]);
       setSelectedFarm(null);
+      setIsFarmsLoaded(true);
       return [];
     }
   };
@@ -81,10 +92,12 @@ export const FarmProvider = ({ children }) => {
   // Re-sync farms whenever AuthContext user changes (Login, Logout, Startup, Profile load)
   useEffect(() => {
     if (user) {
+      setIsFarmsLoaded(false);
       refreshFarms();
     } else {
       setFarms([]);
       setSelectedFarm(null);
+      setIsFarmsLoaded(true);
     }
   }, [user]);
 
@@ -138,7 +151,7 @@ export const FarmProvider = ({ children }) => {
   };
 
   return (
-    <FarmContext.Provider value={{ farms, selectedFarm, changeFarm, selectFarm, addFarm, editFarm, deleteFarm, refreshFarms }}>
+    <FarmContext.Provider value={{ farms, selectedFarm, isFarmsLoaded, changeFarm, selectFarm, addFarm, editFarm, deleteFarm, refreshFarms }}>
       {children}
     </FarmContext.Provider>
   );

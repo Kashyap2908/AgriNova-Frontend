@@ -1,120 +1,143 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sprout, TestTube, Thermometer, Droplets, ArrowRight, CheckCircle2 } from 'lucide-react';
-import { predictCrop } from '../services/mlService';
+import { Sprout, MapPin, ArrowRight, TestTube, Scale, Droplets } from 'lucide-react';
+import { FarmContext } from '../context/farm-context';
+import { predictCropApi } from '../services/api';
+import RecommendationResult from './RecommendationResult';
+import { Link } from 'react-router-dom';
 
 const CropRecommendation = () => {
-  const [formData, setFormData] = useState({
-    N: 50,
-    P: 50,
-    K: 50,
-    temperature: 28,
-    humidity: 60,
-    ph: 6.5,
-    rainfall: 100,
-  });
-  
+  const { selectedFarm } = useContext(FarmContext);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
+  const [error, setError] = useState(null);
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: parseFloat(value) });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleGenerate = async () => {
+    if (!selectedFarm) return;
+    
     setLoading(true);
+    setError(null);
     setResult(null);
-    const prediction = await predictCrop(formData);
-    setResult(prediction);
-    setLoading(false);
+    
+    try {
+      const response = await predictCropApi(selectedFarm.id);
+      if (response.success) {
+        setResult(response.data);
+      } else {
+        setError("Failed to generate recommendation.");
+      }
+    } catch (err) {
+      console.error(err);
+      setError("An error occurred during prediction.");
+    } finally {
+      setLoading(false);
+    }
   };
+
+  if (!selectedFarm) {
+    return (
+      <div className="py-12 max-w-6xl mx-auto text-center">
+        <h2 className="text-3xl font-bold mb-4">No Farm Selected</h2>
+        <p className="mb-6">Please select a farm to generate crop recommendations.</p>
+        <Link to="/select-farm" className="px-6 py-3 bg-primary text-white rounded-xl font-bold">Select Farm</Link>
+      </div>
+    );
+  }
 
   return (
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="py-12 max-w-6xl mx-auto"
+      className="py-12 max-w-6xl mx-auto px-4 sm:px-6"
     >
       <div className="mb-10 text-center">
         <h2 className="text-4xl font-extrabold text-slate-900 dark:text-white mb-4 tracking-tight flex justify-center items-center gap-3">
-          <Sprout className="w-10 h-10 text-emerald-500" /> ML Crop Engine
+          <Sprout className="w-10 h-10 text-emerald-500" /> AI Crop Recommendation
         </h2>
-        <p className="text-slate-500 dark:text-slate-400 text-lg max-w-2xl mx-auto">
-          Input your soil metrics and local environment parameters. Our XGBoost model will analyze historical agricultural data to recommend the most profitable crop.
+        <p className="text-slate-500 dark:text-slate-400 text-lg max-w-2xl mx-auto mb-4">
+          Review your farm profile below. Our AI engine will analyze your soil data, live weather conditions, and seasonal parameters to recommend the optimal crop.
         </p>
+        <Link to="/recommendation-history" className="text-emerald-500 hover:text-emerald-600 font-bold inline-flex items-center gap-1 text-sm underline underline-offset-4">
+          View Past Recommendations
+        </Link>
       </div>
 
       <div className="flex flex-col lg:flex-row gap-8">
-        {/* Form Section */}
-        <div className="w-full lg:w-1/2 glass-card rounded-[2rem] p-8">
-          <form onSubmit={handleSubmit} className="space-y-8">
-            <div>
-              <h3 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2 mb-6 border-b border-slate-200 dark:border-slate-700 pb-4">
-                <TestTube className="w-5 h-5 text-indigo-500" /> Soil Nutrients (NPK)
-              </h3>
-              <div className="space-y-6">
-                <div>
-                  <div className="flex justify-between text-sm font-medium mb-2 text-slate-700 dark:text-slate-300">
-                    <span>Nitrogen (N)</span>
-                    <span className="text-indigo-600 dark:text-indigo-400">{formData.N}</span>
-                  </div>
-                  <input type="range" name="N" min="0" max="140" value={formData.N} onChange={handleInputChange} className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer dark:bg-slate-700 accent-indigo-500" />
+        {/* Farm Profile Read-Only Section */}
+        <div className="w-full lg:w-1/2 glass-card rounded-[2rem] p-8 flex flex-col justify-between">
+          <div>
+            <div className="border-b border-slate-200 dark:border-slate-700 pb-6 mb-6">
+              <h3 className="text-2xl font-extrabold text-slate-900 dark:text-white mb-2">{selectedFarm.name || selectedFarm.farm_name}</h3>
+              <p className="text-sm text-slate-500 flex items-center gap-2">
+                <MapPin className="w-4 h-4 text-primary" />
+                {selectedFarm.village}, {selectedFarm.district}, {selectedFarm.state}
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 mb-8">
+              <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-xl">
+                <div className="flex items-center gap-2 mb-1">
+                  <Scale className="w-4 h-4 text-primary" />
+                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wide">Area</span>
                 </div>
-                <div>
-                  <div className="flex justify-between text-sm font-medium mb-2 text-slate-700 dark:text-slate-300">
-                    <span>Phosphorus (P)</span>
-                    <span className="text-pink-600 dark:text-pink-400">{formData.P}</span>
-                  </div>
-                  <input type="range" name="P" min="0" max="145" value={formData.P} onChange={handleInputChange} className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer dark:bg-slate-700 accent-pink-500" />
+                <p className="font-bold">{selectedFarm.area || selectedFarm.farm_area} {selectedFarm.areaUnit || selectedFarm.area_unit || 'Acres'}</p>
+              </div>
+              <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-xl">
+                <div className="flex items-center gap-2 mb-1">
+                  <Droplets className="w-4 h-4 text-primary" />
+                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wide">Water</span>
                 </div>
-                <div>
-                  <div className="flex justify-between text-sm font-medium mb-2 text-slate-700 dark:text-slate-300">
-                    <span>Potassium (K)</span>
-                    <span className="text-amber-600 dark:text-amber-400">{formData.K}</span>
-                  </div>
-                  <input type="range" name="K" min="0" max="205" value={formData.K} onChange={handleInputChange} className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer dark:bg-slate-700 accent-amber-500" />
-                </div>
+                <p className="font-bold truncate" title={selectedFarm.waterAvailability || selectedFarm.water_availability}>{selectedFarm.waterAvailability || selectedFarm.water_availability}</p>
               </div>
             </div>
 
-            <div>
-              <h3 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2 mb-6 border-b border-slate-200 dark:border-slate-700 pb-4">
-                <Thermometer className="w-5 h-5 text-rose-500" /> Environment
-              </h3>
-              <div className="grid grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Temperature (°C)</label>
-                  <input type="number" name="temperature" value={formData.temperature} onChange={handleInputChange} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 focus:ring-2 focus:ring-emerald-500 outline-none transition-all dark:text-white" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Humidity (%)</label>
-                  <input type="number" name="humidity" value={formData.humidity} onChange={handleInputChange} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 focus:ring-2 focus:ring-emerald-500 outline-none transition-all dark:text-white" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">pH Level</label>
-                  <input type="number" step="0.1" name="ph" value={formData.ph} onChange={handleInputChange} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 focus:ring-2 focus:ring-emerald-500 outline-none transition-all dark:text-white" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Rainfall (mm)</label>
-                  <input type="number" name="rainfall" value={formData.rainfall} onChange={handleInputChange} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 focus:ring-2 focus:ring-emerald-500 outline-none transition-all dark:text-white" />
-                </div>
+            <h4 className="text-lg font-bold text-slate-800 dark:text-slate-200 mb-4 flex items-center gap-2">
+              <TestTube className="w-5 h-5 text-indigo-500" /> Soil Specifications
+            </h4>
+            
+            <div className="space-y-3 mb-8">
+              <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-2">
+                <span className="text-slate-600 dark:text-slate-400 text-sm">Soil Type</span>
+                <span className="font-bold">{selectedFarm.soilType || selectedFarm.soil_type}</span>
+              </div>
+              <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-2">
+                <span className="text-slate-600 dark:text-slate-400 text-sm">Nitrogen (N)</span>
+                <span className="font-bold">{selectedFarm.nitrogen !== null ? selectedFarm.nitrogen : 'N/A'} kg/ha</span>
+              </div>
+              <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-2">
+                <span className="text-slate-600 dark:text-slate-400 text-sm">Phosphorus (P)</span>
+                <span className="font-bold">{selectedFarm.phosphorus !== null ? selectedFarm.phosphorus : 'N/A'} kg/ha</span>
+              </div>
+              <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-2">
+                <span className="text-slate-600 dark:text-slate-400 text-sm">Potassium (K)</span>
+                <span className="font-bold">{selectedFarm.potassium !== null ? selectedFarm.potassium : 'N/A'} kg/ha</span>
+              </div>
+              <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-2">
+                <span className="text-slate-600 dark:text-slate-400 text-sm">Soil pH</span>
+                <span className="font-bold">{selectedFarm.soil_ph !== null ? selectedFarm.soil_ph : 'N/A'}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-600 dark:text-slate-400 text-sm">Organic Carbon</span>
+                <span className="font-bold">{selectedFarm.organic_carbon !== null ? `${selectedFarm.organic_carbon}%` : 'N/A'}</span>
               </div>
             </div>
+          </div>
 
+          <div>
+            {error && <div className="text-rose-500 text-sm font-bold text-center mb-4">{error}</div>}
+            
             <button 
-              type="submit" 
+              onClick={handleGenerate} 
               disabled={loading}
               className="w-full py-4 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/30 transition-all flex items-center justify-center gap-2 transform hover:-translate-y-1 disabled:opacity-70 disabled:transform-none"
             >
               {loading ? (
                 <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
               ) : (
-                <>Run AI Prediction <ArrowRight className="w-5 h-5" /></>
+                <>Generate Recommendation <ArrowRight className="w-5 h-5" /></>
               )}
             </button>
-          </form>
+          </div>
         </div>
 
         {/* Results Section */}
@@ -125,11 +148,11 @@ const CropRecommendation = () => {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="h-full flex flex-col items-center justify-center text-slate-400 glass-card rounded-[2rem] border-dashed border-2 border-slate-300 dark:border-slate-700 p-8 text-center"
+                className="h-full flex flex-col items-center justify-center text-slate-400 glass-card rounded-[2rem] border-dashed border-2 border-slate-300 dark:border-slate-700 p-8 text-center min-h-[400px]"
               >
                 <Sprout className="w-20 h-20 mb-4 opacity-50" />
-                <h3 className="text-xl font-bold mb-2 text-slate-500 dark:text-slate-400">Awaiting Data</h3>
-                <p>Adjust the parameters on the left and run the prediction to see AI recommendations.</p>
+                <h3 className="text-xl font-bold mb-2 text-slate-500 dark:text-slate-400">Ready to Analyze</h3>
+                <p>Click "Generate Recommendation" to fetch real-time weather and analyze your farm's parameters.</p>
               </motion.div>
             )}
 
@@ -139,50 +162,19 @@ const CropRecommendation = () => {
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
-                className="h-full flex flex-col items-center justify-center bg-slate-900 text-white rounded-[2rem] p-8 shadow-2xl relative overflow-hidden"
+                className="h-full flex flex-col items-center justify-center bg-slate-900 text-white rounded-[2rem] p-8 shadow-2xl relative overflow-hidden min-h-[400px]"
               >
                 <div className="absolute inset-0 bg-emerald-500/20 blur-[100px] animate-pulse"></div>
                 <div className="relative z-10 flex flex-col items-center">
                   <div className="w-16 h-16 border-4 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin mb-6"></div>
-                  <h3 className="text-2xl font-bold mb-2">Analyzing Tensor Data...</h3>
-                  <p className="text-emerald-400 font-mono">XGBoost inference in progress</p>
+                  <h3 className="text-2xl font-bold mb-2">Analyzing Farm Data...</h3>
+                  <p className="text-emerald-400 font-mono">Fetching weather & running AI inference</p>
                 </div>
               </motion.div>
             )}
 
             {result && !loading && (
-              <motion.div 
-                key="result"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                className="h-full bg-gradient-to-br from-emerald-500 to-teal-600 rounded-[2rem] p-10 text-white shadow-2xl shadow-emerald-500/30 flex flex-col justify-center relative overflow-hidden"
-              >
-                <div className="absolute -top-10 -right-10 opacity-10">
-                  <Sprout className="w-64 h-64" />
-                </div>
-                <div className="relative z-10">
-                  <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-md rounded-full font-bold text-sm mb-8">
-                    <CheckCircle2 className="w-5 h-5 text-emerald-100" /> Prediction Complete
-                  </div>
-                  
-                  <p className="text-emerald-100 font-medium uppercase tracking-widest text-sm mb-2">Recommended Crop</p>
-                  <h3 className="text-6xl font-extrabold mb-6 tracking-tight">{result.crop}</h3>
-                  
-                  <div className="bg-black/20 backdrop-blur-md rounded-2xl p-6 border border-white/10 mb-6">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="font-semibold">Model Confidence</span>
-                      <span className="font-bold text-xl">{result.confidence}%</span>
-                    </div>
-                    <div className="w-full bg-black/30 rounded-full h-2 mt-2">
-                      <div className="bg-emerald-400 h-2 rounded-full" style={{ width: `${result.confidence}%` }}></div>
-                    </div>
-                  </div>
-                  
-                  <p className="text-emerald-50 text-lg leading-relaxed bg-white/10 p-6 rounded-2xl border border-white/5">
-                    {result.details}
-                  </p>
-                </div>
-              </motion.div>
+              <RecommendationResult result={result} />
             )}
           </AnimatePresence>
         </div>

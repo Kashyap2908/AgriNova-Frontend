@@ -331,6 +331,42 @@ const SelectFarm = () => {
                   </div>
                 </div>
 
+                <div className="border-t border-slate-100 dark:border-slate-800 pt-4 mt-4">
+                  <h4 className="text-sm font-bold text-slate-800 dark:text-white mb-3">Soil Test Data</h4>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">Nitrogen (N) *</label>
+                      <input type="number" required min="0" max="200" step="0.1" value={editingFarm.nitrogen || ''} onChange={(e) => setEditingFarm({ ...editingFarm, nitrogen: e.target.value })} className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white" />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">Phosphorus (P) *</label>
+                      <input type="number" required min="0" max="200" step="0.1" value={editingFarm.phosphorus || ''} onChange={(e) => setEditingFarm({ ...editingFarm, phosphorus: e.target.value })} className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white" />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">Potassium (K) *</label>
+                      <input type="number" required min="0" max="300" step="0.1" value={editingFarm.potassium || ''} onChange={(e) => setEditingFarm({ ...editingFarm, potassium: e.target.value })} className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white" />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">Soil pH *</label>
+                      <input type="number" required min="0" max="14" step="0.1" value={editingFarm.soil_ph || ''} onChange={(e) => setEditingFarm({ ...editingFarm, soil_ph: e.target.value })} className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white" />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">Org. Carbon</label>
+                      <input type="number" min="0" step="0.01" value={editingFarm.organic_carbon || ''} onChange={(e) => setEditingFarm({ ...editingFarm, organic_carbon: e.target.value })} className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white" />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">Elec. Cond.</label>
+                      <input type="number" min="0" step="0.01" value={editingFarm.electrical_conductivity || ''} onChange={(e) => setEditingFarm({ ...editingFarm, electrical_conductivity: e.target.value })} className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white" />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">Test Date</label>
+                      <input type="date" value={editingFarm.last_soil_test_date || ''} onChange={(e) => setEditingFarm({ ...editingFarm, last_soil_test_date: e.target.value })} className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white" />
+                    </div>
+                  </div>
+                </div>
+
                 <div className="pt-4 flex gap-3">
                   <button 
                     type="button"

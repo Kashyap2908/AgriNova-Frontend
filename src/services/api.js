@@ -144,4 +144,20 @@ export const geocodeLocation = async ({ village, taluka, district, state }) => {
   return null;
 };
 
+// Recommendation API Service
+export const predictCropApi = async (farmId) => {
+  const response = await api.post('/recommendation/predict/', { farm_id: farmId });
+  return response.data;
+};
+
+export const fetchRecommendationHistoryApi = async () => {
+  const response = await api.get('/recommendation/history/');
+  return response.data;
+};
+
+export const fetchRecommendationDetailApi = async (id) => {
+  const response = await api.get(`/recommendation/history/${id}/`);
+  return response.data;
+};
+
 export default api;

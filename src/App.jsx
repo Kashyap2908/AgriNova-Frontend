@@ -14,9 +14,11 @@ import Profile from './pages/Profile';
 
 import Dashboard from './pages/Dashboard';
 import CropRecommendation from './pages/CropRecommendation';
-import DiseaseDetection from './pages/DiseaseDetection';
 import AddFarm from './pages/AddFarm';
 import SelectFarm from './pages/SelectFarm';
+import RecommendationHistory from './pages/RecommendationHistory';
+import DiseaseDetection from './pages/DiseaseDetection';
+import Weather from './pages/Weather';
 
 // Only used on Landing Page
 const LandingNavigation = () => {
@@ -165,13 +167,13 @@ const AnimatedRoutes = () => {
             <Route path="/complete-profile" element={<Profile />} />
             <Route path="/add-farm" element={<AddFarm />} />
             <Route path="/select-farm" element={<SelectFarm />} />
-            <Route path="/manage-farms" element={<SelectFarm />} />
             <Route path="/farms" element={<SelectFarm />} />
             <Route path="/crop-recommendation" element={<CropRecommendation />} />
+            <Route path="/recommendation-history" element={<RecommendationHistory />} />
             <Route path="/disease-detection" element={<DiseaseDetection />} />
             
-            {/* Nav placeholders */}
-            <Route path="/weather" element={<Dashboard />} />
+            {/* Modules */}
+            <Route path="/weather" element={<Weather />} />
             <Route path="/yield-prediction" element={<Dashboard />} />
             <Route path="/profit-prediction" element={<Dashboard />} />
             <Route path="/market-forecast" element={<Dashboard />} />
