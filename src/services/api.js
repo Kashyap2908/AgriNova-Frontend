@@ -151,8 +151,15 @@ export const geocodeLocation = async ({ village, taluka, district, state }) => {
 };
 
 // Recommendation API Service
-export const predictCropApi = async (farmId) => {
-  const response = await api.post('/recommendation/predict/', { farm_id: farmId });
+export const predictCropApi = async (payload) => {
+  // Accepts either farmId integer or full payload object
+  const body = typeof payload === 'object' ? payload : { farm_id: payload };
+  const response = await api.post('/recommendation/predict/', body);
+  return response.data;
+};
+
+export const fetchAvailableCropsApi = async (farmId) => {
+  const response = await api.get(`/recommendation/crops/${farmId}/`);
   return response.data;
 };
 
