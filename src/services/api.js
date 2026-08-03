@@ -173,4 +173,42 @@ export const fetchRecommendationDetailApi = async (id) => {
   return response.data;
 };
 
+// Market Forecast API Service
+export const fetchMarketIntelligenceApi = async (farmId) => {
+  try {
+    const response = await api.get(`/market-forecast/intelligence/?farm_id=${farmId}`);
+    return { success: true, data: response.data.data };
+  } catch (error) {
+    console.error('Market Intelligence error:', error);
+    return { 
+      success: false, 
+      message: error.response?.data?.message || 'Failed to fetch market intelligence' 
+    };
+  }
+};
+
+export const fetchMarketForecastHistoryApi = async () => {
+  const response = await api.get('/market-forecast/history/');
+  return response.data;
+};
+
+export const fetchMarketForecastDetailApi = async (id) => {
+  const response = await api.get(`/market-forecast/history/${id}/`);
+  return response.data;
+};
+
 export default api;
+
+export const fetchHistoricalMarketDataApi = async (crop, state, district = "all", days = 30) => {
+  try {
+    const response = await api.get(`/market-forecast/explorer/?crop=${crop}&state=${state}&district=${district}&days=${days}`);
+    return { success: true, data: response.data.data };
+  } catch (error) {
+    console.error("Historical Explorer error:", error);
+    return { 
+      success: false, 
+      message: error.response?.data?.message || "Failed to fetch historical market data." 
+    };
+  }
+};
+

@@ -79,7 +79,7 @@ const MainLayout = () => {
         { label: 'Crop Recommendation', icon: Sprout, to: '/crop-recommendation' },
         { label: 'Yield Prediction', icon: TrendingUp, to: '/yield-prediction' },
         { label: 'Profit Prediction', icon: IndianRupee, to: '/profit-prediction' },
-        { label: 'Market Forecast', icon: BarChart3, to: '/market-forecast' },
+        { label: 'Market Intelligence', icon: BarChart3, to: '/market-intelligence' },
         { label: 'Disease Detection', icon: ImagePlus, to: '/disease-detection' },
         { label: 'Pest Prediction', icon: Bug, to: '/pest-prediction' },
       ]
@@ -115,7 +115,7 @@ const MainLayout = () => {
       </AnimatePresence>
 
       {/* Sidebar */}
-      <aside className={`fixed inset-y-0 left-0 z-50 w-72 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 transform transition-transform duration-300 lg:translate-x-0 lg:static lg:flex-shrink-0 flex flex-col ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <aside className={`print:hidden fixed inset-y-0 left-0 z-50 w-72 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 transform transition-transform duration-300 lg:translate-x-0 lg:static lg:flex-shrink-0 flex flex-col ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         
         {/* Logo */}
         <div className="h-20 flex items-center px-8 border-b border-slate-200 dark:border-slate-800">
@@ -170,7 +170,7 @@ const MainLayout = () => {
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
         
         {/* Topbar */}
-        <header className="h-20 bg-white/80 dark:bg-slate-900/80 backdrop-blur-lg border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-4 sm:px-8 z-30 flex-shrink-0">
+        <header className="print:hidden h-20 bg-white/80 dark:bg-slate-900/80 backdrop-blur-lg border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-4 sm:px-8 z-30 flex-shrink-0">
           <div className="flex items-center gap-4">
             <button onClick={() => setIsSidebarOpen(true)} className="p-2 -ml-2 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 lg:hidden">
               <Menu className="w-6 h-6" />
@@ -304,7 +304,7 @@ const MainLayout = () => {
       </div>
 
       {/* Floating AI Chat Widget Button */}
-      <div className="fixed bottom-6 right-6 z-50">
+      <div className="fixed bottom-6 right-6 z-50 print:hidden">
         <button 
           onClick={() => setAiChatOpen(!aiChatOpen)}
           className="group flex items-center justify-center w-14 h-14 bg-primary hover:bg-primary-dark text-white rounded-full shadow-[0_8px_30px_rgb(22,163,74,0.3)] transition-all transform hover:scale-105 hover:-translate-y-1 relative"

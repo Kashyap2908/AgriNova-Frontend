@@ -19,6 +19,8 @@ import SelectFarm from './pages/SelectFarm';
 import RecommendationHistory from './pages/RecommendationHistory';
 import DiseaseDetection from './pages/DiseaseDetection';
 import Weather from './pages/Weather';
+import MarketIntelligence from './pages/MarketIntelligence';
+import MarketIntelligenceHistory from './pages/MarketIntelligenceHistory';
 
 // Only used on Landing Page
 const LandingNavigation = () => {
@@ -174,9 +176,10 @@ const AnimatedRoutes = () => {
             
             {/* Modules */}
             <Route path="/weather" element={<Weather />} />
+            <Route path="/market-intelligence" element={<MarketIntelligence />} />
+            <Route path="/market-intelligence/history" element={<MarketIntelligenceHistory />} />
             <Route path="/yield-prediction" element={<Dashboard />} />
             <Route path="/profit-prediction" element={<Dashboard />} />
-            <Route path="/market-forecast" element={<Dashboard />} />
             <Route path="/pest-prediction" element={<Dashboard />} />
             <Route path="/fertilizers" element={<Dashboard />} />
             <Route path="/irrigation" element={<Dashboard />} />
