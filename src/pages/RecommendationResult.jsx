@@ -1,9 +1,12 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   CheckCircle2, Sprout, Cloud, Droplets, Thermometer, Wind,
-  TrendingUp, Cpu, Zap, Layers, Medal, Award, Star
+  TrendingUp, Cpu, Zap, Layers, Medal, Award, Star, Store, IndianRupee, RefreshCw,
+  BarChart2, ArrowRight, ChevronDown
 } from 'lucide-react';
+import { fetchCropMarketPriceApi, fetchAvailableCropsApi } from '../services/api';
 
 // ─── Rank Badge ────────────────────────────────────────────────────────────────
 const RankBadge = ({ rank }) => {
@@ -90,21 +93,55 @@ const RecommendationResult = ({ result }) => {
 
   const { recommendation, recommendations, weather, season, mode, type, farm } = result;
 
-  // Determine which list to render:
-  //   - Use new recommendations[] array if present (new API shape)
-  //   - Fall back to old comparison[] or single crop for backward compat
   const isBest    = type === 'BEST';
   const isCompare = type === 'COMPARE';
 
-  // New multi-crop list (present for both BEST and COMPARE in new API)
   const multiList = Array.isArray(recommendations) && recommendations.length > 0
     ? recommendations
     : null;
 
-  // Old compare fallback
   const legacyCompare = !multiList && recommendation.comparison?.length > 0
     ? recommendation.comparison
     : null;
+
+  // Selected crop for live market price lookup
+  const initialCrop = multiList ? multiList[0].crop : (recommendation.crop || "Cotton");
+  const [selectedCrop, setSelectedCrop] = useState(initialCrop);
+  const [marketPriceData, setMarketPriceData] = useState(null);
+  const [marketLoading, setMarketLoading] = useState(false);
+
+  const candidateCrops = multiList ? multiList.map(item => item.crop) : [initialCrop];
+  const [allCropsList, setAllCropsList] = useState(candidateCrops);
+
+  useEffect(() => {
+    if (farm?.id) {
+      fetchAvailableCropsApi(farm.id)
+        .then(res => {
+          if (res.success && res.data?.crops) {
+            setAllCropsList(Array.from(new Set([...candidateCrops, ...res.data.crops])));
+          }
+        })
+        .catch(err => console.warn(err));
+    }
+  }, [farm?.id]);
+
+  // Fetch market data from MarketCache / API whenever selectedCrop changes
+  useEffect(() => {
+    let isMounted = true;
+    if (selectedCrop) {
+      setMarketLoading(true);
+      fetchCropMarketPriceApi(selectedCrop, farm?.id)
+        .then(res => {
+          if (isMounted && res.success) {
+            setMarketPriceData(res.data);
+          }
+        })
+        .finally(() => {
+          if (isMounted) setMarketLoading(false);
+        });
+    }
+    return () => { isMounted = false; };
+  }, [selectedCrop, farm?.id]);
 
   return (
     <motion.div
@@ -133,17 +170,15 @@ const RecommendationResult = ({ result }) => {
           </div>
         </div>
 
-        {/* ── NEW: Multi-Crop Recommendations List ── */}
+        {/* ── Multi-Crop Recommendations List ── */}
         {multiList ? (
           <div>
             <p className="text-emerald-200 font-bold uppercase tracking-widest text-xs mb-3">
               {isBest ? 'Top Recommended Crops' : 'Selected Crops — Ranked by Suitability'}
             </p>
 
-            {/* Rank #1 gets a prominent primary card */}
             <PrimaryCard item={multiList[0]} />
 
-            {/* Ranks 2–N as compact cards */}
             {multiList.length > 1 && (
               <div className="space-y-2 mt-3">
                 {multiList.slice(1).map((item, idx) => (
@@ -182,7 +217,6 @@ const RecommendationResult = ({ result }) => {
               </div>
             </div>
 
-            {/* Legacy comparison section */}
             {legacyCompare && (
               <div>
                 <p className="text-xs font-bold uppercase tracking-wider text-emerald-200 mb-2">Side-by-Side Crop Comparison</p>
@@ -204,6 +238,89 @@ const RecommendationResult = ({ result }) => {
             )}
           </>
         )}
+
+        {/* ── CROP MARKET PRICE INTEGRATION (MarketCache Instant Check) ── */}
+        <div className="bg-black/30 backdrop-blur-md rounded-2xl p-5 border border-amber-400/30 space-y-3">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+            <p className="text-xs font-bold uppercase tracking-wider text-amber-300 flex items-center gap-1.5">
+              <Store className="w-4 h-4 text-amber-400" /> Market Intelligence (APMC Price)
+            </p>
+            {/* Crop Selection Dropdown & Quick Chips */}
+            <div className="flex flex-wrap items-center gap-1.5 w-full sm:w-auto">
+              <div className="relative flex-1 sm:flex-none">
+                <select
+                  value={selectedCrop}
+                  onChange={(e) => setSelectedCrop(e.target.value)}
+                  className="w-full sm:w-44 bg-black/50 text-white font-bold text-xs border border-white/20 rounded-lg px-2.5 py-1 pr-7 appearance-none cursor-pointer outline-none focus:border-amber-400"
+                >
+                  <optgroup label="Recommended Crops">
+                    {candidateCrops.map(c => (
+                      <option key={c} value={c} className="bg-slate-900 text-white">{c} (Ranked)</option>
+                    ))}
+                  </optgroup>
+                  <optgroup label="All Available Crops">
+                    {allCropsList.filter(c => !candidateCrops.includes(c)).map(c => (
+                      <option key={c} value={c} className="bg-slate-900 text-white">{c}</option>
+                    ))}
+                  </optgroup>
+                </select>
+                <ChevronDown className="w-3.5 h-3.5 text-slate-300 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Chip Shortcuts for Candidate Crops */}
+          <div className="flex flex-wrap gap-1.5 pt-0.5">
+            <span className="text-[10px] text-emerald-200/80 font-semibold self-center mr-1">Quick Select:</span>
+            {candidateCrops.map(cropName => (
+              <button
+                key={cropName}
+                onClick={() => setSelectedCrop(cropName)}
+                className={`px-2 py-0.5 rounded-md text-[11px] font-bold transition-all ${
+                  selectedCrop === cropName 
+                    ? 'bg-amber-400 text-slate-950 font-black shadow' 
+                    : 'bg-white/10 text-white/80 hover:bg-white/20'
+                }`}
+              >
+                {cropName}
+              </button>
+            ))}
+          </div>
+
+          {marketLoading ? (
+            <div className="py-4 text-center text-amber-200/60 text-xs font-mono flex items-center justify-center gap-2">
+              <RefreshCw className="w-3.5 h-3.5 animate-spin" /> Checking MarketCache...
+            </div>
+          ) : marketPriceData?.current_price ? (
+            <div className="space-y-3">
+              <div className="grid grid-cols-3 gap-3 text-center pt-1">
+                <div className="bg-black/30 p-2.5 rounded-xl border border-white/10">
+                  <span className="text-[10px] text-emerald-200 uppercase font-bold block">Min Price</span>
+                  <span className="font-extrabold text-sm text-white">₹{marketPriceData.current_price.minimum_price}</span>
+                </div>
+                <div className="bg-amber-400/20 p-2.5 rounded-xl border border-amber-400/30">
+                  <span className="text-[10px] text-amber-300 uppercase font-bold block">Modal Price</span>
+                  <span className="font-black text-base text-amber-300">₹{marketPriceData.current_price.modal_price}</span>
+                </div>
+                <div className="bg-black/30 p-2.5 rounded-xl border border-white/10">
+                  <span className="text-[10px] text-emerald-200 uppercase font-bold block">Max Price</span>
+                  <span className="font-extrabold text-sm text-white">₹{marketPriceData.current_price.maximum_price}</span>
+                </div>
+              </div>
+
+              <Link
+                to={`/market-intelligence?crop=${encodeURIComponent(selectedCrop)}`}
+                className="w-full flex items-center justify-center gap-1.5 py-2 px-3 bg-amber-400/20 hover:bg-amber-400/30 text-amber-300 text-xs font-extrabold rounded-xl border border-amber-400/40 transition-all group"
+              >
+                <BarChart2 className="w-3.5 h-3.5" />
+                View Full Market Intelligence & Predictions for {selectedCrop}
+                <ArrowRight className="w-3.5 h-3.5 transform group-hover:translate-x-1 transition-transform" />
+              </Link>
+            </div>
+          ) : (
+            <p className="text-xs text-emerald-200/70 text-center py-2">Select a crop above to load MarketCache APMC prices.</p>
+          )}
+        </div>
 
         {/* ── Weather Snapshot Grid ── */}
         {weather && (

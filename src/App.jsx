@@ -21,7 +21,6 @@ import DiseaseDetection from './pages/DiseaseDetection';
 import Weather from './pages/Weather';
 import MarketIntelligence from './pages/MarketIntelligence';
 import MarketIntelligenceHistory from './pages/MarketIntelligenceHistory';
-import AIAssistant from './pages/AIAssistant';
 
 // Only used on Landing Page
 
@@ -186,7 +185,7 @@ const AnimatedRoutes = () => {
             <Route path="/fertilizers" element={<Dashboard />} />
             <Route path="/irrigation" element={<Dashboard />} />
             <Route path="/analytics" element={<Dashboard />} />
-            <Route path="/assistant" element={<AIAssistant />} />
+            <Route path="/assistant" element={<Dashboard />} />
             <Route path="/settings" element={<Dashboard />} />
           </Route>
         </Route>

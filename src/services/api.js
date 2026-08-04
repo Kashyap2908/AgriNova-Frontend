@@ -174,9 +174,13 @@ export const fetchRecommendationDetailApi = async (id) => {
 };
 
 // Market Forecast API Service
-export const fetchMarketIntelligenceApi = async (farmId) => {
+export const fetchMarketIntelligenceApi = async (farmId, crop = null) => {
   try {
-    const response = await api.get(`/market-forecast/intelligence/?farm_id=${farmId}`);
+    let url = `/market-forecast/intelligence/?farm_id=${farmId}`;
+    if (crop) {
+      url += `&crop=${encodeURIComponent(crop)}`;
+    }
+    const response = await api.get(url);
     return { success: true, data: response.data.data };
   } catch (error) {
     console.error('Market Intelligence error:', error);
@@ -186,6 +190,24 @@ export const fetchMarketIntelligenceApi = async (farmId) => {
     };
   }
 };
+
+export const fetchCropMarketPriceApi = async (crop, farmId = null) => {
+  try {
+    let url = `/market-forecast/crop-price/?crop=${encodeURIComponent(crop)}`;
+    if (farmId) {
+      url += `&farm_id=${farmId}`;
+    }
+    const response = await api.get(url);
+    return { success: true, data: response.data.data };
+  } catch (error) {
+    console.error('Crop Market Price error:', error);
+    return {
+      success: false,
+      message: error.response?.data?.message || 'Failed to fetch crop market price'
+    };
+  }
+};
+
 
 export const fetchMarketForecastHistoryApi = async () => {
   const response = await api.get('/market-forecast/history/');

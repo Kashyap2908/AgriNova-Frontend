@@ -1,9 +1,13 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LineChart, BarChart2, Compass, AlertCircle, RefreshCw, Download, ArrowRight, ShieldCheck, MapPin, Store, IndianRupee, Activity, Target, Leaf } from 'lucide-react';
+import { 
+  LineChart, BarChart2, Compass, AlertCircle, RefreshCw, Download, 
+  ArrowRight, ShieldCheck, MapPin, Store, IndianRupee, Activity, Target, 
+  Leaf, Calendar, TrendingUp, TrendingDown, Sparkles, Cpu, Layers, Sprout, ChevronDown
+} from 'lucide-react';
 import { FarmContext } from '../context/farm-context';
-import { fetchMarketIntelligenceApi } from '../services/api';
+import { fetchMarketIntelligenceApi, fetchAvailableCropsApi } from '../services/api';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -30,21 +34,35 @@ ChartJS.register(
 
 const MarketIntelligence = () => {
   const { selectedFarm, isFarmsLoaded } = useContext(FarmContext);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const urlCrop = searchParams.get('crop');
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [data, setData] = useState(null);
-  const [historicalFilter, setHistoricalFilter] = useState('30D');
+  const [historicalTab, setHistoricalTab] = useState('Weekly'); // 'Weekly', 'Monthly', 'Yearly'
+  const [selectedCrop, setSelectedCrop] = useState(urlCrop || '');
+  const [availableCrops, setAvailableCrops] = useState([
+    'Cotton', 'Rice', 'Wheat', 'Maize', 'Sugarcane', 
+    'Soybean', 'Groundnut', 'Mungbean', 'Tomato', 'Onion', 
+    'Jowar', 'Bajra', 'Pulses'
+  ]);
 
-  const fetchIntelligence = async () => {
+  const fetchIntelligence = async (targetCrop = null) => {
     if (!selectedFarm) return;
     
     setLoading(true);
     setError(null);
     
+    const cropToFetch = targetCrop !== null ? targetCrop : (selectedCrop || urlCrop || null);
+
     try {
-      const response = await fetchMarketIntelligenceApi(selectedFarm.id);
+      const response = await fetchMarketIntelligenceApi(selectedFarm.id, cropToFetch);
       if (response.success) {
         setData(response.data);
+        if (response.data.crop && !selectedCrop) {
+          setSelectedCrop(response.data.crop);
+        }
       } else {
         setError(response.message || 'Failed to retrieve market intelligence.');
       }
@@ -59,10 +77,23 @@ const MarketIntelligence = () => {
   useEffect(() => {
     if (selectedFarm) {
       fetchIntelligence();
+      fetchAvailableCropsApi(selectedFarm.id)
+        .then(res => {
+          if (res.success && res.data?.crops) {
+            setAvailableCrops(prev => Array.from(new Set([...res.data.crops, ...prev])));
+          }
+        })
+        .catch(err => console.warn("Available crops fetch error:", err));
     } else {
       setData(null);
     }
   }, [selectedFarm]);
+
+  const handleCropChange = (newCrop) => {
+    setSelectedCrop(newCrop);
+    setSearchParams({ crop: newCrop });
+    fetchIntelligence(newCrop);
+  };
 
   const handlePrint = () => {
     window.print();
@@ -106,7 +137,7 @@ const MarketIntelligence = () => {
          <AlertCircle className="w-12 h-12 text-rose-500 mb-4" />
          <h2 className="text-xl font-bold text-slate-800 dark:text-white mb-2">Intelligence Fetch Failed</h2>
          <p className="text-slate-500 dark:text-slate-400 mb-6">{error}</p>
-         <button onClick={fetchIntelligence} className="px-6 py-2.5 bg-primary text-white font-bold rounded-xl flex items-center gap-2">
+         <button onClick={fetchIntelligence} className="px-6 py-2.5 bg-emerald-600 text-white font-bold rounded-xl flex items-center gap-2">
             <RefreshCw className="w-4 h-4" /> Retry Connection
          </button>
       </div>
@@ -116,44 +147,50 @@ const MarketIntelligence = () => {
   if (!data) return null;
 
   const {
-    crop, best_market, best_modal_price, trend, analytics_data, markets_data, created_at
+    crop, state, district, market, current_price, weekly_price_history,
+    monthly_price_history, yearly_price_history, predictions, markets_data, trend
   } = data;
 
-  const stats = analytics_data?.statistics || {};
-  const brief = analytics_data?.ai_market_brief || [];
-  const insights = analytics_data?.market_insights || [];
-  const bestWindow = analytics_data?.best_selling_window || {};
-  const historicalTrends = analytics_data?.historical_trends || {};
-  
-  const currentTrendData = historicalTrends[historicalFilter] || [];
+  const currentInfo = current_price || {};
+
+  // Select historical graph dataset based on tab
+  let historicalDataset = [];
+  if (historicalTab === 'Weekly') historicalDataset = weekly_price_history || [];
+  else if (historicalTab === 'Monthly') historicalDataset = monthly_price_history || [];
+  else historicalDataset = yearly_price_history || [];
 
   const lineChartData = {
-    labels: currentTrendData.map(d => d.date),
+    labels: historicalDataset.map(d => d.date),
     datasets: [
       {
         label: 'Modal Price (₹)',
-        data: currentTrendData.map(d => d.price),
-        borderColor: '#0ea5e9',
-        backgroundColor: 'rgba(14, 165, 233, 0.15)',
+        data: historicalDataset.map(d => d.modal_price),
+        borderColor: '#10b981',
+        backgroundColor: 'rgba(16, 185, 129, 0.15)',
         fill: true,
-        tension: 0.4,
+        tension: 0.3,
         borderWidth: 3,
         pointBackgroundColor: '#ffffff',
-        pointBorderColor: '#0ea5e9',
-        pointRadius: 4,
-        pointHoverRadius: 6,
-        pointBorderWidth: 2,
+        pointBorderColor: '#10b981',
+        pointRadius: 3,
       },
       {
-        label: 'Regional Average (₹)',
-        data: currentTrendData.map(() => stats.average_price || 0),
+        label: 'Min Price (₹)',
+        data: historicalDataset.map(d => d.min_price),
         borderColor: '#94a3b8',
-        borderDash: [6, 6],
-        borderWidth: 2,
+        borderDash: [4, 4],
+        borderWidth: 1.5,
         pointRadius: 0,
-        pointHoverRadius: 0,
         fill: false,
-        tension: 0,
+      },
+      {
+        label: 'Max Price (₹)',
+        data: historicalDataset.map(d => d.max_price),
+        borderColor: '#3b82f6',
+        borderDash: [4, 4],
+        borderWidth: 1.5,
+        pointRadius: 0,
+        fill: false,
       }
     ]
   };
@@ -162,218 +199,314 @@ const MarketIntelligence = () => {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
-      legend: { 
-        display: true, 
-        position: 'top',
-        labels: {
-          usePointStyle: true,
-          boxWidth: 8,
-          color: '#64748b',
-          font: { weight: 'bold' }
-        }
-      },
-      tooltip: {
-        mode: 'index',
-        intersect: false,
-        backgroundColor: 'rgba(15, 23, 42, 0.9)',
-        titleColor: '#ffffff',
-        bodyColor: '#cbd5e1',
-        borderColor: '#334155',
-        borderWidth: 1,
-        padding: 12,
-        boxPadding: 6,
-        usePointStyle: true,
-      },
+      legend: { display: true, position: 'top' },
+      tooltip: { mode: 'index', intersect: false }
     },
     scales: {
-      y: { 
-        min: stats.lowest_price ? Math.floor(stats.lowest_price * 0.9) : 0,
-        grid: { color: 'rgba(148, 163, 184, 0.1)' },
-        ticks: { color: '#64748b', font: { weight: 'bold' } }
-      },
-      x: { 
-        grid: { display: false },
-        ticks: { color: '#64748b', maxRotation: 45, minRotation: 45 }
-      }
-    },
-    interaction: {
-      mode: 'nearest',
-      axis: 'x',
-      intersect: false
+      y: { grid: { color: 'rgba(148, 163, 184, 0.1)' } },
+      x: { grid: { display: false } }
     }
+  };
+
+  // Predictions
+  const shortTerm10Days = predictions?.short_term_10_days || [];
+  const mediumTermMonths = predictions?.medium_term_months || [];
+
+  // Short term chart data
+  const shortTermChartData = {
+    labels: shortTerm10Days.map(d => d.date),
+    datasets: [
+      {
+        label: 'Predicted Modal Price (₹)',
+        data: shortTerm10Days.map(d => d.predicted_modal_price),
+        borderColor: '#8b5cf6',
+        backgroundColor: 'rgba(139, 92, 246, 0.15)',
+        fill: true,
+        tension: 0.3,
+        borderWidth: 3,
+        pointBackgroundColor: '#ffffff',
+        pointBorderColor: '#8b5cf6',
+        pointRadius: 4,
+      }
+    ]
   };
 
   return (
     <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-8 print:p-0 print:max-w-full print:m-0" id="intelligence-dashboard">
       
-      {/* Header & Print */}
+      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white flex items-center gap-3">
-            <div className="p-2.5 bg-primary/10 text-primary rounded-xl">
+            <div className="p-2.5 bg-emerald-500/10 text-emerald-500 rounded-xl">
               <BarChart2 className="w-7 h-7" />
             </div>
-            Market Intelligence
+            Market Intelligence Engine
           </h1>
           <p className="mt-2 text-slate-500 dark:text-slate-400 font-medium">
-            Live executive dashboard for {selectedFarm.farm_name} ({crop}).
+            AI-driven price predictions & rolling cache analytics for {selectedFarm.farm_name} ({crop}).
           </p>
         </div>
         <div className="flex items-center gap-3 print:hidden">
           <button 
             onClick={handlePrint}
-            className="flex items-center gap-2 px-4 py-2 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800/50 rounded-xl hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition-colors font-semibold text-sm shadow-sm"
+            className="flex items-center gap-2 px-4 py-2 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800/50 rounded-xl hover:bg-indigo-100 transition-colors font-semibold text-sm shadow-sm"
           >
             <Download className="w-4 h-4" /> Download Report
           </button>
-          <Link 
-            to="/market-intelligence/history" 
-            className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors font-semibold text-sm shadow-sm"
-          >
-            History & Logs
-          </Link>
         </div>
       </div>
 
-      {/* Section 1: Market Summary KPIs */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 print:grid-cols-3 print:gap-2 print:break-inside-avoid">
-        {[
-          { label: 'Current Crop', value: crop, icon: Leaf },
-          { label: 'Top Modal Price', value: `₹${best_modal_price || 0}`, icon: IndianRupee },
-          { label: 'Best Market', value: best_market?.split(' ')[0] || 'N/A', icon: Store },
-          { label: 'Market Trend', value: trend || 'STABLE', icon: trend === 'UP' ? LineChart : Activity },
-          { label: 'Regional Avg', value: `₹${stats.average_price || 0}`, icon: Target },
-          { label: 'Last Updated', value: created_at ? new Date(created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'N/A', icon: RefreshCw },
-        ].map((kpi, idx) => (
-          <div key={idx} className="bg-white/80 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col justify-center backdrop-blur-md">
-            <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{kpi.label}</p>
-            <div className="flex items-center gap-2 mt-2">
-              <kpi.icon className="w-4 h-4 text-primary opacity-80" />
-              <span className="text-lg font-extrabold text-slate-800 dark:text-white truncate">{kpi.value}</span>
+      {/* ── CROP SELECTION DROPDOWN CONTROL BAR ── */}
+      <div className="bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="flex items-center gap-3">
+          <div className="p-3 bg-amber-500/10 text-amber-500 rounded-2xl">
+            <Sprout className="w-6 h-6" />
+          </div>
+          <div>
+            <label htmlFor="crop-select-main" className="text-xs font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
+              Select Crop to Analyze
+            </label>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              Active Crop: <strong className="text-emerald-600 dark:text-emerald-400 font-bold">{crop}</strong> (Loads from MarketCache instantly)
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+          <div className="relative w-full sm:w-72">
+            <select
+              id="crop-select-main"
+              value={selectedCrop || crop || ''}
+              onChange={(e) => handleCropChange(e.target.value)}
+              className="w-full appearance-none bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-2xl px-4 py-3 pr-10 text-sm font-extrabold text-slate-800 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none cursor-pointer transition-all shadow-sm"
+            >
+              {crop && !availableCrops.includes(crop) && (
+                <option value={crop}>{crop} (Current Selected)</option>
+              )}
+              {availableCrops.map((cName) => (
+                <option key={cName} value={cName}>
+                  {cName} {cName === crop ? '★ (Top Recommended)' : ''}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+          </div>
+        </div>
+      </div>
+
+      {/* SECTION 1: Current Market Price Card */}
+      <div className="bg-gradient-to-br from-emerald-600 via-teal-700 to-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden">
+        <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
+          <Store className="w-48 h-48 text-white" />
+        </div>
+        <div className="relative z-10 space-y-6">
+          <div className="flex flex-wrap justify-between items-center gap-2">
+            <div className="flex items-center gap-2 px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-xs font-bold uppercase tracking-wider">
+              <MapPin className="w-3.5 h-3.5" /> {market || `${district} APMC`}, {state}
+            </div>
+            <span className="text-xs text-emerald-200 font-bold flex items-center gap-1">
+              <Calendar className="w-3.5 h-3.5" /> Updated: {currentInfo.last_updated || 'Today'}
+            </span>
+          </div>
+
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 border-b border-white/15 pb-6">
+            <div>
+              <p className="text-xs uppercase tracking-widest text-emerald-200 font-bold">Crop Commodity</p>
+              <h2 className="text-4xl sm:text-5xl font-black text-white mt-1">{crop}</h2>
+            </div>
+            <div className="text-left sm:text-right">
+              <p className="text-xs uppercase tracking-widest text-emerald-200 font-bold">Current Modal Price</p>
+              <p className="text-4xl sm:text-5xl font-black text-amber-300">₹{currentInfo.modal_price || 0}<span className="text-sm text-emerald-200 font-normal ml-1">/ quintal</span></p>
             </div>
           </div>
-        ))}
-      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 print:grid-cols-3 print:break-inside-avoid">
-        {/* Section 2: AI Market Brief */}
-        <div className="lg:col-span-2 print:col-span-2 bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-900/20 dark:to-blue-900/10 rounded-2xl p-6 border border-indigo-100 dark:border-indigo-800/50 shadow-sm">
-          <h3 className="text-lg font-bold text-indigo-900 dark:text-indigo-300 mb-4 flex items-center gap-2">
-            <ShieldCheck className="w-5 h-5" /> Today's Market Brief
-          </h3>
-          <ul className="space-y-3">
-            {brief.map((point, idx) => (
-              <li key={idx} className="flex items-start gap-3 text-slate-700 dark:text-slate-300 font-medium">
-                <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 mt-2 flex-shrink-0"></div>
-                {point}
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        {/* Section 6: Best Selling Window */}
-        <div className="bg-white/80 dark:bg-slate-800/80 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm backdrop-blur-md flex flex-col justify-center">
-          <h3 className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
-            <Compass className="w-4 h-4" /> Best Selling Window
-          </h3>
-          <p className="text-3xl font-extrabold text-emerald-600 dark:text-emerald-400 mb-2">
-            {bestWindow.period}
-          </p>
-          <div className="space-y-1 mt-4">
-            <p className="text-sm text-slate-600 dark:text-slate-400">
-              <span className="font-bold text-slate-800 dark:text-slate-200">Trend: </span> {bestWindow.trend}
-            </p>
-            <p className="text-sm text-slate-600 dark:text-slate-400">
-              <span className="font-bold text-slate-800 dark:text-slate-200">Action: </span> {bestWindow.action}
-            </p>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-2">
+            <div className="bg-black/25 backdrop-blur-md p-4 rounded-2xl border border-white/10">
+              <p className="text-[11px] text-emerald-200 font-bold uppercase">Minimum Price</p>
+              <p className="text-xl font-extrabold text-white mt-1">₹{currentInfo.minimum_price || 0}</p>
+            </div>
+            <div className="bg-black/25 backdrop-blur-md p-4 rounded-2xl border border-white/10">
+              <p className="text-[11px] text-amber-200 font-bold uppercase">Modal Price</p>
+              <p className="text-xl font-extrabold text-amber-300 mt-1">₹{currentInfo.modal_price || 0}</p>
+            </div>
+            <div className="bg-black/25 backdrop-blur-md p-4 rounded-2xl border border-white/10">
+              <p className="text-[11px] text-emerald-200 font-bold uppercase">Maximum Price</p>
+              <p className="text-xl font-extrabold text-white mt-1">₹{currentInfo.maximum_price || 0}</p>
+            </div>
+            <div className="bg-black/25 backdrop-blur-md p-4 rounded-2xl border border-white/10">
+              <p className="text-[11px] text-cyan-200 font-bold uppercase">Arrival Quantity</p>
+              <p className="text-xl font-extrabold text-cyan-300 mt-1">{currentInfo.arrival_quantity || 'N/A'} <span className="text-xs font-normal">Tons</span></p>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Section 4: Historical Market Trends */}
-      <div className="bg-white/80 dark:bg-slate-800/80 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm backdrop-blur-md print:break-inside-avoid print:mt-4">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-          <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
-            <LineChart className="w-5 h-5 text-sky-500" /> Historical Market Trends
-          </h3>
-          <div className="flex bg-slate-100 dark:bg-slate-900 p-1 rounded-lg print:hidden">
-            {['7D', '30D', '3M', '6M', '1Y'].map(filter => (
+      {/* SECTION 2: Historical Market Trends (Weekly, Monthly, Yearly Tabs) */}
+      <div className="bg-white dark:bg-slate-800 rounded-3xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm space-y-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h3 className="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2">
+              <LineChart className="w-5 h-5 text-emerald-500" /> Historical Price Trends (Market Cache)
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              Reading strictly from cached rolling history records ({historicalDataset.length} records).
+            </p>
+          </div>
+
+          <div className="flex bg-slate-100 dark:bg-slate-900 p-1 rounded-2xl">
+            {['Weekly', 'Monthly', 'Yearly'].map(tab => (
               <button
-                key={filter}
-                onClick={() => setHistoricalFilter(filter)}
-                className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all ${historicalFilter === filter ? 'bg-white dark:bg-slate-700 shadow text-sky-600 dark:text-sky-400' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                key={tab}
+                onClick={() => setHistoricalTab(tab)}
+                className={`px-4 py-2 text-xs font-bold rounded-xl transition-all ${
+                  historicalTab === tab 
+                    ? 'bg-emerald-500 text-white shadow-md' 
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                }`}
               >
-                {filter}
+                {tab === 'Weekly' ? 'Weekly (7 Days)' : (tab === 'Monthly' ? 'Monthly (30 Days)' : 'Yearly (365 Days)')}
               </button>
             ))}
           </div>
         </div>
+
         <div className="h-72">
-           <Line data={lineChartData} options={lineChartOptions} />
+          {historicalDataset.length > 0 ? (
+            <Line data={lineChartData} options={lineChartOptions} />
+          ) : (
+            <div className="h-full flex items-center justify-center text-slate-400 font-medium text-sm">
+              No historical cache records available for this tab.
+            </div>
+          )}
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 print:grid-cols-3 print:break-inside-avoid print:mt-4">
-        {/* Section 3: Market Comparison Table */}
-        <div className="lg:col-span-2 print:col-span-2 bg-white/80 dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm backdrop-blur-md overflow-hidden">
-          <div className="p-5 border-b border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50">
-            <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
-              <Store className="w-5 h-5 text-amber-500" /> Market Comparison
-            </h3>
+      {/* SECTION 3: ML Market Price Predictions */}
+      <div className="space-y-6">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-indigo-500/10 text-indigo-500 rounded-xl">
+            <Cpu className="w-6 h-6" />
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-slate-50 dark:bg-slate-900/50">
-                  <th className="px-5 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Market</th>
-                  <th className="px-5 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Min Price</th>
-                  <th className="px-5 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Max Price</th>
-                  <th className="px-5 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Modal Price</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                {(markets_data || []).map((mkt, idx) => {
-                  const isBest = mkt.modal_price === best_modal_price;
-                  return (
-                    <tr key={idx} className={isBest ? 'bg-amber-50/50 dark:bg-amber-900/10' : 'hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors'}>
-                      <td className="px-5 py-4">
-                        <span className={`font-bold ${isBest ? 'text-amber-700 dark:text-amber-400 flex items-center gap-2' : 'text-slate-700 dark:text-slate-300'}`}>
-                          {mkt.market}
-                          {isBest && <span className="text-[10px] bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-300 px-2 py-0.5 rounded-full">BEST</span>}
-                        </span>
-                      </td>
-                      <td className="px-5 py-4 text-sm text-slate-500">₹{mkt.minimum_price}</td>
-                      <td className="px-5 py-4 text-sm text-slate-500">₹{mkt.maximum_price}</td>
-                      <td className={`px-5 py-4 font-bold ${isBest ? 'text-amber-600 dark:text-amber-400' : 'text-slate-700 dark:text-slate-300'}`}>
-                        ₹{mkt.modal_price}
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
+          <div>
+            <h3 className="text-2xl font-black text-slate-900 dark:text-white">ML Market Price Predictions</h3>
+            <p className="text-xs text-slate-500">Trained exclusively on MarketCache history. Short-term daily & medium-term monthly forecasts.</p>
           </div>
         </div>
 
-        {/* Section 5: Market Insights */}
-        <div className="bg-white/80 dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm backdrop-blur-md flex flex-col">
-          <div className="p-5 border-b border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50">
-            <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
-              <Activity className="w-5 h-5 text-rose-500" /> Key Insights
-            </h3>
+        {/* Short-Term (Next 10 Days) & Medium-Term (Next 3-4 Months) Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+          {/* Short-Term Prediction Card (Next 10 Days) */}
+          <div className="bg-white dark:bg-slate-800 rounded-3xl p-6 border border-indigo-100 dark:border-slate-700 shadow-sm flex flex-col justify-between">
+            <div>
+              <div className="flex justify-between items-center mb-4">
+                <h4 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-indigo-500" /> Short-Term Prediction (Next 10 Days)
+                </h4>
+                <span className="text-[11px] font-extrabold bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 px-2.5 py-1 rounded-full">
+                  10 Daily Forecasts
+                </span>
+              </div>
+
+              <div className="h-56 mb-4">
+                <Line data={shortTermChartData} options={lineChartOptions} />
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 pt-2">
+                {shortTerm10Days.slice(0, 5).map((item, idx) => (
+                  <div key={idx} className="bg-slate-50 dark:bg-slate-900/60 p-2.5 rounded-xl text-center border border-slate-100 dark:border-slate-800">
+                    <p className="text-[10px] text-slate-400 font-bold">{item.date?.slice(5)}</p>
+                    <p className="text-sm font-black text-indigo-600 dark:text-indigo-400 mt-0.5">₹{item.predicted_modal_price}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
-          <div className="p-5 flex-1">
-             <ul className="space-y-4">
-               {insights.map((insight, idx) => (
-                 <li key={idx} className="flex gap-3">
-                   <div className="w-6 h-6 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center flex-shrink-0 mt-0.5">
-                     <span className="text-xs font-bold">✓</span>
-                   </div>
-                   <p className="text-sm font-medium text-slate-700 dark:text-slate-300 leading-relaxed">{insight}</p>
-                 </li>
-               ))}
-             </ul>
+
+          {/* Medium-Term Prediction Card (Next 3-4 Months) */}
+          <div className="bg-white dark:bg-slate-800 rounded-3xl p-6 border border-cyan-100 dark:border-slate-700 shadow-sm flex flex-col justify-between">
+            <div>
+              <div className="flex justify-between items-center mb-4">
+                <h4 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                  <Layers className="w-5 h-5 text-cyan-500" /> Medium-Term Prediction (Next 3–4 Months)
+                </h4>
+                <span className="text-[11px] font-extrabold bg-cyan-100 dark:bg-cyan-900/40 text-cyan-700 dark:text-cyan-300 px-2.5 py-1 rounded-full">
+                  Monthly Trends
+                </span>
+              </div>
+
+              <div className="space-y-3">
+                {mediumTermMonths.map((item, idx) => (
+                  <div key={idx} className="bg-slate-50 dark:bg-slate-900/60 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 flex justify-between items-center">
+                    <div>
+                      <span className="text-xs text-slate-400 font-bold uppercase tracking-wider block">Month {item.month_number}</span>
+                      <h5 className="font-extrabold text-slate-800 dark:text-white text-base">{item.month_name}</h5>
+                    </div>
+                    <div className="text-right flex items-center gap-4">
+                      <div>
+                        <p className="text-xs text-slate-400 font-bold">Predicted Avg</p>
+                        <p className="text-lg font-black text-emerald-600 dark:text-emerald-400">₹{item.predicted_avg_price}</p>
+                      </div>
+                      <span className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 ${
+                        item.trend === 'UPWARD' 
+                          ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300' 
+                          : item.trend === 'DOWNWARD' 
+                            ? 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300'
+                            : 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300'
+                      }`}>
+                        {item.trend === 'UPWARD' && <TrendingUp className="w-3.5 h-3.5" />}
+                        {item.trend === 'DOWNWARD' && <TrendingDown className="w-3.5 h-3.5" />}
+                        {item.trend}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
+
+        </div>
+      </div>
+
+      {/* SECTION 4: Regional Market Comparison Table */}
+      <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+        <div className="p-5 border-b border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50">
+          <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
+            <Store className="w-5 h-5 text-amber-500" /> APMC Market Comparison ({district}, {state})
+          </h3>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-slate-50 dark:bg-slate-900/50">
+                <th className="px-5 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Market APMC</th>
+                <th className="px-5 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Min Price</th>
+                <th className="px-5 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Max Price</th>
+                <th className="px-5 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Modal Price</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+              {(markets_data || []).map((mkt, idx) => {
+                const isBest = mkt.modal_price === currentInfo.modal_price;
+                return (
+                  <tr key={idx} className={isBest ? 'bg-amber-50/50 dark:bg-amber-900/10' : 'hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors'}>
+                    <td className="px-5 py-4">
+                      <span className={`font-bold ${isBest ? 'text-amber-700 dark:text-amber-400 flex items-center gap-2' : 'text-slate-700 dark:text-slate-300'}`}>
+                        {mkt.market}
+                        {isBest && <span className="text-[10px] bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-300 px-2 py-0.5 rounded-full">BEST</span>}
+                      </span>
+                    </td>
+                    <td className="px-5 py-4 text-sm text-slate-500">₹{mkt.minimum_price}</td>
+                    <td className="px-5 py-4 text-sm text-slate-500">₹{mkt.maximum_price}</td>
+                    <td className={`px-5 py-4 font-bold ${isBest ? 'text-amber-600 dark:text-amber-400' : 'text-slate-700 dark:text-slate-300'}`}>
+                      ₹{mkt.modal_price}
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
         </div>
       </div>
 
