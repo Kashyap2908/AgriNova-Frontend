@@ -32,7 +32,6 @@ const MainLayout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isDark, setIsDark] = useState(false);
   const [farmDropdownOpen, setFarmDropdownOpen] = useState(false);
-  const [aiChatOpen, setAiChatOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
 
   const avatarPhoto = user?.avatar || user?.profile_photo || null;
@@ -159,6 +158,7 @@ const MainLayout = () => {
         <div className="p-4 border-t border-slate-200 dark:border-slate-800 space-y-1">
           <SidebarItem icon={MessageSquare} label="AI Assistant" to="/assistant" active={location.pathname === '/assistant'} />
           <SidebarItem icon={Settings} label="Settings" to="/settings" active={location.pathname === '/settings'} />
+
           <button onClick={logout} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 hover:text-rose-600 font-medium text-sm transition-colors">
             <LogOut className="w-5 h-5" />
             <span>Logout</span>
@@ -303,64 +303,22 @@ const MainLayout = () => {
 
       </div>
 
+
       {/* Floating AI Chat Widget Button */}
       <div className="fixed bottom-6 right-6 z-50 print:hidden">
-        <button 
-          onClick={() => setAiChatOpen(!aiChatOpen)}
+        <Link 
+          to="/assistant"
           className="group flex items-center justify-center w-14 h-14 bg-primary hover:bg-primary-dark text-white rounded-full shadow-[0_8px_30px_rgb(22,163,74,0.3)] transition-all transform hover:scale-105 hover:-translate-y-1 relative"
         >
-          {aiChatOpen ? (
-            <X className="w-6 h-6" />
-          ) : (
-            <MessageSquare className="w-6 h-6" />
-          )}
+          <MessageSquare className="w-6 h-6" />
           
-          {/* Notification Dot */}
-          {!aiChatOpen && (
-            <span className="absolute top-0 right-0 w-3 h-3 bg-rose-500 border-2 border-white dark:border-slate-900 rounded-full"></span>
-          )}
+          <span className="absolute top-0 right-0 w-3 h-3 bg-rose-500 border-2 border-white dark:border-slate-900 rounded-full"></span>
 
           {/* Tooltip */}
           <div className="absolute right-full mr-4 top-1/2 -translate-y-1/2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-3 py-1.5 rounded-lg text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-xl pointer-events-none flex items-center gap-2">
             Ask AgriNova AI <Sparkles className="w-3 h-3 text-emerald-400 dark:text-primary" />
           </div>
-        </button>
-
-        {/* Mock Chat Panel */}
-        <AnimatePresence>
-          {aiChatOpen && (
-            <motion.div 
-              initial={{ opacity: 0, y: 20, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 20, scale: 0.95 }}
-              className="absolute bottom-20 right-0 w-[350px] h-[500px] bg-white dark:bg-slate-800 rounded-[2rem] shadow-[0_10px_40px_rgba(0,0,0,0.1)] dark:shadow-[0_10px_40px_rgba(0,0,0,0.4)] border border-slate-100 dark:border-slate-700 flex flex-col overflow-hidden"
-            >
-              <div className="bg-primary p-4 text-white flex justify-between items-center">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
-                    <Sparkles className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="font-bold">AgriNova AI</h3>
-                    <p className="text-xs text-primary-50 opacity-80">Online</p>
-                  </div>
-                </div>
-                <button onClick={() => setAiChatOpen(false)} className="text-white/80 hover:text-white"><X className="w-5 h-5" /></button>
-              </div>
-              <div className="flex-1 p-4 bg-slate-50 dark:bg-slate-900/50 flex flex-col justify-end gap-4">
-                <div className="bg-white dark:bg-slate-700 p-3 rounded-2xl rounded-tl-sm text-sm text-slate-700 dark:text-slate-200 shadow-sm self-start max-w-[85%]">
-                  Hello Farmer! 👋 I analyzed {selectedFarm?.name}'s current weather and soil data. Would you like a quick summary of today's recommended actions?
-                </div>
-              </div>
-              <div className="p-4 bg-white dark:bg-slate-800 border-t border-slate-100 dark:border-slate-700">
-                <div className="bg-slate-100 dark:bg-slate-900 rounded-xl p-1 flex items-center pr-2">
-                  <input type="text" placeholder="Ask anything..." className="flex-1 bg-transparent px-3 py-2 text-sm outline-none dark:text-white" />
-                  <button className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white"><ArrowRight className="w-4 h-4" /></button>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        </Link>
       </div>
     </div>
   );

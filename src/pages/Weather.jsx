@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FarmContext } from '../context/farm-context';
-import { geocodeLocation } from '../services/api';
+import api, { geocodeLocation } from '../services/api';
 import { 
   CloudRain, Sun, Cloud, CloudLightning, CloudSnow, Wind, Droplets, 
   Thermometer, MapPin, Calendar, Sunrise, Sunset, Navigation, AlertCircle
@@ -95,12 +95,87 @@ const Weather = () => {
           }
         }
 
-        const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m,wind_direction_10m&hourly=temperature_2m,precipitation_probability,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,uv_index_max,sunrise,sunset&timezone=auto`;
+        const url = `/weather/current/?farm_id=${selectedFarm.id}`;
         
-        const response = await fetch(url);
-        if (!response.ok) throw new Error("Failed to fetch weather data from satellite");
+        const response = await api.get(url);
+        const json = response.data;
+        if (!json.success) throw new Error(json.error || "Failed to fetch weather data from satellite");
         
-        const data = await response.json();
+        const bData = json.data;
+        
+        // Re-construct the format expected by the UI arrays
+        const hourlyTimes = [];
+        const hourlyTemps = [];
+        const hourlyPrecip = [];
+        const hourlyCodes = [];
+        const hourlyWind = [];
+        
+        const allHourly = [
+          ...(bData.today_hourly_forecast || []), 
+          ...(bData.weekly_hourly_forecast || [])
+        ];
+        
+        allHourly.forEach(h => {
+          hourlyTimes.push(h.time);
+          hourlyTemps.push(h.temperature);
+          hourlyPrecip.push(h.precipitation_probability || 0);
+          hourlyCodes.push(h.weather_code);
+          hourlyWind.push(h.wind_speed || 0);
+        });
+
+        const dailyTimes = [];
+        const dailyMax = [];
+        const dailyMin = [];
+        const dailySunrise = [];
+        const dailySunset = [];
+        const dailyPrecip = [];
+        const dailyUv = [];
+        const dailyCodes = [];
+
+        // Exclude the first day (Yesterday) to align with UI expectations of starting from Today
+        const validDaily = (bData.daily_forecast || []).slice(1);
+
+        validDaily.forEach(d => {
+          // Append T00:00:00 to force local timezone parsing and avoid date shifting
+          dailyTimes.push(d.date.includes('T') ? d.date : d.date + 'T00:00:00');
+          dailyMax.push(d.max_temp);
+          dailyMin.push(d.min_temp);
+          dailySunrise.push(d.sunrise);
+          dailySunset.push(d.sunset);
+          dailyPrecip.push(d.rainfall);
+          dailyUv.push(d.uv_index_max || 0);
+          dailyCodes.push(d.weather_code);
+        });
+
+        const data = {
+          current: {
+            temperature_2m: bData.current_weather.temperature,
+            apparent_temperature: bData.current_weather.feels_like,
+            relative_humidity_2m: bData.current_weather.humidity,
+            wind_speed_10m: bData.current_weather.wind_speed,
+            precipitation: bData.current_weather.rainfall,
+            weather_code: bData.current_weather.weather_code,
+            time: bData.current_weather.timestamp,
+          },
+          hourly: {
+            time: hourlyTimes,
+            temperature_2m: hourlyTemps,
+            precipitation_probability: hourlyPrecip,
+            weather_code: hourlyCodes,
+            wind_speed_10m: hourlyWind,
+          },
+          daily: {
+            time: dailyTimes,
+            temperature_2m_max: dailyMax,
+            temperature_2m_min: dailyMin,
+            sunrise: dailySunrise,
+            sunset: dailySunset,
+            precipitation_sum: dailyPrecip,
+            uv_index_max: dailyUv,
+            weather_code: dailyCodes,
+          }
+        };
+
         setWeatherData(data);
       } catch (err) {
         console.error("Weather fetch error:", err);

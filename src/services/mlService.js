@@ -1,4 +1,4 @@
-import axios from 'axios';
+import api from './api';
 
 // Mock ML API calls for Crop Recommendation
 export const predictCrop = async (features) => {
@@ -40,16 +40,11 @@ export const detectDisease = async (imageFile) => {
     const formData = new FormData();
     formData.append("image", imageFile);
 
-    const token = localStorage.getItem("access_token");
-
-    console.log("JWT Token :", token);
-
-    const response = await axios.post(
-      "http://localhost:8000/api/disease/predict/",
+    const response = await api.post(
+      "/disease/predict/",
       formData,
       {
         headers: {
-          Authorization: `Bearer ${token}`,
           "Content-Type": "multipart/form-data",
         },
       }
