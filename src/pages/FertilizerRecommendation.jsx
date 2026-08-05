@@ -287,14 +287,18 @@ const FertilizerRecommendation = () => {
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 w-full lg:w-auto">
                     <div className="bg-slate-50 dark:bg-slate-900 p-4 rounded-2xl text-center border border-slate-100 dark:border-slate-700">
                       <Scale className="w-5 h-5 text-emerald-600 dark:text-emerald-400 mx-auto mb-1" />
-                      <span className="text-[10px] font-bold text-slate-400 uppercase">Dosage / Acre</span>
-                      <p className="text-lg font-black text-slate-800 dark:text-white">{recommendation.dosage_per_acre_kg} kg</p>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase">Dosage / {recommendation.area_unit || 'Acre'}</span>
+                      <p className="text-sm sm:text-base font-black text-slate-800 dark:text-white">
+                        {recommendation.dosage_per_unit_text || `${recommendation.dosage_per_acre_kg} kg/acre`}
+                      </p>
                     </div>
 
                     <div className="bg-slate-50 dark:bg-slate-900 p-4 rounded-2xl text-center border border-slate-100 dark:border-slate-700">
                       <Layers className="w-5 h-5 text-teal-600 dark:text-teal-400 mx-auto mb-1" />
                       <span className="text-[10px] font-bold text-slate-400 uppercase">Total Quantity</span>
-                      <p className="text-lg font-black text-slate-800 dark:text-white">{recommendation.total_quantity_kg} kg</p>
+                      <p className="text-sm sm:text-base font-black text-slate-800 dark:text-white">
+                        {recommendation.total_quantity_text || `${recommendation.total_quantity_kg} kg`}
+                      </p>
                     </div>
 
                     <div className="col-span-2 sm:col-span-1 bg-emerald-500/10 dark:bg-emerald-500/20 p-4 rounded-2xl text-center border border-emerald-500/30">
@@ -407,25 +411,42 @@ const FertilizerRecommendation = () => {
               {/* Alternative Fertilizers & Safety Warnings Grid */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 
-                {/* Ranked Alternatives */}
+                {/* Ranked Recommendations List (Top 3-5 Options) */}
                 <div className="bg-white dark:bg-slate-800 rounded-3xl p-6 shadow-xl border border-slate-100 dark:border-slate-700 space-y-4">
                   <h3 className="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
-                    <Layers className="w-5 h-5 text-emerald-500" /> Ranked Alternative Fertilizers
+                    <Layers className="w-5 h-5 text-emerald-500" /> Top Ranked Suitable Recommendations
                   </h3>
 
                   <div className="space-y-3">
-                    {(recommendation.alternative_fertilizers || []).map((alt, idx) => (
-                      <div key={idx} className="p-4 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-700 flex items-start justify-between gap-4">
-                        <div>
-                          <h4 className="text-sm font-extrabold text-slate-800 dark:text-white flex items-center gap-2">
-                            <span>{alt.name}</span>
-                            <span className="text-[10px] font-bold px-2 py-0.5 bg-slate-200 dark:bg-slate-700 rounded">NPK {alt.npk_ratio}</span>
-                          </h4>
-                          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{alt.reason}</p>
+                    {(recommendation.top_recommendations || recommendation.alternative_fertilizers || []).map((alt, idx) => (
+                      <div key={idx} className="p-4 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-700 space-y-2">
+                        <div className="flex items-start justify-between gap-4">
+                          <div>
+                            <h4 className="text-sm font-extrabold text-slate-800 dark:text-white flex items-center gap-2">
+                              <span className="w-5 h-5 rounded-full bg-emerald-500 text-white text-[10px] font-black flex items-center justify-center">
+                                #{alt.rank || (idx + 1)}
+                              </span>
+                              <span>{alt.name}</span>
+                              {alt.npk_ratio && (
+                                <span className="text-[10px] font-bold px-2 py-0.5 bg-slate-200 dark:bg-slate-700 rounded">NPK {alt.npk_ratio}</span>
+                              )}
+                            </h4>
+                            <p className="text-xs text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">
+                              {alt.why_recommended || alt.reason}
+                            </p>
+                          </div>
+                          {alt.suitability_score && (
+                            <span className="text-xs font-extrabold px-2.5 py-1 bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300 rounded-xl flex-shrink-0">
+                              {alt.suitability_score}% Match
+                            </span>
+                          )}
                         </div>
-                        <span className="text-xs font-black text-emerald-600 dark:text-emerald-400 flex-shrink-0">
-                          ₹{alt.price_per_kg}/kg
-                        </span>
+
+                        <div className="flex flex-wrap items-center justify-between text-[11px] font-semibold text-slate-500 dark:text-slate-400 pt-2 border-t border-slate-200/50 dark:border-slate-700/50 gap-2">
+                          <span>Dosage: <strong className="text-slate-800 dark:text-slate-200">{alt.dosage_per_unit_text || alt.dosage_per_unit || `${alt.dosage_per_acre_kg} kg/acre`}</strong></span>
+                          <span>Method: <strong className="text-slate-800 dark:text-slate-200">{alt.application_method}</strong></span>
+                          <span className="text-emerald-600 dark:text-emerald-400 font-extrabold">₹{alt.price_per_kg}/kg</span>
+                        </div>
                       </div>
                     ))}
                   </div>
