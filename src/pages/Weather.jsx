@@ -157,6 +157,7 @@ const Weather = () => {
             weather_code: bData.current_weather.weather_code,
             time: bData.current_weather.timestamp,
           },
+          yesterday_hourly: bData.yesterday_hourly_forecast || [],
           hourly: {
             time: hourlyTimes,
             temperature_2m: hourlyTemps,
@@ -370,7 +371,7 @@ const Weather = () => {
                 <div>
                   <p className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-1">Sunrise</p>
                   <p className="text-2xl font-black text-slate-800 dark:text-white">
-                    {formatTime(daily.sunrise[activeDay])}
+                    {formatTime(daily.sunrise[activeDay >= 0 ? activeDay : 0])}
                   </p>
                 </div>
               </div>
@@ -384,7 +385,7 @@ const Weather = () => {
                 <div>
                   <p className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-1">Sunset</p>
                   <p className="text-2xl font-black text-slate-800 dark:text-white">
-                    {formatTime(daily.sunset[activeDay])}
+                    {formatTime(daily.sunset[activeDay >= 0 ? activeDay : 0])}
                   </p>
                 </div>
               </div>
@@ -400,7 +401,7 @@ const Weather = () => {
             <div>
               <p className="text-amber-800 dark:text-amber-400 font-bold mb-1">UV Index Max</p>
               <p className="text-3xl font-black text-amber-600 dark:text-amber-300">
-                {daily.uv_index_max[activeDay]}
+                {daily.uv_index_max[activeDay >= 0 ? activeDay : 0]}
               </p>
             </div>
             <Sun className="w-12 h-12 text-amber-400/50" />
@@ -414,7 +415,7 @@ const Weather = () => {
         className="mb-10"
       >
         <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-          <Wind className="w-5 h-5 text-primary" /> Hourly Forecast ({activeDay === 0 ? 'Next 24h' : new Date(daily.time[activeDay]).toLocaleDateString('en-US', { weekday: 'long' })})
+          <Wind className="w-5 h-5 text-primary" /> Hourly Forecast ({activeDay === -1 ? 'Yesterday' : activeDay === 0 ? 'Next 24h' : new Date(daily.time[activeDay]).toLocaleDateString('en-US', { weekday: 'long' })})
         </h3>
         
         <div 
@@ -425,56 +426,142 @@ const Weather = () => {
           onMouseMove={onMouseMove}
           className="flex overflow-x-auto pb-4 -mx-4 px-4 sm:mx-0 sm:px-0 gap-3 no-scrollbar cursor-grab active:cursor-grabbing"
         >
-          {Array.from({ length: 24 }).map((_, i) => {
-            const idx = next24Hours + i;
-            if (idx >= hourly.time.length) return null;
-            
-            const timeObj = new Date(hourly.time[idx]);
-            const isNow = activeDay === 0 && i === 0;
-            const timeStr = isNow ? 'Now' : timeObj.toLocaleTimeString([], { hour: 'numeric' });
-            
-            return (
-              <motion.div 
-                key={idx}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: i * 0.02 + 0.2 }}
-                className={`flex-shrink-0 w-24 p-4 rounded-[1.5rem] flex flex-col items-center justify-between text-center border transition-all select-none pointer-events-none sm:pointer-events-auto ${
-                  isNow 
-                    ? 'bg-primary text-white border-primary shadow-lg shadow-primary/30' 
-                    : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border-slate-100 dark:border-slate-700 shadow-sm'
-                }`}
-              >
-                <span className={`text-xs font-bold mb-3 ${isNow ? 'text-primary-100' : 'text-slate-400'}`}>
-                  {timeStr}
-                </span>
-                
-                <div className="scale-75 my-1">
-                  {getWeatherIcon(hourly.weather_code[idx])}
-                </div>
-                
-                <span className="text-xl font-black mt-2">
-                  {Math.round(hourly.temperature_2m[idx])}°
-                </span>
-                
-                <div className={`flex items-center gap-1 mt-2 text-[10px] font-bold ${isNow ? 'text-primary-200' : 'text-blue-500'}`}>
-                  <Droplets className="w-3 h-3" />
-                  {hourly.precipitation_probability[idx]}%
-                </div>
-              </motion.div>
-            );
-          })}
+          {activeDay === -1 ? (
+            (weatherData.yesterday_hourly || []).map((h, i) => {
+              const timeObj = new Date(h.time);
+              const timeStr = timeObj.toLocaleTimeString([], { hour: 'numeric' });
+              return (
+                <motion.div 
+                  key={`yest-${i}`}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: i * 0.02 }}
+                  className="flex-shrink-0 w-24 p-4 rounded-[1.5rem] flex flex-col items-center justify-between text-center border transition-all select-none pointer-events-none sm:pointer-events-auto bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border-slate-100 dark:border-slate-700 shadow-sm"
+                >
+                  <span className="text-xs font-bold mb-3 text-slate-400">
+                    {timeStr}
+                  </span>
+                  
+                  <div className="scale-75 my-1">
+                    {getWeatherIcon(h.weather_code)}
+                  </div>
+                  
+                  <span className="text-xl font-black mt-2">
+                    {Math.round(h.temperature)}°
+                  </span>
+                  
+                  <div className="flex items-center gap-1 mt-2 text-[10px] font-bold text-blue-500">
+                    <Droplets className="w-3 h-3" />
+                    {h.precipitation_probability || 0}%
+                  </div>
+                </motion.div>
+              );
+            })
+          ) : (
+            Array.from({ length: 24 }).map((_, i) => {
+              const idx = next24Hours + i;
+              if (idx >= hourly.time.length) return null;
+              
+              const timeObj = new Date(hourly.time[idx]);
+              const isNow = activeDay === 0 && i === 0;
+              const timeStr = isNow ? 'Now' : timeObj.toLocaleTimeString([], { hour: 'numeric' });
+              
+              return (
+                <motion.div 
+                  key={idx}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: i * 0.02 + 0.2 }}
+                  className={`flex-shrink-0 w-24 p-4 rounded-[1.5rem] flex flex-col items-center justify-between text-center border transition-all select-none pointer-events-none sm:pointer-events-auto ${
+                    isNow 
+                      ? 'bg-primary text-white border-primary shadow-lg shadow-primary/30' 
+                      : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border-slate-100 dark:border-slate-700 shadow-sm'
+                  }`}
+                >
+                  <span className={`text-xs font-bold mb-3 ${isNow ? 'text-primary-100' : 'text-slate-400'}`}>
+                    {timeStr}
+                  </span>
+                  
+                  <div className="scale-75 my-1">
+                    {getWeatherIcon(hourly.weather_code[idx])}
+                  </div>
+                  
+                  <span className="text-xl font-black mt-2">
+                    {Math.round(hourly.temperature_2m[idx])}°
+                  </span>
+                  
+                  <div className={`flex items-center gap-1 mt-2 text-[10px] font-bold ${isNow ? 'text-primary-200' : 'text-blue-500'}`}>
+                    <Droplets className="w-3 h-3" />
+                    {hourly.precipitation_probability[idx]}%
+                  </div>
+                </motion.div>
+              );
+            })
+          )}
         </div>
       </motion.div>
 
-      {/* 7-Day Forecast */}
+      {/* 7-Day Forecast / Outlook */}
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-2xl font-black text-slate-900 dark:text-white flex items-center gap-3">
-          <Calendar className="w-6 h-6 text-primary" /> 7-Day Outlook
+          <Calendar className="w-6 h-6 text-primary" /> Outlook
         </h3>
       </div>
       
-      <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-8 gap-4">
+        {/* Yesterday Card */}
+        {(() => {
+          const yestArr = weatherData.yesterday_hourly || [];
+          const yestMax = yestArr.length ? Math.max(...yestArr.map(h => h.temperature)) : null;
+          const yestMin = yestArr.length ? Math.min(...yestArr.map(h => h.temperature)) : null;
+          const yestCode = yestArr.length ? (yestArr[Math.floor(yestArr.length / 2)]?.weather_code ?? yestArr[0]?.weather_code ?? 0) : 0;
+          const yestDate = yestArr.length && yestArr[0].time ? new Date(yestArr[0].time) : new Date(Date.now() - 86400000);
+          return (
+            <motion.div 
+              key="yesterday-card"
+              onClick={() => setActiveDay(-1)}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.25 }}
+              whileHover={{ y: -5, scale: 1.02 }}
+              whileTap={{ scale: 0.95 }}
+              className={`saas-card p-5 cursor-pointer flex flex-col items-center justify-between text-center min-h-[220px] transition-all duration-300 ${
+                activeDay === -1 
+                  ? 'border-primary bg-primary/[0.05] shadow-primary/20 shadow-2xl ring-2 ring-primary/50' 
+                  : 'hover:shadow-xl hover:border-slate-300 dark:hover:border-slate-600'
+              }`}
+            >
+              <div className="mb-4">
+                <p className="text-sm font-extrabold uppercase tracking-widest text-slate-400 dark:text-slate-500">
+                  Yesterday
+                </p>
+                <p className="text-xs font-medium text-slate-400 mt-1">
+                  {yestDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                </p>
+              </div>
+              
+              <div className="flex-1 flex items-center justify-center my-2 scale-[1.15]">
+                {getWeatherIcon(yestCode)}
+              </div>
+              
+              <div className="mt-4 w-full">
+                <div className="flex items-center justify-center gap-3 text-base mb-2">
+                  <span className="font-black text-slate-900 dark:text-white">
+                    {yestMax !== null ? `${Math.round(yestMax)}°` : '--'}
+                  </span>
+                  <span className="font-bold text-slate-400">
+                    {yestMin !== null ? `${Math.round(yestMin)}°` : '--'}
+                  </span>
+                </div>
+                <div className="h-px w-full bg-slate-100 dark:bg-slate-800 mb-2"></div>
+                <p className="text-[11px] font-bold text-slate-500 line-clamp-2 leading-tight">
+                  {getWeatherDescription(yestCode)}
+                </p>
+              </div>
+            </motion.div>
+          );
+        })()}
+
         {daily.time.map((dateStr, index) => {
           const date = new Date(dateStr);
           const isToday = index === 0;

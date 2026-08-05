@@ -24,6 +24,9 @@ import MarketIntelligence from './pages/MarketIntelligence';
 import MarketIntelligenceHistory from './pages/MarketIntelligenceHistory';
 import Assistant from './pages/Assistant';
 
+import YieldPrediction from './pages/YieldPrediction';
+import ProfitAnalysis from './pages/ProfitAnalysis';
+
 // Only used on Landing Page
 
 const LandingNavigation = () => {
@@ -182,8 +185,8 @@ const AnimatedRoutes = () => {
             <Route path="/weather" element={<Weather />} />
             <Route path="/market-intelligence" element={<MarketIntelligence />} />
             <Route path="/market-intelligence/history" element={<MarketIntelligenceHistory />} />
-            <Route path="/yield-prediction" element={<Dashboard />} />
-            <Route path="/profit-prediction" element={<Dashboard />} />
+            <Route path="/yield-prediction" element={<YieldPrediction />} />
+            <Route path="/profit-prediction" element={<ProfitAnalysis />} />
             <Route path="/pest-prediction" element={<Dashboard />} />
             <Route path="/fertilizers" element={<Dashboard />} />
             <Route path="/irrigation" element={<Dashboard />} />

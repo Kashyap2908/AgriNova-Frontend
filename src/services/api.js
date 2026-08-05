@@ -158,10 +158,23 @@ export const predictCropApi = async (payload) => {
   return response.data;
 };
 
-export const fetchAvailableCropsApi = async (farmId) => {
-  const response = await api.get(`/recommendation/crops/${farmId}/`);
-  return response.data;
+const availableCropsCache = new Map();
+
+export const fetchAvailableCropsApi = async (farmId, forceRefresh = false) => {
+  if (!farmId) return { success: false, data: { crops: [] } };
+  if (!forceRefresh && availableCropsCache.has(farmId)) {
+    return availableCropsCache.get(farmId);
+  }
+  const promise = api.get(`/recommendation/crops/${farmId}/`)
+    .then(res => res.data)
+    .catch(err => {
+      availableCropsCache.delete(farmId);
+      throw err;
+    });
+  availableCropsCache.set(farmId, promise);
+  return promise;
 };
+
 
 export const fetchRecommendationHistoryApi = async () => {
   const response = await api.get('/recommendation/history/');
@@ -170,6 +183,25 @@ export const fetchRecommendationHistoryApi = async () => {
 
 export const fetchRecommendationDetailApi = async (id) => {
   const response = await api.get(`/recommendation/history/${id}/`);
+  return response.data;
+};
+
+export const fetchYieldSummaryApi = async (farmId = null, recId = null, crop = null) => {
+  let url = '/recommendation/yield-summary/';
+  const params = [];
+  if (farmId) params.push(`farm_id=${farmId}`);
+  if (recId) params.push(`rec_id=${recId}`);
+  if (crop) params.push(`crop=${encodeURIComponent(crop)}`);
+  if (params.length > 0) url += `?${params.join('&')}`;
+  const response = await api.get(url);
+  return response.data;
+};
+
+export const fetchProfitAnalysisApi = async (farmId, crop = null, customCosts = null) => {
+  const payload = { farm_id: farmId };
+  if (crop) payload.crop = crop;
+  if (customCosts) payload.custom_costs = customCosts;
+  const response = await api.post('/profit-analysis/', payload);
   return response.data;
 };
 
