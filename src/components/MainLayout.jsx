@@ -8,6 +8,7 @@ import {
   BarChart3, ImagePlus, Bug, FlaskConical, Droplets, PieChart, MessageSquare, Bell, Settings, LogOut,
   Search, Sun, Moon, Menu, X, ChevronDown, Leaf, Sparkles, ArrowRight, User
 } from 'lucide-react';
+import NotificationBell from './NotificationBell';
 
 const SidebarItem = ({ icon: Icon, label, to, active, onClick }) => (
   <Link 
@@ -247,10 +248,7 @@ const MainLayout = () => {
               <button onClick={toggleTheme} className="p-2 text-slate-400 hover:text-amber-500 bg-slate-100 dark:bg-slate-800 rounded-full transition-colors">
                 {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
               </button>
-              <button className="p-2 text-slate-400 hover:text-primary bg-slate-100 dark:bg-slate-800 rounded-full transition-colors relative">
-                <Bell className="w-5 h-5" />
-                <span className="absolute top-0 right-0 w-2 h-2 bg-rose-500 rounded-full border-2 border-slate-100 dark:border-slate-800"></span>
-              </button>
+              <NotificationBell />
               <div className="relative ml-1">
                 <button 
                   onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}

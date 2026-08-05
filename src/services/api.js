@@ -219,8 +219,74 @@ export const fetchMarketForecastDetailApi = async (id) => {
   return response.data;
 };
 
-export default api;
+// ==========================================
+// NOTIFICATIONS API
+// ==========================================
 
+export const fetchNotificationsApi = async () => {
+    try {
+        const response = await api.get('/notifications/');
+        return response.data; // should return { results: [...] } if paginated
+    } catch (error) {
+        throw error;
+    }
+};
+
+export const markNotificationReadApi = async (id) => {
+    try {
+        const response = await api.patch(`/notifications/${id}/read/`);
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+};
+
+export const markAllNotificationsReadApi = async () => {
+    try {
+        const response = await api.post('/notifications/mark-all-read/');
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+};
+
+export const deleteNotificationApi = async (id) => {
+    try {
+        const response = await api.delete(`/notifications/${id}/`);
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+};
+
+export const clearAllNotificationsApi = async () => {
+    try {
+        const response = await api.delete('/notifications/clear-all/');
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+};
+
+export const generateSmartNotificationsApi = async () => {
+    try {
+        const response = await api.post('/notifications/generate/');
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+};
+
+export const generateTestNotificationApi = async () => {
+    try {
+        const response = await api.post('/notifications/test-generate/');
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+};
+
+export default api;
 export const fetchHistoricalMarketDataApi = async (crop, state, district = "all", days = 30) => {
   try {
     const response = await api.get(`/market-forecast/explorer/?crop=${crop}&state=${state}&district=${district}&days=${days}`);
@@ -232,5 +298,31 @@ export const fetchHistoricalMarketDataApi = async (crop, state, district = "all"
       message: error.response?.data?.message || "Failed to fetch historical market data." 
     };
   }
+};
+
+// Assistant API Service
+export const chatWithAssistantApi = async (payload) => {
+  const response = await api.post('/assistant/chat/', payload);
+  return response.data;
+};
+
+export const fetchConversationsApi = async () => {
+  const response = await api.get('/assistant/conversations/');
+  return response.data;
+};
+
+export const fetchConversationDetailApi = async (id) => {
+  const response = await api.get(`/assistant/conversations/${id}/`);
+  return response.data;
+};
+
+export const renameConversationApi = async (id, title) => {
+  const response = await api.patch(`/assistant/conversations/${id}/`, { title });
+  return response.data;
+};
+
+export const deleteConversationApi = async (id) => {
+  const response = await api.delete(`/assistant/conversations/${id}/`);
+  return response.data;
 };
 

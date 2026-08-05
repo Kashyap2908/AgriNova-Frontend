@@ -15,12 +15,14 @@ import Profile from './pages/Profile';
 import Dashboard from './pages/Dashboard';
 import CropRecommendation from './pages/CropRecommendation';
 import AddFarm from './pages/AddFarm';
+import NotificationsPage from './pages/NotificationsPage';
 import SelectFarm from './pages/SelectFarm';
 import RecommendationHistory from './pages/RecommendationHistory';
 import DiseaseDetection from './pages/DiseaseDetection';
 import Weather from './pages/Weather';
 import MarketIntelligence from './pages/MarketIntelligence';
 import MarketIntelligenceHistory from './pages/MarketIntelligenceHistory';
+import Assistant from './pages/Assistant';
 
 // Only used on Landing Page
 
@@ -169,6 +171,7 @@ const AnimatedRoutes = () => {
             <Route path="/profile" element={<Profile />} />
             <Route path="/complete-profile" element={<Profile />} />
             <Route path="/add-farm" element={<AddFarm />} />
+            <Route path="/notifications" element={<NotificationsPage />} />
             <Route path="/select-farm" element={<SelectFarm />} />
             <Route path="/farms" element={<SelectFarm />} />
             <Route path="/crop-recommendation" element={<CropRecommendation />} />
@@ -185,7 +188,7 @@ const AnimatedRoutes = () => {
             <Route path="/fertilizers" element={<Dashboard />} />
             <Route path="/irrigation" element={<Dashboard />} />
             <Route path="/analytics" element={<Dashboard />} />
-            <Route path="/assistant" element={<Dashboard />} />
+            <Route path="/assistant" element={<Assistant />} />
             <Route path="/settings" element={<Dashboard />} />
           </Route>
         </Route>
