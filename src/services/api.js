@@ -358,3 +358,27 @@ export const deleteConversationApi = async (id) => {
   return response.data;
 };
 
+// ==========================================
+// FERTILIZER RECOMMENDATION API
+// ==========================================
+
+export const recommendFertilizerApi = async (farmId, growthStage = null, soilOverrides = null) => {
+  const payload = { farm_id: farmId };
+  if (growthStage) payload.growth_stage = growthStage;
+  if (soilOverrides) payload.soil_overrides = soilOverrides;
+  const response = await api.post('/fertilizer/recommend/', payload);
+  return response.data;
+};
+
+export const fetchFertilizerHistoryApi = async (farmId = null) => {
+  let url = '/fertilizer/history/';
+  if (farmId) url += `?farm_id=${farmId}`;
+  const response = await api.get(url);
+  return response.data;
+};
+
+export const fetchFertilizerMasterApi = async () => {
+  const response = await api.get('/fertilizer/master/');
+  return response.data;
+};
+

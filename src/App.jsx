@@ -26,6 +26,7 @@ import Assistant from './pages/Assistant';
 
 import YieldPrediction from './pages/YieldPrediction';
 import ProfitAnalysis from './pages/ProfitAnalysis';
+import FertilizerRecommendation from './pages/FertilizerRecommendation';
 
 // Only used on Landing Page
 
@@ -188,7 +189,7 @@ const AnimatedRoutes = () => {
             <Route path="/yield-prediction" element={<YieldPrediction />} />
             <Route path="/profit-prediction" element={<ProfitAnalysis />} />
             <Route path="/pest-prediction" element={<Dashboard />} />
-            <Route path="/fertilizers" element={<Dashboard />} />
+            <Route path="/fertilizers" element={<FertilizerRecommendation />} />
             <Route path="/irrigation" element={<Dashboard />} />
             <Route path="/analytics" element={<Dashboard />} />
             <Route path="/assistant" element={<Assistant />} />
