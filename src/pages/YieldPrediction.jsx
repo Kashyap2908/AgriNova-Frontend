@@ -90,8 +90,8 @@ const YieldPrediction = () => {
           <div className="absolute inset-0 bg-emerald-500/20 blur-xl rounded-full"></div>
           <TrendingUp className="w-16 h-16 text-emerald-500 animate-pulse relative z-10" />
         </div>
-        <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Analyzing Yield Models...</h3>
-        <p className="text-slate-500 font-medium">Computing ML yield forecast for {selectedFarm.name}</p>
+        <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Analyzing Harvest Data...</h3>
+        <p className="text-slate-500 font-medium">Calculating expected harvest for {selectedFarm.name}</p>
       </div>
     );
   }
@@ -107,9 +107,9 @@ const YieldPrediction = () => {
           <div className="w-16 h-16 bg-amber-50 dark:bg-amber-900/20 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-6">
             <AlertTriangle className="w-8 h-8" />
           </div>
-          <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white mb-3">Yield Prediction Failed</h2>
+          <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white mb-3">Harvest Estimate Failed</h2>
           <p className="text-slate-600 dark:text-slate-400 mb-6 max-w-md mx-auto">
-            {error || 'Unable to calculate yield prediction for this farm.'}
+            {error || 'Unable to calculate harvest estimate for this farm.'}
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <button
@@ -140,10 +140,10 @@ const YieldPrediction = () => {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div>
           <h1 className="text-4xl sm:text-5xl font-black text-slate-900 dark:text-white tracking-tight mb-2 flex items-center gap-3">
-            <TrendingUp className="w-10 h-10 text-emerald-500" /> Yield Prediction
+            <TrendingUp className="w-10 h-10 text-emerald-500" /> Harvest Estimate
           </h1>
           <p className="text-slate-500 dark:text-slate-400 text-lg font-medium">
-            Precision Machine Learning Yield & Output Forecasting
+            Smart calculation of your expected harvest
           </p>
         </div>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
@@ -187,7 +187,7 @@ const YieldPrediction = () => {
         className="saas-card p-6 md:p-8 bg-gradient-to-br from-emerald-900/10 via-slate-900/5 to-slate-900/10 border-emerald-500/20"
       >
         <h2 className="text-xl font-extrabold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
-          <Sprout className="w-5 h-5 text-emerald-500" /> Section 1: Crop Information
+          <Sprout className="w-5 h-5 text-emerald-500" /> Farm Details
         </h2>
         
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-7 gap-4">
@@ -238,10 +238,10 @@ const YieldPrediction = () => {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
             <h2 className="text-xl font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
-              <FlaskConical className="w-5 h-5 text-blue-500" /> Section 2: Prediction Inputs & Data Origin
+              <FlaskConical className="w-5 h-5 text-blue-500" /> Your Farm's Soil and Weather Info
             </h2>
             <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mt-1">
-              Exact features fed into XGBoost Yield Model with verified data source transparency
+              The information we used to calculate your harvest estimate
             </p>
           </div>
 
@@ -249,12 +249,12 @@ const YieldPrediction = () => {
           {prediction_inputs.has_soil_health_card ? (
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 font-extrabold text-xs rounded-full self-start sm:self-auto">
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-              🟢 Using Soil Health Card
+              🟢 Using Verified Soil Test Data
             </div>
           ) : (
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 font-extrabold text-xs rounded-full self-start sm:self-auto">
               <span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
-              🟡 Using Estimated Soil Parameters
+              🟡 Using Estimated Soil Data
             </div>
           )}
         </div>
@@ -399,7 +399,7 @@ const YieldPrediction = () => {
         <div className="relative z-10 space-y-6">
           <div className="flex justify-between items-center">
             <span className="px-4 py-1.5 bg-white/20 backdrop-blur-md rounded-full font-bold text-xs uppercase tracking-wider text-emerald-100">
-              Section 3: Expected Yield Summary
+              Expected Harvest Results
             </span>
             <span className="text-xs font-semibold text-emerald-200">
               Respecting Original Unit: {crop_info.farm_area_unit}
@@ -409,7 +409,7 @@ const YieldPrediction = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
             {/* Yield per Unit Area */}
             <div className="bg-black/30 backdrop-blur-md rounded-3xl p-6 border border-white/10 flex flex-col justify-between">
-              <span className="text-xs font-bold uppercase tracking-wider text-emerald-200 mb-2">Yield per Unit Area</span>
+              <span className="text-xs font-bold uppercase tracking-wider text-emerald-200 mb-2">Harvest Rate</span>
               <div>
                 <p className="text-5xl font-black text-white tracking-tight mb-1">
                   {yield_prediction.yield_per_unit_area}
@@ -425,7 +425,7 @@ const YieldPrediction = () => {
 
             {/* Total Expected Yield */}
             <div className="bg-emerald-400/20 backdrop-blur-md rounded-3xl p-6 border border-emerald-400/30 flex flex-col justify-between">
-              <span className="text-xs font-bold uppercase tracking-wider text-emerald-200 mb-2">Total Expected Yield</span>
+              <span className="text-xs font-bold uppercase tracking-wider text-emerald-200 mb-2">Total Expected Harvest</span>
               <div>
                 <p className="text-5xl font-black text-amber-300 tracking-tight mb-1">
                   {yield_prediction.total_expected_yield}
@@ -450,7 +450,7 @@ const YieldPrediction = () => {
         className="saas-card p-6 md:p-8"
       >
         <h2 className="text-xl font-extrabold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
-          <BarChart2 className="w-5 h-5 text-indigo-500" /> Section 4: Yield Analysis
+          <BarChart2 className="w-5 h-5 text-indigo-500" /> Harvest Breakdown
         </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -509,7 +509,7 @@ const YieldPrediction = () => {
         className="saas-card p-6 md:p-8"
       >
         <h2 className="text-xl font-extrabold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
-          <Info className="w-5 h-5 text-emerald-500" /> Section 5: Practical Recommendations
+          <Info className="w-5 h-5 text-emerald-500" /> Advice for Better Growth
         </h2>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

@@ -480,18 +480,18 @@ const AddFarm = () => {
                       <input type="number" name="potassium" min="0" max="300" step="0.1" value={formData.potassium} onChange={handleChange} placeholder="0-300" className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20" />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Soil pH <span className="text-slate-400 font-normal">(Optional)</span></label>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Soil Acidity (pH) <span className="text-slate-400 font-normal">(Optional)</span></label>
                       <input type="number" name="soil_ph" min="0" max="14" step="0.1" value={formData.soil_ph} onChange={handleChange} placeholder="0-14" className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20" />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Organic Carbon (%)</label>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Soil Richness (Carbon %)</label>
                       <input type="number" name="organic_carbon" min="0" step="0.01" value={formData.organic_carbon} onChange={handleChange} placeholder="Optional" className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20" />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Electrical Cond. (dS/m)</label>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Soil Salt Level (EC)</label>
                       <input type="number" name="electrical_conductivity" min="0" step="0.01" value={formData.electrical_conductivity} onChange={handleChange} placeholder="Optional" className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20" />
                     </div>
                     <div>

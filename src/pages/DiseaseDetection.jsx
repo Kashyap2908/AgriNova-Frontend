@@ -81,10 +81,10 @@ const DiseaseDetection = () => {
     >
       <div className="mb-12 text-center">
         <h2 className="text-4xl font-extrabold text-slate-900 dark:text-white mb-4 tracking-tight flex justify-center items-center gap-3">
-          <ScanLine className="w-10 h-10 text-emerald-500" /> Plant Health Scanner
+          <ScanLine className="w-10 h-10 text-emerald-500" /> Check Crop Disease
         </h2>
         <p className="text-slate-500 dark:text-slate-400 text-lg max-w-2xl mx-auto">
-          Upload a clear photo of an affected leaf. Our EfficientNetB0 AI model will identify the disease and instantly prescribe a comprehensive treatment plan.
+          Upload a clear photo of a sick leaf. We will tell you the disease and how to treat it.
         </p>
       </div>
 

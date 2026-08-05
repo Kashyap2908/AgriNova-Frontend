@@ -188,10 +188,7 @@ const AnimatedRoutes = () => {
             <Route path="/market-intelligence/history" element={<MarketIntelligenceHistory />} />
             <Route path="/yield-prediction" element={<YieldPrediction />} />
             <Route path="/profit-prediction" element={<ProfitAnalysis />} />
-            <Route path="/pest-prediction" element={<Dashboard />} />
             <Route path="/fertilizers" element={<FertilizerRecommendation />} />
-            <Route path="/irrigation" element={<Dashboard />} />
-            <Route path="/analytics" element={<Dashboard />} />
             <Route path="/assistant" element={<Assistant />} />
             <Route path="/settings" element={<Dashboard />} />
           </Route>

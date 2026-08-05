@@ -5,32 +5,39 @@ import { FarmContext } from '../context/farm-context';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   LayoutDashboard, Map as MapIcon, PlusSquare, CloudSun, Sprout, TrendingUp, IndianRupee, 
-  BarChart3, ImagePlus, Bug, FlaskConical, Droplets, PieChart, MessageSquare, Bell, Settings, LogOut,
+  BarChart3, ImagePlus, FlaskConical, MessageSquare, Bell, Settings, LogOut,
   Search, Sun, Moon, Menu, X, ChevronDown, Leaf, Sparkles, ArrowRight, User
 } from 'lucide-react';
 import NotificationBell from './NotificationBell';
 
-const SidebarItem = ({ icon: Icon, label, to, active, onClick }) => (
-  <Link 
-    to={to} 
-    onClick={onClick}
-    className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-sm
-      ${active 
-        ? 'bg-primary text-white shadow-md shadow-primary/20' 
-        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-      }`}
-  >
-    <Icon className="w-5 h-5" />
-    <span>{label}</span>
-  </Link>
-);
+const SidebarItem = ({ icon: Icon, label, to, active, onClick, asButton }) => {
+  const baseClasses = "flex items-center gap-4 px-4 py-3.5 rounded-r-xl rounded-l-md transition-all font-semibold text-[15px] group";
+  const activeClasses = "bg-gradient-to-r from-[#22C55E]/10 to-transparent border-l-[3px] border-[#22C55E] text-[#22C55E]";
+  const inactiveClasses = "text-slate-300 hover:text-white hover:bg-white/5 border-l-[3px] border-transparent";
+
+  if (asButton) {
+    return (
+      <button onClick={onClick} className={`w-full ${baseClasses} ${inactiveClasses}`}>
+        <Icon className="w-5 h-5 text-slate-400 group-hover:text-slate-300" />
+        <span>{label}</span>
+      </button>
+    );
+  }
+
+  return (
+    <Link to={to} onClick={onClick} className={`${baseClasses} ${active ? activeClasses : inactiveClasses}`}>
+      <Icon className={`w-5 h-5 ${active ? 'text-[#22C55E]' : 'text-slate-400 group-hover:text-slate-300'}`} />
+      <span>{label}</span>
+    </Link>
+  );
+};
 
 const MainLayout = () => {
   const { user, logout } = useContext(AuthContext);
   const { farms, selectedFarm, changeFarm } = useContext(FarmContext);
   const location = useLocation();
   
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth >= 1024);
   const [isDark, setIsDark] = useState(false);
   const [farmDropdownOpen, setFarmDropdownOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
@@ -65,31 +72,21 @@ const MainLayout = () => {
 
   const navGroups = [
     {
-      title: 'Overview',
+      title: 'AgriNova Hub',
       items: [
-        { label: 'Dashboard', icon: LayoutDashboard, to: '/dashboard' },
+        { label: 'Home', icon: LayoutDashboard, to: '/dashboard' },
         { label: 'My Farms', icon: MapIcon, to: '/farms' },
         { label: 'Add Farm', icon: PlusSquare, to: '/add-farm' },
         { label: 'Weather', icon: CloudSun, to: '/weather' },
-      ]
-    },
-    {
-      title: 'Machine Learning Insights',
-      items: [
-        { label: 'Crop Recommendation', icon: Sprout, to: '/crop-recommendation' },
-        { label: 'Yield Prediction', icon: TrendingUp, to: '/yield-prediction' },
-        { label: 'Profit Prediction', icon: IndianRupee, to: '/profit-prediction' },
-        { label: 'Market Intelligence', icon: BarChart3, to: '/market-intelligence' },
-        { label: 'Disease Detection', icon: ImagePlus, to: '/disease-detection' },
-        { label: 'Pest Prediction', icon: Bug, to: '/pest-prediction' },
-      ]
-    },
-    {
-      title: 'Operations',
-      items: [
+        { label: 'What to Grow', icon: Sprout, to: '/crop-recommendation' },
+        { label: 'Harvest Estimate', icon: TrendingUp, to: '/yield-prediction' },
+        { label: 'Profit Estimate', icon: IndianRupee, to: '/profit-prediction' },
+        { label: 'Market Prices', icon: BarChart3, to: '/market-intelligence' },
+        { label: 'Check Crop Disease', icon: ImagePlus, to: '/disease-detection' },
         { label: 'Fertilizers', icon: FlaskConical, to: '/fertilizers' },
-        { label: 'Irrigation', icon: Droplets, to: '/irrigation' },
-        { label: 'Analytics', icon: PieChart, to: '/analytics' },
+        { label: 'Smart Helper', icon: MessageSquare, to: '/assistant' },
+        { label: 'Settings', icon: Settings, to: '/settings' },
+        { label: 'Logout', icon: LogOut, isAction: true, action: logout }
       ]
     }
   ];
@@ -101,11 +98,11 @@ const MainLayout = () => {
   };
 
   return (
-    <div className="h-screen w-full flex bg-slate-50 dark:bg-slate-900 transition-colors overflow-hidden">
+    <div className="h-screen w-full flex bg-slate-50 dark:bg-[#0B1121] transition-colors overflow-hidden">
       
       {/* Mobile Sidebar Overlay */}
       <AnimatePresence>
-        {isSidebarOpen && (
+        {isSidebarOpen && window.innerWidth < 1024 && (
           <motion.div 
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             onClick={() => setIsSidebarOpen(false)}
@@ -115,15 +112,15 @@ const MainLayout = () => {
       </AnimatePresence>
 
       {/* Sidebar */}
-      <aside className={`print:hidden fixed inset-y-0 left-0 z-50 w-72 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 transform transition-transform duration-300 lg:translate-x-0 lg:static lg:flex-shrink-0 flex flex-col ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <aside className={`print:hidden fixed inset-y-0 left-0 z-50 bg-white dark:bg-[#0B1121] border-r border-slate-200 dark:border-white/5 transition-all duration-300 lg:static lg:flex-shrink-0 flex flex-col overflow-hidden whitespace-nowrap ${isSidebarOpen ? 'w-72 translate-x-0' : 'w-72 -translate-x-full lg:w-0 lg:border-none lg:opacity-0'}`}>
         
         {/* Logo */}
-        <div className="h-20 flex items-center px-8 border-b border-slate-200 dark:border-slate-800">
-          <Link to="/" className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white shadow-md shadow-primary/30">
-              <Leaf className="w-5 h-5" />
+        <div className="h-20 flex items-center px-8 border-b border-slate-200 dark:border-white/5">
+          <Link to="/" className="flex items-center gap-4">
+            <div className="w-9 h-9 bg-[#22C55E] rounded-xl flex items-center justify-center text-white shadow-[0_0_15px_rgba(34,197,94,0.4)]">
+              <Leaf className="w-5 h-5 fill-current" />
             </div>
-            <h1 className="text-xl font-bold text-slate-800 dark:text-white tracking-tight">
+            <h1 className="text-2xl font-bold text-slate-800 dark:text-white tracking-tight">
               AgriNova
             </h1>
           </Link>
@@ -133,37 +130,39 @@ const MainLayout = () => {
         </div>
 
         {/* Navigation */}
-        <div className="flex-1 overflow-y-auto no-scrollbar py-6 px-4 space-y-8">
+        <div className="flex-1 overflow-y-auto no-scrollbar py-6 px-3 space-y-8">
           {navGroups.map((group, idx) => (
             <div key={idx}>
-              <h3 className="px-4 text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3">
+              <h3 className="px-4 text-[11px] font-extrabold text-slate-400 dark:text-[#64748B] uppercase tracking-[0.15em] mb-4">
                 {group.title}
               </h3>
               <div className="space-y-1">
-                {group.items.map((item, itemIdx) => (
-                  <SidebarItem 
-                    key={itemIdx}
-                    icon={item.icon}
-                    label={item.label}
-                    to={item.to}
-                    active={location.pathname === item.to}
-                    onClick={() => setIsSidebarOpen(false)}
-                  />
-                ))}
+                {group.items.map((item, itemIdx) => {
+                  if (item.isAction) {
+                    return (
+                      <SidebarItem 
+                        key={itemIdx}
+                        icon={item.icon}
+                        label={item.label}
+                        asButton={true}
+                        onClick={() => { item.action(); setIsSidebarOpen(false); }}
+                      />
+                    );
+                  }
+                  return (
+                    <SidebarItem 
+                      key={itemIdx}
+                      icon={item.icon}
+                      label={item.label}
+                      to={item.to}
+                      active={location.pathname === item.to}
+                      onClick={() => setIsSidebarOpen(false)}
+                    />
+                  );
+                })}
               </div>
             </div>
           ))}
-        </div>
-
-        {/* Footer Nav */}
-        <div className="p-4 border-t border-slate-200 dark:border-slate-800 space-y-1">
-          <SidebarItem icon={MessageSquare} label="AI Assistant" to="/assistant" active={location.pathname === '/assistant'} />
-          <SidebarItem icon={Settings} label="Settings" to="/settings" active={location.pathname === '/settings'} />
-
-          <button onClick={logout} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 hover:text-rose-600 font-medium text-sm transition-colors">
-            <LogOut className="w-5 h-5" />
-            <span>Logout</span>
-          </button>
         </div>
       </aside>
 
@@ -171,9 +170,9 @@ const MainLayout = () => {
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
         
         {/* Topbar */}
-        <header className="print:hidden h-20 bg-white/80 dark:bg-slate-900/80 backdrop-blur-lg border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-4 sm:px-8 z-30 flex-shrink-0">
+        <header className="print:hidden h-20 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border-b border-white/50 dark:border-slate-700/30 flex items-center justify-between px-4 sm:px-8 z-30 flex-shrink-0 shadow-[0_4px_30px_rgba(0,0,0,0.02)]">
           <div className="flex items-center gap-4">
-            <button onClick={() => setIsSidebarOpen(true)} className="p-2 -ml-2 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 lg:hidden">
+            <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="p-2 -ml-2 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
               <Menu className="w-6 h-6" />
             </button>
             <h2 className="text-xl font-bold text-slate-800 dark:text-white hidden sm:block">
@@ -183,15 +182,6 @@ const MainLayout = () => {
 
           <div className="flex items-center gap-3 sm:gap-6">
             
-            {/* Search */}
-            <div className="hidden md:flex relative">
-              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-              <input 
-                type="text" 
-                placeholder="Search anything..." 
-                className="pl-10 pr-4 py-2 bg-slate-100 dark:bg-slate-800 border-transparent rounded-full text-sm focus:bg-white dark:focus:bg-slate-700 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none w-64 transition-all dark:text-white"
-              />
-            </div>
 
             {/* Farm Selector Dropdown */}
             <div className="relative">
@@ -314,7 +304,7 @@ const MainLayout = () => {
 
           {/* Tooltip */}
           <div className="absolute right-full mr-4 top-1/2 -translate-y-1/2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-3 py-1.5 rounded-lg text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-xl pointer-events-none flex items-center gap-2">
-            Ask AgriNova AI <Sparkles className="w-3 h-3 text-emerald-400 dark:text-primary" />
+            Ask Smart Helper <Sparkles className="w-3 h-3 text-emerald-400 dark:text-primary" />
           </div>
         </Link>
       </div>

@@ -241,10 +241,10 @@ const MarketIntelligence = () => {
             <div className="p-2.5 bg-emerald-500/10 text-emerald-500 rounded-xl">
               <BarChart2 className="w-7 h-7" />
             </div>
-            Market Intelligence Engine
+            Market Prices
           </h1>
           <p className="mt-2 text-slate-500 dark:text-slate-400 font-medium">
-            AI-driven price predictions & rolling cache analytics for {selectedFarm.farm_name} ({crop}).
+            Current market prices and trends for {selectedFarm.farm_name} ({crop}).
           </p>
         </div>
         <div className="flex items-center gap-3 print:hidden">

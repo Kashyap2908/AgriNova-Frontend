@@ -219,10 +219,10 @@ const ProfitAnalysis = () => {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div>
           <h1 className="text-4xl sm:text-5xl font-black text-slate-900 dark:text-white tracking-tight mb-2 flex items-center gap-3">
-            <IndianRupee className="w-10 h-10 text-emerald-500" /> Profit Analysis
+            <IndianRupee className="w-10 h-10 text-emerald-500" /> Profit Estimate
           </h1>
           <p className="text-slate-500 dark:text-slate-400 text-lg font-medium">
-            Financial Feasibility, Harvest Market Valuation & Cost Optimization
+            Calculate how much money you can make
           </p>
         </div>
 

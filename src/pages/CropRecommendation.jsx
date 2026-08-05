@@ -136,10 +136,10 @@ const CropRecommendation = () => {
       {/* Title Header */}
       <div className="mb-10 text-center">
         <h2 className="text-4xl md:text-5xl font-extrabold text-slate-900 dark:text-white mb-4 tracking-tight flex justify-center items-center gap-3">
-          <Sprout className="w-10 h-10 text-emerald-500" /> Crop Recommendation Engine
+          <Sprout className="w-10 h-10 text-emerald-500" /> What to Grow
         </h2>
         <p className="text-slate-600 dark:text-slate-400 text-base md:text-lg max-w-3xl mx-auto mb-4">
-          Select recommendation mode, customize soil parameters or opt for quick rule-based recommendation based on your farm's state, soil profile, and 7-day weather aggregates.
+          Find out the best crop to grow on your land based on your soil type and local weather.
         </p>
         <Link to="/recommendation-history" className="text-emerald-500 hover:text-emerald-600 font-bold inline-flex items-center gap-1 text-sm underline underline-offset-4">
           View Past Recommendation History

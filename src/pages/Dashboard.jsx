@@ -10,18 +10,21 @@ import {
 
 const StatCard = ({ title, value, subtitle, icon: Icon, color }) => (
   <motion.div 
-    whileHover={{ y: -3 }} 
-    className="saas-card p-6 flex flex-col justify-between"
+    whileHover={{ y: -5, scale: 1.01 }} 
+    className="saas-card p-6 flex flex-col justify-between relative overflow-hidden group"
   >
-    <div className="flex justify-between items-start mb-3">
-      <div className={`p-3 rounded-xl ${color}`}>
+    {/* Decorative ambient glow */}
+    <div className={`absolute -right-8 -top-8 w-32 h-32 rounded-full blur-3xl opacity-20 transition-opacity group-hover:opacity-40 ${color.split(' ')[0]}`}></div>
+    
+    <div className="flex justify-between items-start mb-4 relative z-10">
+      <div className={`p-3.5 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 ${color} bg-opacity-50 backdrop-blur-sm`}>
         <Icon className="w-6 h-6" />
       </div>
     </div>
-    <div>
-      <h4 className="text-slate-500 dark:text-slate-400 text-xs font-extrabold uppercase tracking-wider mb-1">{title}</h4>
-      <h3 className="text-2xl font-extrabold text-slate-800 dark:text-white tracking-tight">{value}</h3>
-      {subtitle && <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{subtitle}</p>}
+    <div className="relative z-10">
+      <h4 className="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">{title}</h4>
+      <h3 className="text-3xl font-black text-slate-800 dark:text-white tracking-tighter">{value}</h3>
+      {subtitle && <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mt-2">{subtitle}</p>}
     </div>
   </motion.div>
 );
@@ -106,8 +109,8 @@ const Dashboard = () => {
         >
           <div>
             <div className="flex items-center justify-between pb-4 mb-6 border-b border-slate-100 dark:border-slate-800">
-              <h3 className="text-xl font-extrabold text-slate-800 dark:text-white flex items-center gap-2">
-                <User className="w-5 h-5 text-primary" /> Farmer Profile Summary
+              <h3 className="text-xl font-black text-slate-800 dark:text-white flex items-center gap-2">
+                <User className="w-5 h-5 text-primary" /> Farmer Profile
               </h3>
               <Link to="/profile" className="text-xs font-bold text-primary hover:underline">
                 Edit Profile
@@ -129,8 +132,8 @@ const Dashboard = () => {
                   {user?.fullName || user?.full_name || user?.username || 'Farmer User'}
                 </h4>
                 <p className="text-xs text-slate-500 dark:text-slate-400">{user?.email}</p>
-                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300 text-xs font-bold mt-1.5">
-                  <CheckCircle2 className="w-3 h-3 text-primary" /> Profile Verified
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400 text-xs font-bold mt-2 border border-emerald-200/50 dark:border-emerald-500/20">
+                  <CheckCircle2 className="w-3.5 h-3.5" /> Profile Verified
                 </div>
               </div>
             </div>
@@ -174,8 +177,8 @@ const Dashboard = () => {
         >
           <div>
             <div className="flex items-center justify-between pb-4 mb-6 border-b border-slate-100 dark:border-slate-800">
-              <h3 className="text-xl font-extrabold text-slate-800 dark:text-white flex items-center gap-2">
-                <Compass className="w-5 h-5 text-primary" /> Active Selected Farm Summary
+              <h3 className="text-xl font-black text-slate-800 dark:text-white flex items-center gap-2">
+                <Compass className="w-5 h-5 text-primary" /> Active Farm Overview
               </h3>
               <Link to="/select-farm" className="text-xs font-bold text-primary hover:underline">
                 Switch Farm
@@ -186,21 +189,24 @@ const Dashboard = () => {
               <div className="space-y-6">
                 
                 {/* Farm Name Banner */}
-                <div className="p-5 rounded-2xl bg-gradient-to-r from-slate-900 to-slate-800 text-white shadow-lg">
-                  <div className="flex justify-between items-start">
+                <div className="relative overflow-hidden p-6 sm:p-8 rounded-[20px] bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white shadow-xl shadow-slate-900/10 border border-slate-700/50">
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/20 rounded-full blur-3xl -mr-20 -mt-20"></div>
+                  <div className="absolute bottom-0 left-0 w-40 h-40 bg-blue-500/10 rounded-full blur-2xl -ml-10 -mb-10"></div>
+                  
+                  <div className="relative z-10 flex flex-col sm:flex-row justify-between items-start gap-4">
                     <div>
-                      <span className="inline-block px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-bold text-xs mb-2">
+                      <span className="inline-block px-3 py-1 rounded-full bg-white/10 backdrop-blur-md text-emerald-300 border border-white/10 font-bold text-[11px] uppercase tracking-widest mb-3">
                         Active Selected
                       </span>
-                      <h2 className="text-2xl font-extrabold tracking-tight">{selectedFarm.name}</h2>
-                      <p className="text-xs text-slate-300 mt-1 flex items-center gap-1">
-                        <MapPin className="w-3.5 h-3.5 text-emerald-400" />
+                      <h2 className="text-3xl font-black tracking-tighter">{selectedFarm.name}</h2>
+                      <p className="text-sm font-medium text-slate-400 mt-2 flex items-center gap-1.5">
+                        <MapPin className="w-4 h-4 text-emerald-400" />
                         {selectedFarm.village ? `${selectedFarm.village}, ` : ''}{selectedFarm.district || ''}{selectedFarm.state ? `, ${selectedFarm.state}` : ''}
                       </p>
                     </div>
-                    <div className="text-right">
-                      <span className="text-3xl font-black text-emerald-400">{selectedFarm.area}</span>
-                      <span className="block text-xs text-slate-300">{selectedFarm.areaUnit || 'Acres'}</span>
+                    <div className="text-left sm:text-right">
+                      <span className="text-4xl font-black text-white">{selectedFarm.area}</span>
+                      <span className="block text-sm font-bold text-emerald-400 uppercase tracking-widest mt-1">{selectedFarm.areaUnit || 'Acres'}</span>
                     </div>
                   </div>
                 </div>
