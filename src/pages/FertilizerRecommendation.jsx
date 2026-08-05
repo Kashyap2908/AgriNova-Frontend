@@ -10,10 +10,8 @@ import {
 
 const STAGES = [
   "Basal / Sowing",
-  "Vegetative / Active Tillering",
-  "Flowering / Square Formation",
-  "Grain Filling / Fruit Set",
-  "Maturity & Harvest"
+  "Vegetative / Active Growth",
+  "Flowering & Fruiting"
 ];
 
 const FertilizerRecommendation = () => {
@@ -36,6 +34,7 @@ const FertilizerRecommendation = () => {
 
   useEffect(() => {
     if (activeFarmId) {
+      setRecommendation(null);
       loadHistory(activeFarmId);
     }
     loadMasterCatalog();

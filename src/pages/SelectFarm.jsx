@@ -4,8 +4,9 @@ import { FarmContext } from '../context/farm-context';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   CheckCircle2, PlusSquare, MapPin, Scale, Layers, Droplets, Edit3, Trash2, 
-  ArrowRight, ShieldCheck, AlertTriangle, X, Check, Sprout, Map
+  ArrowRight, ShieldCheck, AlertTriangle, X, Check, Sprout, Map, AlertCircle, RefreshCw
 } from 'lucide-react';
+
 const SelectFarm = () => {
   const { farms, selectedFarm, selectFarm, editFarm, deleteFarm } = useContext(FarmContext);
   const navigate = useNavigate();
@@ -13,6 +14,8 @@ const SelectFarm = () => {
   // Modal States
   const [deleteModalId, setDeleteModalId] = useState(null);
   const [editingFarm, setEditingFarm] = useState(null);
+  const [editError, setEditError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSelectFarm = async (farmId) => {
     await selectFarm(farmId);
@@ -28,9 +31,24 @@ const SelectFarm = () => {
 
   const handleSaveEdit = async (e) => {
     e.preventDefault();
-    if (editingFarm) {
+    if (!editingFarm) return;
+    setEditError('');
+    setIsSubmitting(true);
+    try {
       await editFarm(editingFarm.id, editingFarm);
       setEditingFarm(null);
+    } catch (err) {
+      console.error("Edit farm error:", err);
+      const errors = err.response?.data?.errors || err.response?.data;
+      let msg = err.response?.data?.message || err.response?.data?.detail;
+      if (!msg && typeof errors === 'object') {
+        const firstKey = Object.keys(errors)[0];
+        const firstVal = errors[firstKey];
+        msg = `${firstKey}: ${Array.isArray(firstVal) ? firstVal[0] : firstVal}`;
+      }
+      setEditError(msg || "Failed to update farm information.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -168,7 +186,7 @@ const SelectFarm = () => {
 
                   <div className="flex items-center gap-1">
                     <button 
-                      onClick={() => setEditingFarm(farm)}
+                      onClick={() => { setEditError(''); setEditingFarm({ ...farm }); }}
                       title="Edit Farm"
                       className="p-2.5 text-slate-500 hover:text-primary bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl transition-colors"
                     >
@@ -242,14 +260,21 @@ const SelectFarm = () => {
                 </button>
               </div>
 
+              {editError && (
+                <div className="mb-4 p-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 rounded-xl text-rose-600 dark:text-rose-300 text-xs font-bold flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                  <span>{editError}</span>
+                </div>
+              )}
+
               <form onSubmit={handleSaveEdit} className="space-y-4 text-sm">
                 <div>
                   <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Farm Name</label>
                   <input 
                     type="text"
                     required
-                    value={editingFarm.name}
-                    onChange={(e) => setEditingFarm({ ...editingFarm, name: e.target.value })}
+                    value={editingFarm.name || editingFarm.farm_name || ''}
+                    onChange={(e) => setEditingFarm({ ...editingFarm, name: e.target.value, farm_name: e.target.value })}
                     className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white"
                   />
                 </div>
@@ -260,16 +285,18 @@ const SelectFarm = () => {
                     <input 
                       type="number"
                       required
-                      value={editingFarm.area}
-                      onChange={(e) => setEditingFarm({ ...editingFarm, area: e.target.value })}
+                      step="0.01"
+                      min="0.1"
+                      value={editingFarm.area || editingFarm.farm_area || ''}
+                      onChange={(e) => setEditingFarm({ ...editingFarm, area: e.target.value, farm_area: e.target.value })}
                       className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white"
                     />
                   </div>
                   <div>
                     <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Unit</label>
                     <select 
-                      value={editingFarm.areaUnit || 'Acres'}
-                      onChange={(e) => setEditingFarm({ ...editingFarm, areaUnit: e.target.value })}
+                      value={editingFarm.areaUnit || editingFarm.area_unit || 'Acres'}
+                      onChange={(e) => setEditingFarm({ ...editingFarm, areaUnit: e.target.value, area_unit: e.target.value })}
                       className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white cursor-pointer"
                     >
                       <option value="Acres">Acres</option>
@@ -305,6 +332,15 @@ const SelectFarm = () => {
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
+                    <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Taluka / Sub-District</label>
+                    <input 
+                      type="text"
+                      value={editingFarm.taluka || ''}
+                      onChange={(e) => setEditingFarm({ ...editingFarm, taluka: e.target.value })}
+                      className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white"
+                    />
+                  </div>
+                  <div>
                     <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Village</label>
                     <input 
                       type="text"
@@ -314,12 +350,15 @@ const SelectFarm = () => {
                       className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white"
                     />
                   </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-3">
                   <div>
                     <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Soil Type</label>
                     <select 
-                      value={editingFarm.soilType || editingFarm.soil || 'Black Soil'}
-                      onChange={(e) => setEditingFarm({ ...editingFarm, soilType: e.target.value, soil: e.target.value })}
-                      className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white cursor-pointer"
+                      value={editingFarm.soilType || editingFarm.soil_type || editingFarm.soil || 'Black Soil'}
+                      onChange={(e) => setEditingFarm({ ...editingFarm, soilType: e.target.value, soil_type: e.target.value, soil: e.target.value })}
+                      className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white cursor-pointer"
                     >
                       <option value="Black Soil">Black Soil</option>
                       <option value="Alluvial Soil">Alluvial Soil</option>
@@ -329,36 +368,62 @@ const SelectFarm = () => {
                       <option value="Loamy Soil">Loamy Soil</option>
                     </select>
                   </div>
+                  <div>
+                    <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Irrigation</label>
+                    <select 
+                      value={editingFarm.irrigationType || editingFarm.irrigation_type || editingFarm.irrigation || 'Drip Irrigation'}
+                      onChange={(e) => setEditingFarm({ ...editingFarm, irrigationType: e.target.value, irrigation_type: e.target.value, irrigation: e.target.value })}
+                      className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white cursor-pointer"
+                    >
+                      <option value="Drip Irrigation">Drip Irrigation</option>
+                      <option value="Sprinkler Irrigation">Sprinkler Irrigation</option>
+                      <option value="Canal Irrigation">Canal Irrigation</option>
+                      <option value="Borewell / Groundwater">Borewell / Groundwater</option>
+                      <option value="Rainfed / Monsoon">Rainfed / Monsoon</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Water Source</label>
+                    <select 
+                      value={editingFarm.waterAvailability || editingFarm.water_availability || 'Good'}
+                      onChange={(e) => setEditingFarm({ ...editingFarm, waterAvailability: e.target.value, water_availability: e.target.value })}
+                      className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white cursor-pointer"
+                    >
+                      <option value="Good">Good / Abundant</option>
+                      <option value="Moderate">Moderate / Seasonal</option>
+                      <option value="Scarcity">Scarcity / Low</option>
+                    </select>
+                  </div>
                 </div>
 
                 <div className="border-t border-slate-100 dark:border-slate-800 pt-4 mt-4">
-                  <h4 className="text-sm font-bold text-slate-800 dark:text-white mb-3">Soil Test Data</h4>
+                  <h4 className="text-sm font-bold text-slate-800 dark:text-white mb-3">Soil Test Data (Optional)</h4>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
                     <div>
                       <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">Nitrogen (N)</label>
-                      <input type="number" min="0" max="200" step="0.1" value={editingFarm.nitrogen || ''} onChange={(e) => setEditingFarm({ ...editingFarm, nitrogen: e.target.value })} className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white" />
+                      <input type="number" min="0" max="200" step="0.1" value={editingFarm.nitrogen !== null && editingFarm.nitrogen !== undefined ? editingFarm.nitrogen : ''} onChange={(e) => setEditingFarm({ ...editingFarm, nitrogen: e.target.value })} className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white" />
                     </div>
                     <div>
                       <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">Phosphorus (P)</label>
-                      <input type="number" min="0" max="200" step="0.1" value={editingFarm.phosphorus || ''} onChange={(e) => setEditingFarm({ ...editingFarm, phosphorus: e.target.value })} className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white" />
+                      <input type="number" min="0" max="200" step="0.1" value={editingFarm.phosphorus !== null && editingFarm.phosphorus !== undefined ? editingFarm.phosphorus : ''} onChange={(e) => setEditingFarm({ ...editingFarm, phosphorus: e.target.value })} className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white" />
                     </div>
                     <div>
                       <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">Potassium (K)</label>
-                      <input type="number" min="0" max="300" step="0.1" value={editingFarm.potassium || ''} onChange={(e) => setEditingFarm({ ...editingFarm, potassium: e.target.value })} className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white" />
+                      <input type="number" min="0" max="300" step="0.1" value={editingFarm.potassium !== null && editingFarm.potassium !== undefined ? editingFarm.potassium : ''} onChange={(e) => setEditingFarm({ ...editingFarm, potassium: e.target.value })} className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white" />
                     </div>
                     <div>
                       <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">Soil pH</label>
-                      <input type="number" min="0" max="14" step="0.1" value={editingFarm.soil_ph || ''} onChange={(e) => setEditingFarm({ ...editingFarm, soil_ph: e.target.value })} className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white" />
+                      <input type="number" min="0" max="14" step="0.1" value={editingFarm.soil_ph !== null && editingFarm.soil_ph !== undefined ? editingFarm.soil_ph : ''} onChange={(e) => setEditingFarm({ ...editingFarm, soil_ph: e.target.value })} className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white" />
                     </div>
                   </div>
                   <div className="grid grid-cols-3 gap-3">
                     <div>
                       <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">Org. Carbon</label>
-                      <input type="number" min="0" step="0.01" value={editingFarm.organic_carbon || ''} onChange={(e) => setEditingFarm({ ...editingFarm, organic_carbon: e.target.value })} className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white" />
+                      <input type="number" min="0" step="0.01" value={editingFarm.organic_carbon !== null && editingFarm.organic_carbon !== undefined ? editingFarm.organic_carbon : ''} onChange={(e) => setEditingFarm({ ...editingFarm, organic_carbon: e.target.value })} className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white" />
                     </div>
                     <div>
                       <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">Elec. Cond.</label>
-                      <input type="number" min="0" step="0.01" value={editingFarm.electrical_conductivity || ''} onChange={(e) => setEditingFarm({ ...editingFarm, electrical_conductivity: e.target.value })} className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white" />
+                      <input type="number" min="0" step="0.01" value={editingFarm.electrical_conductivity !== null && editingFarm.electrical_conductivity !== undefined ? editingFarm.electrical_conductivity : ''} onChange={(e) => setEditingFarm({ ...editingFarm, electrical_conductivity: e.target.value })} className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white" />
                     </div>
                     <div>
                       <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">Test Date</label>
@@ -377,9 +442,16 @@ const SelectFarm = () => {
                   </button>
                   <button 
                     type="submit"
-                    className="flex-1 py-2.5 bg-primary text-white font-bold rounded-xl text-xs shadow-md shadow-primary/20 hover:bg-primary-dark"
+                    disabled={isSubmitting}
+                    className="flex-1 py-2.5 bg-primary text-white font-bold rounded-xl text-xs shadow-md shadow-primary/20 hover:bg-primary-dark flex items-center justify-center gap-2 disabled:opacity-50"
                   >
-                    Save Changes
+                    {isSubmitting ? (
+                      <>
+                        <RefreshCw className="w-4 h-4 animate-spin" /> Saving...
+                      </>
+                    ) : (
+                      "Save Changes"
+                    )}
                   </button>
                 </div>
               </form>

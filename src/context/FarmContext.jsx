@@ -131,7 +131,7 @@ export const FarmProvider = ({ children }) => {
   const editFarm = async (farmId, updatedData) => {
     const numericId = parseInt(farmId);
     try {
-      await api.put(`/farms/${numericId}/`, updatedData);
+      await api.patch(`/farms/${numericId}/`, updatedData);
     } catch (err) {
       console.error('API edit farm error:', err);
       throw err;
