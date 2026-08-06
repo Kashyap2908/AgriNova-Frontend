@@ -9,14 +9,14 @@ import { detectDisease } from '../services/mlService';
 const InfoCard = ({ icon: Icon, title, content, colorClass = "text-amber-500", bgClass = "bg-amber-500/10" }) => {
   if (!content || content === "N/A") return null;
   return (
-    <div className="bg-slate-800/50 backdrop-blur-md border border-slate-700/50 rounded-2xl p-5 hover:bg-slate-800 transition-colors">
+    <div className="bg-slate-800/50 backdrop-blur-md border border-slate-700/50 rounded-2xl p-4 hover:bg-slate-800 transition-colors">
       <div className="flex items-start gap-4">
-        <div className={`p-3 rounded-xl ${bgClass} ${colorClass}`}>
+        <div className={`p-3 rounded-xl shrink-0 ${bgClass} ${colorClass}`}>
           <Icon className="w-6 h-6" />
         </div>
-        <div>
-          <h4 className="text-slate-400 font-semibold text-sm uppercase tracking-wider mb-1">{title}</h4>
-          <p className="text-slate-200 leading-relaxed text-sm">{content}</p>
+        <div className="flex-1 min-w-0">
+          <h4 className="text-slate-400 font-semibold text-sm uppercase tracking-wider mb-1 truncate">{title}</h4>
+          <p className="text-slate-200 leading-relaxed text-sm break-words">{content}</p>
         </div>
       </div>
     </div>
@@ -121,7 +121,7 @@ const DiseaseDetection = () => {
                       ></motion.div>
                       <div className="absolute inset-0 z-20 flex flex-col items-center justify-center text-white">
                         <ScanLine className="w-12 h-12 text-emerald-500 mb-4 animate-pulse" />
-                        <span className="font-bold text-lg text-center px-4">Analyzing cell structure via EfficientNetB0...</span>
+                        <span className="font-bold text-lg text-center px-4">Scanning your leaf...</span>
                       </div>
                     </>
                   )}
@@ -183,7 +183,7 @@ const DiseaseDetection = () => {
                   className="h-full flex flex-col items-center justify-center text-emerald-500"
                 >
                   <div className="w-16 h-16 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin mb-6"></div>
-                  <h3 className="text-xl font-bold">Querying Database...</h3>
+                  <h3 className="text-xl font-bold">Loading results...</h3>
                 </motion.div>
               )}
 
@@ -194,34 +194,59 @@ const DiseaseDetection = () => {
                   className="h-full flex flex-col overflow-hidden"
                 >
                   {/* Top Bar Summary */}
-                  <div className="flex flex-wrap md:flex-nowrap justify-between items-start gap-4 mb-6 pb-6 border-b border-slate-700">
-                    <div>
-                      <div className="flex items-center gap-3 mb-2">
+                  <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6 mb-6 pb-6 border-b border-slate-700">
+                    <div className="w-full xl:w-auto flex-1 min-w-0">
+                      <div className="flex flex-wrap items-center gap-2 mb-3">
                         {isHealthy ? (
-                          <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full font-bold text-xs">
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full font-bold text-xs whitespace-nowrap">
                             <ShieldCheck className="w-4 h-4" /> Healthy
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded-full font-bold text-xs">
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded-full font-bold text-xs whitespace-nowrap">
                             <AlertTriangle className="w-4 h-4" /> Diseased
                           </span>
                         )}
-                        <span className="text-slate-400 text-sm font-semibold px-3 py-1 bg-slate-800 rounded-full">
+                        <span className="text-slate-400 text-sm font-semibold px-3 py-1 bg-slate-800 rounded-full whitespace-nowrap">
                           {result.crop}
                         </span>
+                        
+                        {/* Verification Badge */}
+                        {result.verification_status && (
+                           <span className={`inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-full border whitespace-nowrap ${
+                             result.verification_status.includes('Verified') && !result.verification_status.includes('Unverified')
+                               ? 'bg-blue-500/20 text-blue-400 border-blue-500/30'
+                               : 'bg-amber-500/20 text-amber-400 border-amber-500/30'
+                           }`}>
+                             <ShieldCheck className="w-4 h-4 shrink-0" /> <span className="truncate">{result.verification_status.split('(')[0].trim()}</span>
+                           </span>
+                        )}
+                        
                       </div>
-                      <h3 className={`text-3xl md:text-4xl font-extrabold tracking-tight ${isHealthy ? 'text-emerald-400' : 'text-rose-400'}`}>
+                      <h3 className={`text-3xl md:text-4xl font-extrabold tracking-tight break-words ${isHealthy ? 'text-emerald-400' : 'text-rose-400'}`}>
                         {result.disease}
                       </h3>
                     </div>
                     
-                    <div className="bg-slate-800/80 rounded-xl p-4 border border-slate-700 min-w-[150px] shrink-0">
-                      <div className="text-slate-400 text-xs font-bold uppercase mb-1">AI Confidence</div>
-                      <div className="flex items-end gap-2 mb-2">
-                        <span className="text-2xl font-bold text-emerald-400 leading-none">{result.confidence}</span>
-                      </div>
-                      <div className="w-full bg-slate-900 rounded-full h-1.5">
-                        <div className="bg-emerald-400 h-1.5 rounded-full" style={{ width: result.confidence }}></div>
+                    <div className="flex flex-wrap items-center gap-4 w-full xl:w-auto">
+                      {/* Similarity Image Box */}
+                      {result.similar_image_url && result.similarity_score !== "N/A" && (
+                        <div className="bg-slate-800/80 rounded-xl p-3 border border-slate-700 flex-1 sm:flex-none flex items-center gap-3">
+                          <img src={`http://localhost:8000${result.similar_image_url}`} alt="Similar Match" className="w-12 h-12 md:w-14 md:h-14 object-cover rounded-lg border border-slate-600 shrink-0" />
+                          <div className="min-w-0">
+                             <div className="text-slate-400 text-xs font-bold uppercase mb-0.5 truncate">AI Match</div>
+                             <div className="text-lg md:text-xl font-bold text-blue-400">{result.similarity_score}</div>
+                          </div>
+                        </div>
+                      )}
+                      
+                      <div className="bg-slate-800/80 rounded-xl p-4 border border-slate-700 flex-1 sm:flex-none min-w-[140px]">
+                        <div className="text-slate-400 text-xs font-bold uppercase mb-1 truncate">AI Confidence</div>
+                        <div className="flex items-end gap-2 mb-2">
+                          <span className="text-xl md:text-2xl font-bold text-emerald-400 leading-none">{result.confidence}</span>
+                        </div>
+                        <div className="w-full bg-slate-900 rounded-full h-1.5">
+                          <div className="bg-emerald-400 h-1.5 rounded-full" style={{ width: result.confidence }}></div>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -232,17 +257,17 @@ const DiseaseDetection = () => {
                     {/* Healthy Layout */}
                     {isHealthy ? (
                       <div className="space-y-4">
-                        <div className="p-6 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl">
+                        <div className="p-5 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl">
                           <h4 className="text-emerald-400 font-bold text-lg mb-2 flex items-center gap-2">
                             <CheckCircle2 className="w-5 h-5" /> Excellent Health
                           </h4>
                           <p className="text-slate-300 text-lg leading-relaxed">{result.symptoms}</p>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                           <InfoCard icon={ShieldCheck} title="Prevention" content={result.prevention} colorClass="text-emerald-400" bgClass="bg-emerald-500/10" />
                           <InfoCard icon={Sprout} title="Farmer Action" content={result.farmer_action} colorClass="text-emerald-400" bgClass="bg-emerald-500/10" />
-                          <InfoCard icon={FileText} title="Govt Recommendation" content={result.government_recommendation} colorClass="text-blue-400" bgClass="bg-blue-500/10" />
+                          <InfoCard icon={FileText} title="Govt Rec." content={result.government_recommendation} colorClass="text-blue-400" bgClass="bg-blue-500/10" />
                         </div>
                       </div>
                     ) : (
