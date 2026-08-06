@@ -7,7 +7,7 @@ import {
   Leaf, Calendar, TrendingUp, TrendingDown, Sparkles, Cpu, Layers, Sprout, ChevronDown
 } from 'lucide-react';
 import { FarmContext } from '../context/farm-context';
-import { fetchMarketIntelligenceApi, fetchAvailableCropsApi } from '../services/api';
+import { fetchMarketIntelligenceApi, fetchAvailableCropsApi, downloadMarketReportApi } from '../services/api';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -38,6 +38,7 @@ const MarketIntelligence = () => {
   const urlCrop = searchParams.get('crop');
 
   const [loading, setLoading] = useState(false);
+  const [reportLoading, setReportLoading] = useState(false);
   const [error, setError] = useState(null);
   const [data, setData] = useState(null);
   const [historicalTab, setHistoricalTab] = useState('Weekly'); // 'Weekly', 'Monthly', 'Yearly'
@@ -95,8 +96,30 @@ const MarketIntelligence = () => {
     fetchIntelligence(newCrop);
   };
 
-  const handlePrint = () => {
-    window.print();
+  const handlePrint = async () => {
+    if (!selectedFarm || !crop) return;
+    setReportLoading(true);
+    try {
+      const response = await downloadMarketReportApi(selectedFarm.id, crop);
+      if (response.success && response.data) {
+        const blob = new Blob([response.data], { type: 'application/pdf' });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `Market_Intelligence_Report_${new Date().toISOString().split('T')[0]}.pdf`);
+        document.body.appendChild(link);
+        link.click();
+        link.parentNode.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      } else {
+        alert(response.message || 'Failed to generate report.');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('An error occurred while generating the report.');
+    } finally {
+      setReportLoading(false);
+    }
   };
 
   if (!isFarmsLoaded) return <div className="p-8 text-center text-slate-500">Loading Farm Data...</div>;
@@ -250,9 +273,11 @@ const MarketIntelligence = () => {
         <div className="flex items-center gap-3 print:hidden">
           <button 
             onClick={handlePrint}
-            className="flex items-center gap-2 px-4 py-2 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800/50 rounded-xl hover:bg-indigo-100 transition-colors font-semibold text-sm shadow-sm"
+            disabled={reportLoading}
+            className={`flex items-center gap-2 px-4 py-2 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800/50 rounded-xl transition-colors font-semibold text-sm shadow-sm ${reportLoading ? 'opacity-75 cursor-not-allowed' : 'hover:bg-indigo-100'}`}
           >
-            <Download className="w-4 h-4" /> Download Report
+            {reportLoading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />} 
+            {reportLoading ? 'Generating...' : 'Download Report'}
           </button>
         </div>
       </div>

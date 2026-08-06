@@ -223,6 +223,23 @@ export const fetchMarketIntelligenceApi = async (farmId, crop = null) => {
   }
 };
 
+export const downloadMarketReportApi = async (farmId, crop = null) => {
+  try {
+    let url = `/market-forecast/report/?farm_id=${farmId}`;
+    if (crop) {
+      url += `&crop=${encodeURIComponent(crop)}`;
+    }
+    const response = await api.get(url, { responseType: 'blob' });
+    return { success: true, data: response.data };
+  } catch (error) {
+    console.error('Market Report Download error:', error);
+    return { 
+      success: false, 
+      message: 'Failed to generate market report. Please try again later.'
+    };
+  }
+};
+
 export const fetchCropMarketPriceApi = async (crop, farmId = null) => {
   try {
     let url = `/market-forecast/crop-price/?crop=${encodeURIComponent(crop)}`;
@@ -362,10 +379,13 @@ export const deleteConversationApi = async (id) => {
 // FERTILIZER RECOMMENDATION API
 // ==========================================
 
-export const recommendFertilizerApi = async (farmId, growthStage = null, soilOverrides = null) => {
-  const payload = { farm_id: farmId };
-  if (growthStage) payload.growth_stage = growthStage;
-  if (soilOverrides) payload.soil_overrides = soilOverrides;
+export const recommendFertilizerApi = async (dataOrFarmId, payloadExtra = {}) => {
+  let payload = {};
+  if (typeof dataOrFarmId === 'object' && dataOrFarmId !== null) {
+    payload = { ...dataOrFarmId };
+  } else if (typeof dataOrFarmId === 'number' || typeof dataOrFarmId === 'string') {
+    payload = { farm_id: dataOrFarmId, ...payloadExtra };
+  }
   const response = await api.post('/fertilizer/recommend/', payload);
   return response.data;
 };
