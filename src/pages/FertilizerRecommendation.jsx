@@ -394,20 +394,20 @@ const FertilizerRecommendation = () => {
                 transition={{ duration: 0.4 }}
                 className="space-y-8"
               >
-                {/* SECTION 1: CROP & FARM SUMMARY HEADER */}
+                {/* SECTION 1: CROP SUMMARY HEADER */}
                 <div className="bg-slate-950/60 backdrop-blur-xl border border-slate-800 rounded-3xl p-6 md:p-8 shadow-xl relative overflow-hidden">
                   <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
                     <div>
                       <div className="flex items-center gap-3 mb-2">
                         <span className="px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 text-xs font-bold uppercase">
-                          {plan.crop_summary?.crop} Plan ({plan.crop_summary?.area_display})
+                          1. Crop Summary: {plan.crop_summary?.crop} ({plan.crop_summary?.area_display})
                         </span>
                         <span className="px-3 py-1 rounded-full bg-cyan-500/20 border border-cyan-500/40 text-cyan-400 text-xs font-bold">
                           {plan.soil_summary?.mode === 'PRECISION' ? '🔬 Laboratory Soil Health Card' : '🌾 ICAR Regional Baseline'}
                         </span>
                       </div>
                       <h2 className="text-2xl md:text-3xl font-extrabold text-white">
-                        Agronomic Crop Nutrition & Protection Blueprint
+                        Smart Crop Nutrition & Protection Advisory
                       </h2>
                       <p className="text-slate-400 text-xs md:text-sm mt-1">
                         State: <span className="text-slate-200 font-semibold">{plan.crop_summary?.state}</span> | Soil Type: <span className="text-slate-200 font-semibold">{plan.crop_summary?.soil_type}</span> | Season: <span className="text-slate-200 font-semibold">{plan.crop_summary?.season}</span> | Previous Crop: <span className="text-slate-200 font-semibold">{plan.crop_summary?.previous_crop}</span>
@@ -439,12 +439,28 @@ const FertilizerRecommendation = () => {
                   </div>
                 </div>
 
-                {/* SECTION 2: NUTRIENT ANALYSIS MATRIX */}
+                {/* SECTION 2: SOIL SUMMARY & BASELINE */}
+                <div className="bg-slate-950/60 backdrop-blur-xl border border-slate-800 rounded-3xl p-5 md:p-6 shadow-xl">
+                  <div className="flex items-center gap-3">
+                    <FlaskConical className="w-5 h-5 text-emerald-400 shrink-0" />
+                    <div>
+                      <h4 className="text-sm font-bold text-white uppercase tracking-wider">2. Soil Summary</h4>
+                      <p className="text-xs text-slate-300 mt-0.5">
+                        {plan.soil_summary?.mode === 'PRECISION'
+                          ? 'Laboratory verified Soil Health Card data loaded for farm.'
+                          : `Estimated regional ICAR baseline parameters active for ${plan.crop_summary?.soil_type} soil in ${plan.crop_summary?.state}.`}
+                        {' '}pH: <span className="font-bold text-emerald-400">{plan.soil_summary?.soil_nutrients?.pH || 7.0}</span> | Organic Carbon: <span className="font-bold text-emerald-400">{plan.soil_summary?.soil_nutrients?.OC || 0.75}%</span> | EC: <span className="font-bold text-emerald-400">{plan.soil_summary?.soil_nutrients?.EC || 0.45} dS/m</span>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* SECTION 3: NUTRIENT ANALYSIS MATRIX */}
                 <div className="bg-slate-950/60 backdrop-blur-xl border border-slate-800 rounded-3xl p-6 md:p-8 shadow-xl">
                   <div className="flex items-center justify-between border-b border-slate-800 pb-4 mb-6">
                     <div>
                       <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                        <FlaskConical className="w-5 h-5 text-emerald-400" /> Soil Nutrient Status & Deficit Analysis
+                        <FlaskConical className="w-5 h-5 text-emerald-400" /> 3. Nutrient Status & Classification Matrix
                       </h3>
                       <p className="text-xs text-slate-400 mt-1">
                         Compares verified soil values against {plan.crop_summary?.crop} target yield requirements (ICAR standard)
@@ -522,11 +538,11 @@ const FertilizerRecommendation = () => {
                   </div>
                 </div>
 
-                {/* SECTION 3: MULTIPLE STRATEGY CARDS */}
+                {/* SECTION 4: MULTIPLE FERTILIZER PLANS */}
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                      <Layers className="w-5 h-5 text-emerald-400" /> Multiple Fertilizer Plan Options
+                      <Layers className="w-5 h-5 text-emerald-400" /> 4. Fertilizer Plans (Budget, Balanced, Premium Options)
                     </h3>
                     <p className="text-xs text-slate-400">Select a strategy card below to view custom application schedule</p>
                   </div>
@@ -584,14 +600,14 @@ const FertilizerRecommendation = () => {
                   </div>
                 </div>
 
-                {/* SECTION 4: SELECTED PLAN FERTILIZER BREAKDOWN TABLE */}
+                {/* SECTION 5: SELECTED PLAN BREAKDOWN TABLE */}
                 <div className="bg-slate-950/60 backdrop-blur-xl border border-slate-800 rounded-3xl p-6 md:p-8 shadow-xl">
                   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-slate-800 pb-4 mb-6 gap-4">
                     <div>
                       <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                        <ShoppingBag className="w-5 h-5 text-emerald-400" /> Selected Plan Breakdown ({activeSelectedPlan.title})
+                        <ShoppingBag className="w-5 h-5 text-emerald-400" /> 5. Selected Plan ({activeSelectedPlan.title})
                       </h3>
-                      <p className="text-xs text-slate-400 mt-1">Exact quantities, commercial bags, and estimated market prices for your farm</p>
+                      <p className="text-xs text-slate-400 mt-1">Exact fertilizer product formulations, commercial bags, and estimated market prices</p>
                     </div>
                     <div className="text-right">
                       <div className="text-xs text-slate-400 font-bold">Nutrition Cost Head</div>
@@ -631,13 +647,13 @@ const FertilizerRecommendation = () => {
                   </div>
                 </div>
 
-                {/* SECTION 5: STAGE-WISE APPLICATION TIMELINE */}
+                {/* SECTION 6: STAGE-WISE APPLICATION SCHEDULE */}
                 <div className="bg-slate-950/60 backdrop-blur-xl border border-slate-800 rounded-3xl p-6 md:p-8 shadow-xl">
                   <div className="border-b border-slate-800 pb-4 mb-6">
                     <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                      <Clock className="w-5 h-5 text-emerald-400" /> Stage-Wise Application Schedule
+                      <Clock className="w-5 h-5 text-emerald-400" /> 6. Stage-Wise Application Schedule
                     </h3>
-                    <p className="text-xs text-slate-400 mt-1">Split application schedule to maximize nutrient use efficiency (NUE) and prevent volatilization</p>
+                    <p className="text-xs text-slate-400 mt-1">Split application timeline to maximize nutrient use efficiency (NUE)</p>
                   </div>
 
                   <div className="space-y-6 relative before:absolute before:left-3.5 before:top-3 before:bottom-3 before:w-0.5 before:bg-emerald-500/30 pl-8">
@@ -679,14 +695,14 @@ const FertilizerRecommendation = () => {
                   </div>
                 </div>
 
-                {/* SECTION 6: INTEGRATED CROP PROTECTION PLAN */}
+                {/* SECTION 7: CROP PROTECTION PLAN */}
                 <div className="bg-slate-950/60 backdrop-blur-xl border border-slate-800 rounded-3xl p-6 md:p-8 shadow-xl">
                   <div className="flex justify-between items-center border-b border-slate-800 pb-4 mb-6">
                     <div>
                       <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                        <Shield className="w-5 h-5 text-emerald-400" /> Integrated Crop Protection Plan
+                        <Shield className="w-5 h-5 text-emerald-400" /> 7. Crop Protection Plan
                       </h3>
-                      <p className="text-xs text-slate-400 mt-1">Preventive weed, pest, and disease control guidelines matched to crop growth stages</p>
+                      <p className="text-xs text-slate-400 mt-1">Weed control, disease prevention, pest management, and growth regulators</p>
                     </div>
                     <div className="text-right">
                       <div className="text-xs text-slate-400 font-bold">Protection Cost Head</div>
@@ -718,7 +734,7 @@ const FertilizerRecommendation = () => {
                             <td className="p-3.5 font-bold text-emerald-400">{p.category}</td>
                             <td className="p-3.5 font-semibold text-white">{p.problem}</td>
                             <td className="p-3.5">
-                              <b>{p.recommended_product}</b> <span className="text-[10px] text-slate-400">({p.active_ingredient})</span>
+                              <b>{p.recommended_product}</b> {p.active_ingredient && p.active_ingredient !== 'N/A' ? <span className="text-[10px] text-slate-400">({p.active_ingredient})</span> : ''}
                             </td>
                             <td className="p-3.5">{p.dose_per_acre}</td>
                             <td className="p-3.5 text-slate-400">{p.application_method}</td>
@@ -730,12 +746,12 @@ const FertilizerRecommendation = () => {
                   </div>
                 </div>
 
-                {/* SECTION 7: WEATHER ADVISORY BOX */}
+                {/* SECTION 8: WEATHER ADVISORY */}
                 {plan.weather_advisory?.current_summary && (
                   <div className="bg-gradient-to-r from-blue-950/60 to-slate-950/80 border border-blue-500/30 rounded-3xl p-6 md:p-8 shadow-xl">
                     <div className="flex items-center gap-3 mb-3">
                       <Sun className="w-6 h-6 text-amber-400" />
-                      <h3 className="text-lg font-bold text-white">Real-Time Weather Integration Advisory</h3>
+                      <h3 className="text-lg font-bold text-white">8. Weather Advisory</h3>
                     </div>
                     <p className="text-xs text-slate-300 leading-relaxed mb-4">
                       {plan.weather_advisory.current_summary}
@@ -751,11 +767,11 @@ const FertilizerRecommendation = () => {
                   </div>
                 )}
 
-                {/* SECTION 8: COST BREAKDOWN SUMMARY */}
+                {/* SECTION 9: COST BREAKDOWN SUMMARY */}
                 <div className="bg-slate-950/60 backdrop-blur-xl border border-slate-800 rounded-3xl p-6 md:p-8 shadow-xl">
                   <div className="border-b border-slate-800 pb-4 mb-6">
                     <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                      <IndianRupee className="w-5 h-5 text-emerald-400" /> Complete Cost Breakdown Summary
+                      <IndianRupee className="w-5 h-5 text-emerald-400" /> 9. Cost Breakdown
                     </h3>
                     <p className="text-xs text-slate-400 mt-1">Itemized cost heads for farm operational budget planning</p>
                   </div>
@@ -815,29 +831,34 @@ const FertilizerRecommendation = () => {
                   </div>
                 </div>
 
-                {/* SECTION 9: AI EXPLANATION & SCIENTIFIC RATIONALE */}
+                {/* SECTION 10: AI EXPLANATION */}
                 <div className="bg-slate-950/60 backdrop-blur-xl border border-slate-800 rounded-3xl p-6 md:p-8 shadow-xl">
                   <div className="border-b border-slate-800 pb-4 mb-4">
                     <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                      <Sparkles className="w-5 h-5 text-emerald-400" /> Scientific AI Plan Rationale
+                      <Sparkles className="w-5 h-5 text-emerald-400" /> 10. AI Explanation
                     </h3>
                   </div>
-                  <div className="bg-slate-900/80 p-5 rounded-2xl border border-slate-800 text-xs text-slate-300 leading-relaxed white-space-pre-line">
+                  <div className="bg-slate-900/80 p-5 rounded-2xl border border-slate-800 text-xs text-slate-300 leading-relaxed whitespace-pre-line">
                     {plan.ai_explanation?.full_explanation}
                   </div>
                 </div>
 
-                {/* SECTION 10: SAFETY WARNINGS & PRECAUTIONS */}
+                {/* SECTION 11: IMPORTANT PRECAUTIONS */}
                 <div className="bg-amber-950/20 border border-amber-500/30 rounded-3xl p-6 md:p-8 shadow-xl">
                   <div className="flex items-center gap-3 mb-4">
                     <ShieldAlert className="w-6 h-6 text-amber-400" />
-                    <h3 className="text-lg font-bold text-amber-300">Agrochemical Handling & Safety Precautions</h3>
+                    <h3 className="text-lg font-bold text-amber-300">11. Important Precautions</h3>
                   </div>
                   <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-amber-200/80 list-disc list-inside">
-                    <li>Always wear protective mask, gloves, and boots during agrochemical mixing and spraying.</li>
-                    <li>Do NOT mix phosphatic fertilizers directly with Zinc Sulphate in the same spray tank.</li>
-                    <li>Apply Nitrogen fertilizers only when adequate soil moisture is present to minimize volatilization.</li>
-                    <li>Follow recommended Pre-Harvest Interval (PHI) after applying insecticides/fungicides.</li>
+                    {(plan.important_precautions || [
+                      "Wear protective gloves, eye goggles, and a mask while mixing and spraying agrochemicals.",
+                      "Maintain a Pre-Harvest Interval (PHI) of at least 14 days after chemical spray before harvesting crops.",
+                      "Never mix organophosphate insecticides with alkaline fertilizers (such as Lime or Calcium Nitrate).",
+                      "Ensure adequate soil moisture before broadcasting granular fertilizers (Urea/DAP/MOP) to prevent root scorching.",
+                      "Store remaining fertilizers and pesticides in a cool, dry, locked shed away from children and animals."
+                    ]).map((prec, pIdx) => (
+                      <li key={pIdx}>{prec}</li>
+                    ))}
                   </ul>
                 </div>
               </motion.div>
