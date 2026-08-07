@@ -12,13 +12,13 @@ import NotificationBell from './NotificationBell';
 
 const SidebarItem = ({ icon: Icon, label, to, active, onClick, asButton }) => {
   const baseClasses = "flex items-center gap-4 px-4 py-3.5 rounded-r-xl rounded-l-md transition-all font-semibold text-[15px] group";
-  const activeClasses = "bg-gradient-to-r from-[#22C55E]/10 to-transparent border-l-[3px] border-[#22C55E] text-[#22C55E]";
-  const inactiveClasses = "text-slate-300 hover:text-white hover:bg-white/5 border-l-[3px] border-transparent";
+  const activeClasses = "bg-emerald-500/10 dark:bg-gradient-to-r dark:from-[#22C55E]/10 dark:to-transparent border-l-[3px] border-emerald-600 dark:border-[#22C55E] text-emerald-700 dark:text-[#22C55E] font-extrabold";
+  const inactiveClasses = "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 border-l-[3px] border-transparent";
 
   if (asButton) {
     return (
       <button onClick={onClick} className={`w-full ${baseClasses} ${inactiveClasses}`}>
-        <Icon className="w-5 h-5 text-slate-400 group-hover:text-slate-300" />
+        <Icon className="w-5 h-5 text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300" />
         <span>{label}</span>
       </button>
     );
@@ -26,7 +26,7 @@ const SidebarItem = ({ icon: Icon, label, to, active, onClick, asButton }) => {
 
   return (
     <Link to={to} onClick={onClick} className={`${baseClasses} ${active ? activeClasses : inactiveClasses}`}>
-      <Icon className={`w-5 h-5 ${active ? 'text-[#22C55E]' : 'text-slate-400 group-hover:text-slate-300'}`} />
+      <Icon className={`w-5 h-5 ${active ? 'text-emerald-600 dark:text-[#22C55E]' : 'text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300'}`} />
       <span>{label}</span>
     </Link>
   );
@@ -85,7 +85,6 @@ const MainLayout = () => {
         { label: 'Check Crop Disease', icon: ImagePlus, to: '/disease-detection' },
         { label: 'Fertilizers', icon: FlaskConical, to: '/fertilizers' },
         { label: 'Smart Helper', icon: MessageSquare, to: '/assistant' },
-        { label: 'Settings', icon: Settings, to: '/settings' },
         { label: 'Logout', icon: LogOut, isAction: true, action: logout }
       ]
     }
@@ -266,9 +265,6 @@ const MainLayout = () => {
                       <div className="p-2">
                         <Link to="/profile" onClick={() => setProfileDropdownOpen(false)} className="w-full flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-primary rounded-lg transition-colors">
                           <User className="w-4 h-4" /> My Profile
-                        </Link>
-                        <Link to="/settings" onClick={() => setProfileDropdownOpen(false)} className="w-full flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-primary rounded-lg transition-colors">
-                          <Settings className="w-4 h-4" /> Settings
                         </Link>
                       </div>
                       <div className="border-t border-slate-100 dark:border-slate-700 p-2">

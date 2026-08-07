@@ -92,13 +92,13 @@ const DiseaseDetection = () => {
         
         {/* Left Column: Scanner Area */}
         <div className="w-full lg:w-1/3 flex flex-col gap-6">
-          <div className="bg-slate-900 dark:bg-slate-800 rounded-[2rem] p-6 shadow-2xl relative overflow-hidden h-[500px] flex flex-col border border-slate-700/50">
+          <div className="bg-slate-900 dark:bg-slate-800 rounded-[2rem] p-6 shadow-2xl relative overflow-hidden min-h-[500px] flex flex-col justify-between border border-slate-700/50">
             {/* Background Glows */}
             <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 blur-[80px] rounded-full pointer-events-none"></div>
 
-            <div className="relative z-10 flex-1 flex flex-col">
+            <div className="relative z-10 flex-1 flex flex-col justify-between space-y-4">
               {!imagePreview ? (
-                <label className="flex-1 w-full border-4 border-dashed border-slate-700 hover:border-emerald-500 rounded-[1.5rem] bg-slate-800/50 flex flex-col items-center justify-center text-slate-400 transition-all cursor-pointer hover:bg-emerald-500/5 group">
+                <label className="flex-1 min-h-[360px] w-full border-4 border-dashed border-slate-700 hover:border-emerald-500 rounded-[1.5rem] bg-slate-800/50 flex flex-col items-center justify-center text-slate-400 transition-all cursor-pointer hover:bg-emerald-500/5 group">
                   <input type="file" className="hidden" accept="image/jpeg, image/png, image/jpg" capture="environment" onChange={handleImageUpload} />
                   <div className="w-20 h-20 bg-slate-800 rounded-full flex items-center justify-center mb-6 group-hover:scale-110 transition-transform group-hover:bg-emerald-500/20 group-hover:text-emerald-400 shadow-xl">
                     <ImagePlus className="w-10 h-10" />
@@ -107,8 +107,8 @@ const DiseaseDetection = () => {
                   <span className="text-slate-400 text-sm font-medium">JPG or PNG (Max 5MB)</span>
                 </label>
               ) : (
-                <div className="flex-1 w-full relative rounded-[1.5rem] overflow-hidden border-4 border-slate-700 shadow-2xl bg-black">
-                  <img src={imagePreview} alt="Uploaded Leaf" className="w-full h-full object-contain" />
+                <div className="w-full h-80 relative rounded-[1.5rem] overflow-hidden border-4 border-slate-700 shadow-2xl bg-black shrink-0 flex items-center justify-center">
+                  <img src={imagePreview} alt="Uploaded Leaf" className="max-h-full max-w-full object-contain" />
                   
                   {loading && (
                     <>
@@ -139,7 +139,7 @@ const DiseaseDetection = () => {
               )}
 
               {error && (
-                <div className="mt-4 p-4 bg-rose-500/10 border border-rose-500/30 rounded-xl flex items-start gap-3">
+                <div className="p-4 bg-rose-500/10 border border-rose-500/30 rounded-xl flex items-start gap-3">
                   <AlertCircle className="w-5 h-5 text-rose-500 shrink-0 mt-0.5" />
                   <p className="text-rose-400 text-sm">{error}</p>
                 </div>
@@ -148,7 +148,7 @@ const DiseaseDetection = () => {
               {!loading && imagePreview && !result && !error && (
                 <button 
                   onClick={handleScan}
-                  className="mt-6 w-full py-4 bg-emerald-500 hover:bg-emerald-600 text-slate-900 font-bold text-lg rounded-xl shadow-lg shadow-emerald-500/30 transition-all flex items-center justify-center gap-2 transform hover:-translate-y-1"
+                  className="w-full py-4 bg-emerald-500 hover:bg-emerald-600 text-slate-900 font-bold text-lg rounded-xl shadow-lg shadow-emerald-500/30 transition-all flex items-center justify-center gap-2 transform hover:-translate-y-0.5 shrink-0"
                 >
                   <ScanLine className="w-6 h-6" /> Run AI Diagnosis
                 </button>

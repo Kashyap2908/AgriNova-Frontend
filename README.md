@@ -2,112 +2,94 @@
 
 [![React](https://img.shields.io/badge/React-19.0-61DAFB.svg)](https://react.dev/)
 [![Vite](https://img.shields.io/badge/Vite-8.1-646CFF.svg)](https://vitejs.dev/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4.3-38B2AC.svg)](https://tailwindcss.com/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4.0-38B2AC.svg)](https://tailwindcss.com/)
 [![Framer Motion](https://img.shields.io/badge/Framer_Motion-12.4-0055FF.svg)](https://framer.com/motion)
 [![React Router](https://img.shields.io/badge/React_Router-7.1-CA4245.svg)](https://reactrouter.com/)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](#license)
 
-AgriNova Frontend is a modern, responsive, and feature-packed web application built with **React 19**, **Vite**, **Tailwind CSS**, and **Framer Motion**. It provides farmers, agricultural consultants, and farm managers with an intuitive, aesthetic dark-themed interface to access AI-driven agronomic recommendations, market price predictions, disease diagnostics, weather advisories, and profit calculators.
+AgriNova Frontend is a state-of-the-art agricultural web application designed to empower farmers, agronomists, and farm managers with AI-powered decision support, real-time weather analytics, market intelligence, crop disease diagnostics, smart nutrition planning, and profit modeling.
 
 ---
 
 ## Table of Contents
 
-- [Project Overview](#project-overview)
-- [Features](#features)
-- [Post-Login Onboarding Workflow](#post-login-onboarding-workflow)
-- [State Management Architecture](#state-management-architecture)
+- [Implemented Modules](#implemented-modules)
+- [Key Features](#key-features)
 - [Tech Stack](#tech-stack)
 - [Folder Structure](#folder-structure)
+- [Project Workflow](#project-workflow)
 - [Installation & Setup](#installation--setup)
 - [Environment Variables](#environment-variables)
-- [Screens & Pages](#screens--pages)
-- [API Integration](#api-integration)
-- [Build Commands](#build-commands)
-- [Deployment Notes](#deployment-notes)
-- [License & Authors](#license--authors)
+- [Machine Learning Modules](#machine-learning-modules)
+- [Weather Cache](#weather-cache)
+- [Market Cache](#market-cache)
+- [Fertilizer Planner](#fertilizer-planner)
+- [Profit Analysis](#profit-analysis)
+- [AI Assistant](#ai-assistant)
+- [API Overview](#api-overview)
+- [Future Scope](#future-scope)
 
 ---
 
-## Project Overview
+## Implemented Modules
 
-AgriNova Frontend empowers farmers by delivering intelligent, data-driven agricultural tools in a streamlined single-page application (SPA). Designed with an aggressive emphasis on user experience, high visual quality, smooth micro-animations, dynamic glassmorphism aesthetics, and mobile responsiveness, AgriNova makes complex agronomic and financial insights easily accessible.
+1. **User Authentication & Profile Management (`/login`, `/register`, `/forgot-password`, `/profile`):**
+   - JWT-based authentication with secure token storage.
+   - OTP-based password reset via email.
+   - Profile setup including full name, phone number, language preference, and avatar upload.
 
-### Key Highlights:
-- **Strict Onboarding Workflow:** Ensures every user completes their profile and configures at least one farm before accessing analytical dashboards.
-- **Dynamic Context Management:** Global state management for authentication tokens and active farm selection with persistent storage.
-- **Interactive Data Visualization:** Embedded charts, interactive Leaflet maps, and real-time calculation widgets.
-- **Dark Theme Aesthetics:** Beautiful dark-mode design with glowing subtle accents, Framer Motion transitions, and clean typography.
+2. **Farm Management (`/add-farm`, `/select-farm`, `/farms`):**
+   - Multi-step farm creation wizard with OpenStreetMap Nominatim reverse-geocoding.
+   - Soil profile configuration, irrigation type, and land area unit specification (Acres, Hectares, Bigha, Gunta, etc.).
+   - Multi-farm switching and active farm state management.
 
----
+3. **Dashboard (`/dashboard`):**
+   - Central control hub showing active farm summary, registered land stats, quick action navigation, and farm metrics.
 
-## Features
+4. **Weather Module (`/weather`):**
+   - Real-time weather parameters (temperature, humidity, rainfall, wind speed, pressure, UV index).
+   - 7-day forecast breakdown and specialized agricultural weather advisories.
 
-- **Authentication System:** Secure user login, registration, and OTP-based password recovery.
-- **Onboarding & Profile Setup:** User profile completion tracking with visual completion progress indicators.
-- **Farm Management:** Multi-step farm registration wizard with automatic geolocation via OpenStreetMap Nominatim, farm switching, and CRUD operations.
-- **Interactive Dashboard:** Central hub displaying active farm parameters, quick stats, weather summaries, and module quick-links.
-- **Weather Dashboard:** Real-time temperature, humidity, rainfall, 5-day forecasts, and agricultural weather advisories.
-- **Crop Recommendation Engine:** AI recommendations predicting top suitable crops based on soil NPK, temperature, humidity, pH, state, and season.
-- **Yield Prediction:** Precision estimations of expected crop yields per hectare based on customized environmental parameters.
-- **Fertilizer Recommendation:** Soil nutrient deficit analysis paired with dynamic commercial fertilizer matching and application guidance.
-- **Market Intelligence:** Live mandi commodity prices, historical price trends, and XGBoost price forecasting.
-- **Profit Analysis Calculator:** Interactive financial model estimating total operational costs, gross income, net profit, ROI, and break-even pricing.
-- **Plant Disease Diagnosis:** Image upload tool providing AI-based leaf disease diagnosis, treatment suggestions, and visual similarity matching.
-- **AI Assistant Chatbot:** Conversational assistant for instant natural-language agricultural advice.
-- **System Notifications:** Real-time notification center for farm advisories and operational updates.
-- **Responsive & Dark UI:** Optimized for desktop, tablet, and mobile devices with fluid Framer Motion animations.
+5. **Crop Recommendation (`/crop-recommendation`):**
+   - Dual-mode crop advisor (**AI Mode** using soil parameters and **Quick Mode** using regional weather/season rules).
+   - Single best crop recommendation or multi-crop comparison.
 
----
+6. **Yield Prediction (`/yield-prediction`):**
+   - Precision harvest volume calculation per area unit and total farm yield.
+   - Parameter breakdown with data source badges (Weather Cache, Farm Info, Soil Health Card, Crop Dataset).
 
-## Post-Login Onboarding Workflow
+7. **Fertilizer Recommendation / Smart Nutrition Planner (`/fertilizers`):**
+   - Verified ICAR agronomic deficiency matrix for soil NPK and pH.
+   - Strategy plans (Budget, Balanced, Premium) with exact commercial fertilizer product combinations, quantities, and costs.
+   - One-click PDF export of customized fertilizer schedules.
 
-The frontend enforces a strict step-by-step onboarding flow immediately following user authentication:
+8. **Market Intelligence (`/market-intelligence`):**
+   - Real-time mandi commodity price feeds, APMC market trends, historical price tracking, and 3-month forecast estimates.
 
-```
-[Login / Register] ──> [Profile Completion Check] ──> [Add Farm (Multi-step)] ──> [Select Active Farm] ──> [Main Dashboard]
-```
+9. **Profit Analysis (`/profit-prediction`):**
+   - Complete cultivation economics calculator (Total Investment, Gross Income, Net Profit, ROI %, Profit Margin %, Break-even price).
+   - Interactive cost customization modal (seed, fertilizer, labour, irrigation, machinery, other costs).
+   - Scenario simulations (Best, Average, Worst case) and financial risk assessment.
 
-### Route & Flow Progression:
+10. **Plant Disease Detection (`/disease-detection`):**
+    - Leaf image upload with instant AI diagnosis, confidence score, treatment plan (organic & chemical), active ingredients, and government recommendations.
 
-1. **Authentication (`/login`, `/register`, `/forgot-password`):**
-   - Authenticates user credentials via JWT (Access + Refresh tokens).
-2. **Profile Completion (`/complete-profile`, `/profile`):**
-   - Collects personal details: Full Name, Phone Number, Preferred Language, and Optional Profile Photo.
-   - Displays a visual profile progress indicator card.
-3. **Multi-Step Farm Registration (`/add-farm`):**
-   - **Step 1: Farm Basic Info** - Name, Land Area, Area Unit (Acres/Hectares).
-   - **Step 2: Location Details** - State, District, Taluka, Village, optional PIN Code (*Coordinates resolved asynchronously via OpenStreetMap Nominatim*).
-   - **Step 3: Soil & Irrigation** - Soil Type, Irrigation Type, Water Source Reliability.
-4. **Farm Selection & Portfolio Management (`/select-farm`, `/manage-farms`):**
-   - Card layout of all user-registered farms with active selection badges and edit/delete actions.
-   - Selecting a farm updates `selectedFarm` in `FarmContext` and redirects to `/dashboard`.
-5. **Main Dashboard (`/dashboard`):**
-   - Displays Farmer Profile Summary, Active Selected Farm Summary, Quick Stats, and shortcuts to analytical tools.
+11. **Smart AI Assistant (`/assistant`):**
+    - Conversational AI helper providing context-aware agricultural guidance and advice.
 
----
-
-## State Management Architecture
-
-- **`AuthContext.jsx`:** Manages user authentication tokens, user profile metadata (`fullName`, `phone`, `language`, `avatar`), and `profileCompleted` status with `localStorage` persistence.
-- **`FarmContext.jsx`:** Manages the array of registered user farms, active farm selection (`selectedFarm`), and CRUD operations (`addFarm`, `editFarm`, `deleteFarm`, `selectFarm`) with persistent storage.
-- **`ProtectedRoute.jsx`:** Route guard that strictly enforces authentication state and onboarding completion before granting access to protected pages.
+12. **Notification Center (`/notifications`):**
+    - Agricultural alerts, weather warnings, and farm advisory notifications.
 
 ---
 
 ## Tech Stack
 
-- **Framework:** [React 19](https://react.dev/)
-- **Build Tool:** [Vite 8](https://vitejs.dev/)
-- **Routing:** [React Router DOM 7](https://reactrouter.com/)
-- **Styling:** [Tailwind CSS 4](https://tailwindcss.com/) & Vanilla CSS
-- **Animations:** [Framer Motion 12](https://framer.com/motion)
-- **HTTP Client:** [Axios 1.18](https://axios-http.com/)
-- **Icons:** [Lucide React](https://lucide.dev/)
-- **Maps:** [Leaflet](https://leafletjs.com/) & [React Leaflet](https://react-leaflet.js.org/)
-- **Charts & Graphs:** [Chart.js](https://www.chartjs.org/) & [React ChartJS 2](https://react-chartjs-2.js.org/)
-- **Markdown Rendering:** [React Markdown](https://github.com/remarkjs/react-markdown) & `remark-gfm`
-- **Linter:** [Oxlint](https://oxc.rs/docs/tools/oxlint.html)
+- **Framework:** React 19, Vite
+- **Styling:** Vanilla CSS, Tailwind CSS v4, Glassmorphism design system
+- **Animations:** Framer Motion
+- **Icons:** Lucide React
+- **HTTP Client:** Axios
+- **Routing:** React Router DOM v7
+- **PDF Generation:** jsPDF with jsPDF-AutoTable
 
 ---
 
@@ -115,165 +97,141 @@ The frontend enforces a strict step-by-step onboarding flow immediately followin
 
 ```
 AgriNova-Frontend/
-├── public/                    # Static public assets (favicon, images)
+├── public/
 ├── src/
-│   ├── assets/                # Icons, logos, and illustrative graphics
-│   ├── components/            # Reusable UI components
-│   │   ├── Navbar.jsx         # Navigation bar with farm switcher & user menu
-│   │   ├── Sidebar.jsx        # Dashboard side navigation menu
-│   │   ├── ProtectedRoute.jsx # Authentication & onboarding guard
-│   │   ├── FarmCard.jsx       # Farm portfolio display card
-│   │   └── WeatherWidget.jsx  # Compact weather summary card
-│   ├── context/               # React Context Providers
-│   │   ├── AuthContext.jsx    # User authentication & profile state
-│   │   └── FarmContext.jsx    # Active farm selection & farm portfolio state
-│   ├── pages/                 # Main Application Screen Views
-│   │   ├── Login.jsx          # User login screen
-│   │   ├── Register.jsx       # New user account registration
-│   │   ├── ForgotPassword.jsx # Password reset via OTP email verification
-│   │   ├── Profile.jsx        # User profile view & editor
-│   │   ├── AddFarm.jsx        # Multi-step farm creation wizard
-│   │   ├── SelectFarm.jsx     # Farm selection & portfolio management
-│   │   ├── Dashboard.jsx      # Central overview & farmer portal
-│   │   ├── Weather.jsx        # Detailed weather dashboard & advisories
-│   │   ├── CropRecommendation.jsx # Crop suitability form & predictor
-│   │   ├── RecommendationResult.jsx # Recommended crops & confidence scores
-│   │   ├── RecommendationHistory.jsx# Saved recommendation logs
-│   │   ├── YieldPrediction.jsx# Crop yield estimation calculator
-│   │   ├── FertilizerRecommendation.jsx # NPK deficit & fertilizer matching
-│   │   ├── MarketIntelligence.jsx   # Live mandi prices & trend predictor
-│   │   ├── MarketIntelligenceHistory.jsx # Historical mandi price archives
-│   │   ├── ProfitAnalysis.jsx # Farm financial ROI & profit calculator
-│   │   ├── DiseaseDetection.jsx # Leaf image uploading & disease diagnosis
-│   │   ├── AIAssistant.jsx    # Interactive AI Chatbot interface
-│   │   └── NotificationsPage.jsx # System alerts & farm notification feed
-│   ├── services/              # API Client & Services
-│   │   ├── api.js             # Centralized Axios client with JWT interceptors
-│   │   ├── mlService.js       # ML model endpoint service wrappers
-│   │   ├── weatherService.js  # Weather API service wrappers
-│   │   └── assistantService.js# AI Chatbot endpoint service wrappers
-│   ├── App.jsx                # Main application route configurations
-│   ├── App.css                # Custom global styling rules
-│   ├── index.css              # Tailwind CSS imports & theme utilities
-│   └── main.jsx               # Application entry point
-├── .env                       # Frontend environment configuration
-├── index.html                 # Main HTML template
-├── package.json               # Frontend dependencies & npm scripts
-└── vite.config.js             # Vite development server configuration
+│   ├── assets/              # Branding assets and icons
+│   ├── components/          # Reusable UI components (MainLayout, ProtectedRoute, NotificationBell, etc.)
+│   ├── context/             # React Context (AuthContext, FarmContext)
+│   ├── pages/               # Page components (Dashboard, CropRecommendation, FertilizerRecommendation, etc.)
+│   ├── services/            # API integration modules (api.js, mlService.js, weatherService.js, etc.)
+│   ├── utils/               # Helper utilities (areaConverter.js, pdfGenerator.js)
+│   ├── App.css
+│   ├── App.jsx              # Main routing and landing page configuration
+│   ├── index.css            # Base styles and CSS variables
+│   └── main.jsx             # Entry point
+├── index.html
+├── package.json
+└── vite.config.js
+```
+
+---
+
+## Project Workflow
+
+```
+1. Landing Page (Sign In / Sign Up)
+       │
+2. Authentication (Login / Register / Forgot Password)
+       │
+3. Profile Completion & Farm Creation (Add Farm / Select Farm)
+       │
+4. Main Platform Dashboard (Select active farm context)
+       │
+   ┌───┴─────────────────┬─────────────────┬─────────────────┐
+   ▼                     ▼                     ▼                 ▼
+Weather Advisory   Crop Advisor       Yield & Profit      Fertilizer & Disease
 ```
 
 ---
 
 ## Installation & Setup
 
-### Prerequisites
-- **Node.js 18.0** or higher
-- **npm** or **yarn**
-
-### Setup Steps
-
 1. **Clone the Repository:**
    ```bash
-   git clone https://github.com/your-organization/AgriNova.git
+   git clone <repository-url>
    cd AgriNova/AgriNova-Frontend
    ```
 
-2. **Install Node Dependencies:**
+2. **Install Dependencies:**
    ```bash
    npm install
    ```
 
 3. **Configure Environment Variables:**
-   Create a `.env` file in the `AgriNova-Frontend` root directory:
+   Create a `.env` file in the root of `AgriNova-Frontend`:
    ```env
-   VITE_API_BASE_URL=http://localhost:8000/api
+   VITE_API_URL=http://localhost:8000/api
    ```
 
-4. **Start Development Server:**
+4. **Run Development Server:**
    ```bash
    npm run dev
    ```
 
-The application will be running at: `http://localhost:5173/`
+5. **Build for Production:**
+   ```bash
+   npm run build
+   ```
 
 ---
 
 ## Environment Variables
 
-| Variable Name | Description | Default / Example Value |
+| Variable | Description | Default |
 | :--- | :--- | :--- |
-| `VITE_API_BASE_URL` | Base URL pointing to the AgriNova Django REST Backend | `http://localhost:8000/api` |
+| `VITE_API_URL` | Base URL of the Django backend API | `http://localhost:8000/api` |
 
 ---
 
-## Screens & Pages
+## Machine Learning Modules
 
-| Screen / Page | Route | Description |
-| :--- | :--- | :--- |
-| **Login** | `/login` | User authentication interface with token persistence. |
-| **Register** | `/register` | User sign-up form with input validation. |
-| **Forgot Password** | `/forgot-password` | Password recovery screen triggering email OTP validation. |
-| **Profile** | `/profile` | Profile view, completion progress, and personal detail updating. |
-| **Add Farm** | `/add-farm` | 3-step farm creation wizard with reverse geocoding. |
-| **Select Farm** | `/select-farm` | Farm portfolio manager allowing active farm switching and CRUD. |
-| **Dashboard** | `/dashboard` | Central portal showing profile summary, active farm stats, and quick links. |
-| **Weather** | `/weather` | Interactive weather dashboard with forecast cards and farm advisories. |
-| **Crop Recommendation**| `/recommend-crop` | AI form recommending top crops based on soil and weather inputs. |
-| **Yield Prediction** | `/predict-yield` | Yield calculator predicting output per hectare for selected crops. |
-| **Fertilizer Recommendation** | `/fertilizer` | Deficit calculator generating tailored fertilizer application plans. |
-| **Market Intelligence**| `/market-prices` | Mandi prices, historical commodity charts, and price forecasting. |
-| **Profit Analysis** | `/profit-analysis` | Financial calculator estimating income, costs, profit margins, and break-even points. |
-| **Disease Detection** | `/disease-detection`| Image scanner identifying plant diseases and recommending treatments. |
-| **AI Assistant** | `/ai-assistant` | AI-powered chatbot offering conversational agricultural assistance. |
-| **Notifications** | `/notifications` | Notification center displaying alerts and farm recommendations. |
+- **Crop Recommendation Engine:** Evaluates N, P, K, pH, temperature, humidity, rainfall, state, and season using Random Forest and XGBoost classification models.
+- **Yield Prediction Model:** Predicts crop yield output per hectare considering environmental inputs and soil characteristics.
+- **Market Price Forecasting Model:** Predicts 3-month future commodity market prices based on APMC historical data.
+- **Disease Diagnostic Model:** Deep learning leaf image classifier identifying crop diseases with scientific diagnosis and treatment steps.
 
 ---
 
-## API Integration
+## Weather Cache
 
-The frontend uses a centralized Axios client (`src/services/api.js`) configured to communicate with the Django REST API:
-
-- **JWT Interceptor:** Requests automatically attach the stored `access_token` in the `Authorization: Bearer <token>` header.
-- **Automatic Token Refresh:** If an API endpoint returns a `401 Unauthorized` status code, the interceptor attempts to refresh the access token using the stored `refresh_token` and retries the original request seamlessly.
-- **Response Error Handling:** Standardized error handling converts API error responses into readable user notifications.
+- Integrates live meteorological data using Open-Meteo API.
+- Caches location weather parameters per farm coordinates to optimize request volume and provide instant environmental metrics for yield & crop models.
 
 ---
 
-## Build Commands
+## Market Cache
 
-- **Development Server:**
-  ```bash
-  npm run dev
-  ```
-- **Production Build:**
-  ```bash
-  npm run build
-  ```
-- **Preview Production Build:**
-  ```bash
-  npm run preview
-  ```
-- **Code Linting:**
-  ```bash
-  npm run lint
-  ```
+- Synchronizes mandi market prices for agricultural commodities.
+- Stores historical price records and computes regional min/max/modal prices for crop profit evaluations.
 
 ---
 
-## Deployment Notes
+## Fertilizer Planner
 
-### Production Deployment (Vercel / Netlify / Nginx)
-
-1. **Environment Setup:** Ensure the production `VITE_API_BASE_URL` environment variable is set in your hosting provider's settings pointing to the deployed Django backend (e.g., `https://api.yourdomain.com/api`).
-2. **Build Generation:** Execute `npm run build` to output optimized static assets into the `dist/` directory.
-3. **Single Page Application Routing:** Configure single-page application rewriting rules on your web server (e.g. redirecting all routes to `index.html`) so React Router DOM can handle client-side routing.
+- Calculates exact NPK nutrient deficits by comparing baseline or laboratory soil health test data against ICAR crop targets.
+- Formulates multi-option fertilizer plans (Budget, Balanced, Premium) with exact commercial bag counts and cost estimations.
+- Exports custom printable PDF schedule cards.
 
 ---
 
-## License & Authors
+## Profit Analysis
 
-### License
-This project is licensed under the **MIT License** - see the `LICENSE` file for details.
+- Full financial calculation model computing operational costs against expected yield and 3-month market prices.
+- Supports interactive farmer cost customization and scenario simulations (Best, Average, Worst case).
 
-### Author
-Developed with ❤️ by the **AgriNova Frontend Engineering Team**.
+---
+
+## AI Assistant
+
+- Natural language chat assistant built for farmer queries, crop care tips, and contextual farm management advice.
+
+---
+
+## API Overview
+
+- `POST /api/auth/login/` - Authenticates user.
+- `POST /api/auth/register/` - Registers new user account.
+- `GET /api/farms/` - Fetches user farms list.
+- `POST /api/recommendation/predict/` - Generates crop recommendation.
+- `GET /api/recommendation/yield-summary/` - Fetches yield prediction summary.
+- `POST /api/fertilizer/recommend/` - Generates smart nutrition plan.
+- `POST /api/profit-analysis/` - Computes profit analysis.
+- `POST /api/disease/predict/` - Uploads leaf image for disease diagnosis.
+
+---
+
+## Future Scope
+
+- IoT soil sensor integration for real-time telemetry.
+- Multi-language localized voice interaction for AI assistant.
+- Satellite multispectral crop health imagery (NDVI index).

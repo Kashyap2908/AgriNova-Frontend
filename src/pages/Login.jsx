@@ -222,18 +222,8 @@ const Login = () => {
               </div>
             </div>
 
-            <div className="flex items-center justify-between text-sm">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input 
-                  type="checkbox" 
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  className="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary/50" 
-                />
-                <span className="text-slate-600 dark:text-slate-400 font-medium">Remember me</span>
-              </label>
+            <div className="flex items-center justify-end text-sm">
               <Link to="/forgot-password" className="font-bold text-primary hover:text-primary-dark transition-colors">Forgot Password?</Link>
-
             </div>
 
             <div className="pt-2">

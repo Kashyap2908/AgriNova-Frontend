@@ -235,28 +235,31 @@ const YieldPrediction = () => {
         transition={{ delay: 0.1 }}
         className="saas-card p-6 md:p-8"
       >
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
           <div>
             <h2 className="text-xl font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
-              <FlaskConical className="w-5 h-5 text-blue-500" /> Your Farm's Soil and Weather Info
+              <FlaskConical className="w-5 h-5 text-blue-500" /> Information Used to Calculate Your Harvest Estimate
             </h2>
             <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mt-1">
-              The information we used to calculate your harvest estimate
+              Parameters extracted from verified data sources
             </p>
           </div>
 
-          {/* Soil Health Status Badge */}
-          {prediction_inputs.has_soil_health_card ? (
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 font-extrabold text-xs rounded-full self-start sm:self-auto">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-              🟢 Using Verified Soil Test Data
-            </div>
-          ) : (
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 font-extrabold text-xs rounded-full self-start sm:self-auto">
-              <span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
-              🟡 Using Estimated Soil Data
-            </div>
-          )}
+          {/* Sources Legend Badges */}
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 font-bold text-xs rounded-full">
+              🟢 Weather Cache
+            </span>
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-500/10 border border-blue-500/30 text-blue-600 dark:text-blue-400 font-bold text-xs rounded-full">
+              🟢 Farm Information
+            </span>
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-purple-500/10 border border-purple-500/30 text-purple-600 dark:text-purple-400 font-bold text-xs rounded-full">
+              🟢 Soil Health Card
+            </span>
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 font-bold text-xs rounded-full">
+              🟢 Crop Dataset
+            </span>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
@@ -267,10 +270,6 @@ const YieldPrediction = () => {
               <span className="text-xs font-bold text-slate-400 uppercase block mb-1">Nitrogen (N)</span>
               <p className="text-2xl font-black text-slate-800 dark:text-white">{prediction_inputs.nitrogen} <span className="text-xs font-normal text-slate-400">kg/ha</span></p>
             </div>
-            <div className="mt-3 pt-2 border-t border-slate-200/60 dark:border-slate-700/60 flex items-center justify-between text-xs font-semibold text-slate-500 dark:text-slate-400" title={prediction_inputs.has_soil_health_card ? "Uploaded by the farmer." : "Used because no Soil Health Card is available."}>
-              <span className="truncate">Source: <strong className="text-slate-700 dark:text-slate-200">{prediction_inputs.input_sources?.nitrogen || (prediction_inputs.has_soil_health_card ? "Soil Health Card" : "Estimated (No Soil Health Card)")}</strong></span>
-              <Info className="w-3.5 h-3.5 text-slate-400 flex-shrink-0 cursor-help ml-1" />
-            </div>
           </div>
 
           {/* 2. Phosphorus */}
@@ -278,10 +277,6 @@ const YieldPrediction = () => {
             <div>
               <span className="text-xs font-bold text-slate-400 uppercase block mb-1">Phosphorus (P)</span>
               <p className="text-2xl font-black text-slate-800 dark:text-white">{prediction_inputs.phosphorus} <span className="text-xs font-normal text-slate-400">kg/ha</span></p>
-            </div>
-            <div className="mt-3 pt-2 border-t border-slate-200/60 dark:border-slate-700/60 flex items-center justify-between text-xs font-semibold text-slate-500 dark:text-slate-400" title={prediction_inputs.has_soil_health_card ? "Uploaded by the farmer." : "Used because no Soil Health Card is available."}>
-              <span className="truncate">Source: <strong className="text-slate-700 dark:text-slate-200">{prediction_inputs.input_sources?.phosphorus || (prediction_inputs.has_soil_health_card ? "Soil Health Card" : "Estimated (No Soil Health Card)")}</strong></span>
-              <Info className="w-3.5 h-3.5 text-slate-400 flex-shrink-0 cursor-help ml-1" />
             </div>
           </div>
 
@@ -291,10 +286,6 @@ const YieldPrediction = () => {
               <span className="text-xs font-bold text-slate-400 uppercase block mb-1">Potassium (K)</span>
               <p className="text-2xl font-black text-slate-800 dark:text-white">{prediction_inputs.potassium} <span className="text-xs font-normal text-slate-400">kg/ha</span></p>
             </div>
-            <div className="mt-3 pt-2 border-t border-slate-200/60 dark:border-slate-700/60 flex items-center justify-between text-xs font-semibold text-slate-500 dark:text-slate-400" title={prediction_inputs.has_soil_health_card ? "Uploaded by the farmer." : "Used because no Soil Health Card is available."}>
-              <span className="truncate">Source: <strong className="text-slate-700 dark:text-slate-200">{prediction_inputs.input_sources?.potassium || (prediction_inputs.has_soil_health_card ? "Soil Health Card" : "Estimated (No Soil Health Card)")}</strong></span>
-              <Info className="w-3.5 h-3.5 text-slate-400 flex-shrink-0 cursor-help ml-1" />
-            </div>
           </div>
 
           {/* 4. Soil pH */}
@@ -302,10 +293,6 @@ const YieldPrediction = () => {
             <div>
               <span className="text-xs font-bold text-slate-400 uppercase block mb-1">Soil pH</span>
               <p className="text-2xl font-black text-slate-800 dark:text-white">{prediction_inputs.ph}</p>
-            </div>
-            <div className="mt-3 pt-2 border-t border-slate-200/60 dark:border-slate-700/60 flex items-center justify-between text-xs font-semibold text-slate-500 dark:text-slate-400" title={prediction_inputs.has_soil_health_card ? "Uploaded by the farmer." : "Used because no Soil Health Card is available."}>
-              <span className="truncate">Source: <strong className="text-slate-700 dark:text-slate-200">{prediction_inputs.input_sources?.ph || (prediction_inputs.has_soil_health_card ? "Soil Health Card" : "Estimated (No Soil Health Card)")}</strong></span>
-              <Info className="w-3.5 h-3.5 text-slate-400 flex-shrink-0 cursor-help ml-1" />
             </div>
           </div>
 
@@ -315,10 +302,6 @@ const YieldPrediction = () => {
               <span className="text-xs font-bold text-slate-400 uppercase block mb-1">Temperature</span>
               <p className="text-2xl font-black text-slate-800 dark:text-white">{prediction_inputs.temperature}°C</p>
             </div>
-            <div className="mt-3 pt-2 border-t border-slate-200/60 dark:border-slate-700/60 flex items-center justify-between text-xs font-semibold text-slate-500 dark:text-slate-400" title="Retrieved from the Weather module.">
-              <span className="truncate">Source: <strong className="text-slate-700 dark:text-slate-200">Weather Cache</strong></span>
-              <Info className="w-3.5 h-3.5 text-slate-400 flex-shrink-0 cursor-help ml-1" />
-            </div>
           </div>
 
           {/* 6. Humidity */}
@@ -327,10 +310,6 @@ const YieldPrediction = () => {
               <span className="text-xs font-bold text-slate-400 uppercase block mb-1">Humidity</span>
               <p className="text-2xl font-black text-slate-800 dark:text-white">{prediction_inputs.humidity}%</p>
             </div>
-            <div className="mt-3 pt-2 border-t border-slate-200/60 dark:border-slate-700/60 flex items-center justify-between text-xs font-semibold text-slate-500 dark:text-slate-400" title="Retrieved from the Weather module.">
-              <span className="truncate">Source: <strong className="text-slate-700 dark:text-slate-200">Weather Cache</strong></span>
-              <Info className="w-3.5 h-3.5 text-slate-400 flex-shrink-0 cursor-help ml-1" />
-            </div>
           </div>
 
           {/* 7. Rainfall */}
@@ -338,10 +317,6 @@ const YieldPrediction = () => {
             <div>
               <span className="text-xs font-bold text-slate-400 uppercase block mb-1">Rainfall</span>
               <p className="text-2xl font-black text-slate-800 dark:text-white">{prediction_inputs.rainfall} <span className="text-xs font-normal text-slate-400">mm</span></p>
-            </div>
-            <div className="mt-3 pt-2 border-t border-slate-200/60 dark:border-slate-700/60 flex items-center justify-between text-xs font-semibold text-slate-500 dark:text-slate-400" title="Retrieved from the Weather module.">
-              <span className="truncate">Source: <strong className="text-slate-700 dark:text-slate-200">Weather Cache</strong></span>
-              <Info className="w-3.5 h-3.5 text-slate-400 flex-shrink-0 cursor-help ml-1" />
             </div>
           </div>
 
@@ -353,10 +328,6 @@ const YieldPrediction = () => {
                 {prediction_inputs.soil_type || 'Unknown'}
               </p>
             </div>
-            <div className="mt-3 pt-2 border-t border-slate-200/60 dark:border-slate-700/60 flex items-center justify-between text-xs font-semibold text-slate-500 dark:text-slate-400" title="Entered while creating the farm.">
-              <span className="truncate">Source: <strong className="text-slate-700 dark:text-slate-200">{prediction_inputs.soil_type && prediction_inputs.soil_type !== 'Unknown' ? "Farm Information" : "Not Provided"}</strong></span>
-              <Info className="w-3.5 h-3.5 text-slate-400 flex-shrink-0 cursor-help ml-1" />
-            </div>
           </div>
 
           {/* 9. Water Availability */}
@@ -367,10 +338,6 @@ const YieldPrediction = () => {
                 {prediction_inputs.water_availability || 'Unknown'}
               </p>
             </div>
-            <div className="mt-3 pt-2 border-t border-slate-200/60 dark:border-slate-700/60 flex items-center justify-between text-xs font-semibold text-slate-500 dark:text-slate-400" title="Entered while creating the farm.">
-              <span className="truncate">Source: <strong className="text-slate-700 dark:text-slate-200">{prediction_inputs.water_availability && prediction_inputs.water_availability !== 'Unknown' ? "Farm Information" : "Not Provided"}</strong></span>
-              <Info className="w-3.5 h-3.5 text-slate-400 flex-shrink-0 cursor-help ml-1" />
-            </div>
           </div>
 
           {/* 10. Water Requirement */}
@@ -378,10 +345,6 @@ const YieldPrediction = () => {
             <div>
               <span className="text-xs font-bold text-slate-400 uppercase block mb-1">Water Requirement</span>
               <p className="text-2xl font-black text-slate-800 dark:text-white">{prediction_inputs.water_requirement} <span className="text-xs font-normal text-slate-400">mm</span></p>
-            </div>
-            <div className="mt-3 pt-2 border-t border-slate-200/60 dark:border-slate-700/60 flex items-center justify-between text-xs font-semibold text-slate-500 dark:text-slate-400" title="Retrieved from the Crop Recommendation dataset.">
-              <span className="truncate">Source: <strong className="text-slate-700 dark:text-slate-200">Crop Dataset</strong></span>
-              <Info className="w-3.5 h-3.5 text-slate-400 flex-shrink-0 cursor-help ml-1" />
             </div>
           </div>
 

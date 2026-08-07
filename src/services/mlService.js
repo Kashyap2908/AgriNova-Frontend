@@ -34,8 +34,6 @@ console.log("mlService Loaded");
 // ================= Disease Detection =================
 
 export const detectDisease = async (imageFile) => {
-  console.log("detectDisease() Called");
-
   try {
     const formData = new FormData();
     formData.append("image", imageFile);
@@ -49,8 +47,6 @@ export const detectDisease = async (imageFile) => {
         },
       }
     );
-
-    console.log("Backend Response :", response.data);
 
     return {
       success: true,

@@ -21,7 +21,6 @@ const CropRecommendation = () => {
   const [phosphorus, setPhosphorus] = useState(45);
   const [potassium, setPotassium] = useState(40);
   const [soilPh, setSoilPh] = useState(6.5);
-  const [waterRequirement, setWaterRequirement] = useState(1200);
 
   // Available crops & crop comparison selection
   const [availableCrops, setAvailableCrops] = useState([]);
@@ -91,7 +90,6 @@ const CropRecommendation = () => {
       phosphorus: Number(phosphorus),
       potassium: Number(potassium),
       soil_ph: Number(soilPh),
-      water_requirement: Number(waterRequirement),
       compare_crops: recType === 'COMPARE' ? selectedCompareCrops : []
     };
 
@@ -272,7 +270,7 @@ const CropRecommendation = () => {
                 <span className="text-[10px] bg-indigo-500/10 text-indigo-500 px-2 py-0.5 rounded-full font-bold">Auto-Filled</span>
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 <div>
                   <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 block mb-1">Nitrogen (N) kg/ha</label>
                   <input
@@ -310,16 +308,6 @@ const CropRecommendation = () => {
                     step="0.1"
                     value={soilPh}
                     onChange={(e) => setSoilPh(e.target.value)}
-                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none"
-                  />
-                </div>
-
-                <div className="col-span-2 sm:col-span-2">
-                  <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 block mb-1">Water Requirement (mm)</label>
-                  <input
-                    type="number"
-                    value={waterRequirement}
-                    onChange={(e) => setWaterRequirement(e.target.value)}
                     className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none"
                   />
                 </div>

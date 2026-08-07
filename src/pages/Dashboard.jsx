@@ -177,7 +177,7 @@ const Dashboard = () => {
               to="/profile" 
               className="w-full flex items-center justify-center gap-2 py-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold rounded-xl text-xs transition-colors"
             >
-              <Settings className="w-4 h-4" /> Manage Account Credentials
+              <User className="w-4 h-4" /> Manage Account Credentials
             </Link>
           </div>
         </motion.div>

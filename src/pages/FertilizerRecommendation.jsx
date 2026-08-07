@@ -474,27 +474,27 @@ const FertilizerRecommendation = () => {
                     </span>
                   </div>
 
-                  <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-4 mb-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
                     {plan.nutrient_matrix && Object.values(plan.nutrient_matrix).map(item => (
-                      <div key={item.label} className="bg-slate-900/80 border border-slate-800 rounded-2xl p-3.5 flex flex-col justify-between">
+                      <div key={item.label} className="bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 flex flex-col justify-between shadow-sm">
                         <div>
-                          <div className="flex justify-between items-start">
-                            <span className="text-[11px] font-bold text-slate-400 uppercase">{item.label}</span>
-                            <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{item.label}</span>
+                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
                               item.source === 'Farmer Input' 
-                                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' 
-                                : 'bg-slate-800 text-slate-400'
+                                ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30' 
+                                : 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
                             }`}>
                               {item.source === 'Farmer Input' ? 'Verified' : 'Estimated'}
                             </span>
                           </div>
-                          <div className="text-lg font-extrabold text-white mt-1">
-                            {item.available_nutrient} <span className="text-[10px] text-slate-400 font-normal">{item.unit}</span>
+                          <div className="text-xl font-black text-slate-900 dark:text-white mt-1">
+                            {item.available_nutrient} <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">{item.unit}</span>
                           </div>
                         </div>
-                        <div className="mt-3 pt-2 border-t border-slate-800/60 flex justify-between items-center text-[10px]">
-                          <span className="text-slate-400">Class:</span>
-                          <span className="font-bold text-emerald-400">{item.classification}</span>
+                        <div className="mt-4 pt-3 border-t border-slate-200 dark:border-slate-800 flex justify-between items-center text-xs">
+                          <span className="text-slate-500 dark:text-slate-400 font-medium">Classification:</span>
+                          <span className="font-bold text-emerald-600 dark:text-emerald-400">{item.classification}</span>
                         </div>
                       </div>
                     ))}
