@@ -212,7 +212,7 @@ const MainLayout = () => {
                 {farmDropdownOpen && (
                   <motion.div 
                     initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }}
-                    className="absolute top-full right-0 mt-2 w-60 bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-slate-100 dark:border-slate-700 overflow-hidden z-[120]"
+                    className="absolute top-full right-0 mt-2 w-60 bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-slate-100 dark:border-slate-700 overflow-hidden z-[120] dropdown-menu"
                   >
                     <div className="p-2 border-b border-slate-100 dark:border-slate-700 font-bold text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wider px-3">
                       Select Active Farm
@@ -272,7 +272,7 @@ const MainLayout = () => {
                   {profileDropdownOpen && (
                     <motion.div 
                       initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }}
-                      className="absolute top-full right-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-slate-100 dark:border-slate-700 overflow-hidden z-[120]"
+                      className="absolute top-full right-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-slate-100 dark:border-slate-700 overflow-hidden z-[120] dropdown-menu"
                     >
                       <div className="p-3 border-b border-slate-100 dark:border-slate-700">
                         <p className="text-sm font-bold text-slate-800 dark:text-white truncate">{displayName}</p>
