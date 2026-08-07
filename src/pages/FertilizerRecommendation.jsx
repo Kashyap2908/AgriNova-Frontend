@@ -180,6 +180,9 @@ const FertilizerRecommendation = () => {
   });
 
   const activeSelectedPlan = plan?.top_fertilizer_plans?.[selectedPlanIndex] || plan?.top_fertilizer_plans?.[0] || {};
+  const activeCostSummary = activeSelectedPlan.cost_summary || plan?.cost_summary || {};
+  const activeSchedule = activeSelectedPlan.split_schedule || plan?.selected_plan_schedule || [];
+  const activeAiExplanation = activeSelectedPlan.ai_explanation || plan?.ai_explanation || {};
 
   return (
     <div className="min-h-screen bg-slate-900 text-slate-100 p-4 md:p-8">
@@ -421,9 +424,9 @@ const FertilizerRecommendation = () => {
                         </div>
                         <div>
                           <div className="text-[10px] text-slate-400 uppercase tracking-wider font-bold">Grand Total Plan Cost</div>
-                          <div className="text-2xl font-black text-white">{plan.cost_summary?.grand_total_display}</div>
+                          <div className="text-2xl font-black text-white">{activeCostSummary.grand_total_display}</div>
                           <div className="text-xs text-emerald-400 font-semibold">
-                            {plan.cost_summary?.total_nutrition_cost_display} Nutrition + {plan.cost_summary?.total_protection_cost_display} Protection
+                            {activeCostSummary.total_nutrition_cost_display} Nutrition + {activeCostSummary.total_protection_cost_display} Protection
                           </div>
                         </div>
                       </div>
@@ -651,13 +654,13 @@ const FertilizerRecommendation = () => {
                 <div className="bg-slate-950/60 backdrop-blur-xl border border-slate-800 rounded-3xl p-6 md:p-8 shadow-xl">
                   <div className="border-b border-slate-800 pb-4 mb-6">
                     <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                      <Clock className="w-5 h-5 text-emerald-400" /> 6. Stage-Wise Application Schedule
+                      <Clock className="w-5 h-5 text-emerald-400" /> 6. Stage-Wise Application Schedule ({activeSelectedPlan.title})
                     </h3>
                     <p className="text-xs text-slate-400 mt-1">Split application timeline to maximize nutrient use efficiency (NUE)</p>
                   </div>
 
                   <div className="space-y-6 relative before:absolute before:left-3.5 before:top-3 before:bottom-3 before:w-0.5 before:bg-emerald-500/30 pl-8">
-                    {plan.selected_plan_schedule?.map((stg, idx) => (
+                    {activeSchedule?.map((stg, idx) => (
                       <div key={idx} className="relative bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
                         <div className="absolute -left-11 top-5 w-6 h-6 rounded-full bg-emerald-500 border-4 border-slate-950 text-slate-950 flex items-center justify-center font-black text-[10px]">
                           {idx + 1}
@@ -706,7 +709,7 @@ const FertilizerRecommendation = () => {
                     </div>
                     <div className="text-right">
                       <div className="text-xs text-slate-400 font-bold">Protection Cost Head</div>
-                      <div className="text-xl font-extrabold text-emerald-400">{plan.cost_summary?.total_protection_cost_display}</div>
+                      <div className="text-xl font-extrabold text-emerald-400">{activeCostSummary.total_protection_cost_display}</div>
                     </div>
                   </div>
 
@@ -771,7 +774,7 @@ const FertilizerRecommendation = () => {
                 <div className="bg-slate-950/60 backdrop-blur-xl border border-slate-800 rounded-3xl p-6 md:p-8 shadow-xl">
                   <div className="border-b border-slate-800 pb-4 mb-6">
                     <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                      <IndianRupee className="w-5 h-5 text-emerald-400" /> 9. Cost Breakdown
+                      <IndianRupee className="w-5 h-5 text-emerald-400" /> 9. Cost Breakdown ({activeSelectedPlan.title})
                     </h3>
                     <p className="text-xs text-slate-400 mt-1">Itemized cost heads for farm operational budget planning</p>
                   </div>
@@ -789,42 +792,42 @@ const FertilizerRecommendation = () => {
                         <tr>
                           <td className="p-3.5 font-semibold text-white">Fertilizer Cost</td>
                           <td className="p-3.5 text-slate-400">Nutrition</td>
-                          <td className="p-3.5 font-bold">{plan.cost_summary?.fertilizer_cost_display}</td>
+                          <td className="p-3.5 font-bold">{activeCostSummary.fertilizer_cost_display}</td>
                         </tr>
                         <tr>
                           <td className="p-3.5 font-semibold text-white">Micronutrient & Secondary Cost</td>
                           <td className="p-3.5 text-slate-400">Nutrition</td>
-                          <td className="p-3.5 font-bold">{plan.cost_summary?.micronutrient_cost_display}</td>
+                          <td className="p-3.5 font-bold">{activeCostSummary.micronutrient_cost_display}</td>
                         </tr>
                         <tr>
                           <td className="p-3.5 font-semibold text-white">Herbicide Cost</td>
                           <td className="p-3.5 text-slate-400">Protection</td>
-                          <td className="p-3.5 font-bold">{plan.cost_summary?.herbicide_cost_display}</td>
+                          <td className="p-3.5 font-bold">{activeCostSummary.herbicide_cost_display}</td>
                         </tr>
                         <tr>
                           <td className="p-3.5 font-semibold text-white">Fungicide Cost</td>
                           <td className="p-3.5 text-slate-400">Protection</td>
-                          <td className="p-3.5 font-bold">{plan.cost_summary?.fungicide_cost_display}</td>
+                          <td className="p-3.5 font-bold">{activeCostSummary.fungicide_cost_display}</td>
                         </tr>
                         <tr>
                           <td className="p-3.5 font-semibold text-white">Insecticide Cost</td>
                           <td className="p-3.5 text-slate-400">Protection</td>
-                          <td className="p-3.5 font-bold">{plan.cost_summary?.insecticide_cost_display}</td>
+                          <td className="p-3.5 font-bold">{activeCostSummary.insecticide_cost_display}</td>
                         </tr>
                         <tr>
                           <td className="p-3.5 font-semibold text-white">Growth Regulator Cost</td>
                           <td className="p-3.5 text-slate-400">Protection</td>
-                          <td className="p-3.5 font-bold">{plan.cost_summary?.growth_regulator_cost_display}</td>
+                          <td className="p-3.5 font-bold">{activeCostSummary.growth_regulator_cost_display}</td>
                         </tr>
                         <tr>
                           <td className="p-3.5 font-semibold text-white">Application Labour & Misc</td>
                           <td className="p-3.5 text-slate-400">Operational</td>
-                          <td className="p-3.5 font-bold">{plan.cost_summary?.application_cost_display}</td>
+                          <td className="p-3.5 font-bold">{activeCostSummary.application_cost_display}</td>
                         </tr>
                         <tr className="bg-slate-900 font-extrabold text-white">
                           <td className="p-4 text-sm text-emerald-400">GRAND TOTAL PLAN COST</td>
                           <td className="p-4 text-xs text-slate-400">Nutrition + Protection</td>
-                          <td className="p-4 text-base text-emerald-400">{plan.cost_summary?.grand_total_display}</td>
+                          <td className="p-4 text-base text-emerald-400">{activeCostSummary.grand_total_display}</td>
                         </tr>
                       </tbody>
                     </table>
@@ -835,11 +838,11 @@ const FertilizerRecommendation = () => {
                 <div className="bg-slate-950/60 backdrop-blur-xl border border-slate-800 rounded-3xl p-6 md:p-8 shadow-xl">
                   <div className="border-b border-slate-800 pb-4 mb-4">
                     <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                      <Sparkles className="w-5 h-5 text-emerald-400" /> 10. AI Explanation
+                      <Sparkles className="w-5 h-5 text-emerald-400" /> 10. AI Explanation ({activeSelectedPlan.title})
                     </h3>
                   </div>
                   <div className="bg-slate-900/80 p-5 rounded-2xl border border-slate-800 text-xs text-slate-300 leading-relaxed whitespace-pre-line">
-                    {plan.ai_explanation?.full_explanation}
+                    {activeAiExplanation.full_explanation || plan.ai_explanation?.full_explanation}
                   </div>
                 </div>
 
