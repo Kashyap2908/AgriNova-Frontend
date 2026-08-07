@@ -48,8 +48,17 @@ export const FarmProvider = ({ children }) => {
     phosphorus: f.phosphorus,
     potassium: f.potassium,
     soil_ph: f.soil_ph,
+    sulphur: f.sulphur,
+    calcium: f.calcium,
+    magnesium: f.magnesium,
+    zinc: f.zinc,
+    boron: f.boron,
+    iron: f.iron,
+    manganese: f.manganese,
+    copper: f.copper,
     organic_carbon: f.organic_carbon,
     electrical_conductivity: f.electrical_conductivity,
+    soil_moisture: f.soil_moisture,
     last_soil_test_date: f.last_soil_test_date,
     latitude: f.latitude,
     longitude: f.longitude,
@@ -60,7 +69,7 @@ export const FarmProvider = ({ children }) => {
 
   // Re-fetch all farm records directly from SQLite backend
   const refreshFarms = async () => {
-    const token = localStorage.getItem('access_token');
+    const token = localStorage.getItem('access_token') || sessionStorage.getItem('access_token');
     if (!token) {
       setFarms([]);
       setSelectedFarm(null);
@@ -75,10 +84,26 @@ export const FarmProvider = ({ children }) => {
 
       setFarms(mappedFarms);
       
-      const activeFarm = mappedFarms.find(f => f.is_active) || mappedFarms[0] || null;
-      setSelectedFarm(activeFarm);
-      setIsFarmsLoaded(true);
+      let activeFarm = mappedFarms.find(f => f.is_active);
+      if (!activeFarm && mappedFarms.length > 0) {
+        const savedId = localStorage.getItem('active_farm_id') || sessionStorage.getItem('active_farm_id');
+        if (savedId) {
+          activeFarm = mappedFarms.find(f => String(f.id) === String(savedId));
+        }
+        if (!activeFarm) {
+          activeFarm = mappedFarms[0];
+        }
+      }
 
+      if (activeFarm) {
+        localStorage.setItem('active_farm_id', activeFarm.id);
+        sessionStorage.setItem('active_farm_id', activeFarm.id);
+        setSelectedFarm(activeFarm);
+      } else {
+        setSelectedFarm(null);
+      }
+
+      setIsFarmsLoaded(true);
       return mappedFarms;
     } catch (error) {
       console.error('Failed to refresh farms from backend:', error);
@@ -89,10 +114,10 @@ export const FarmProvider = ({ children }) => {
     }
   };
 
-  // Re-sync farms whenever AuthContext user changes (Login, Logout, Startup, Profile load)
+  // Re-sync farms whenever AuthContext user changes or token is present
   useEffect(() => {
-    if (user) {
-      setIsFarmsLoaded(false);
+    const token = localStorage.getItem('access_token') || sessionStorage.getItem('access_token');
+    if (user || token) {
       refreshFarms();
     } else {
       setFarms([]);

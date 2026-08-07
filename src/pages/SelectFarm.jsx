@@ -396,38 +396,101 @@ const SelectFarm = () => {
                   </div>
                 </div>
 
-                <div className="border-t border-slate-100 dark:border-slate-800 pt-4 mt-4">
-                  <h4 className="text-sm font-bold text-slate-800 dark:text-white mb-3">Soil Test Data (Optional)</h4>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
-                    <div>
-                      <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">Nitrogen (N)</label>
-                      <input type="number" min="0" max="200" step="0.1" value={editingFarm.nitrogen !== null && editingFarm.nitrogen !== undefined ? editingFarm.nitrogen : ''} onChange={(e) => setEditingFarm({ ...editingFarm, nitrogen: e.target.value })} className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white" />
-                    </div>
-                    <div>
-                      <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">Phosphorus (P)</label>
-                      <input type="number" min="0" max="200" step="0.1" value={editingFarm.phosphorus !== null && editingFarm.phosphorus !== undefined ? editingFarm.phosphorus : ''} onChange={(e) => setEditingFarm({ ...editingFarm, phosphorus: e.target.value })} className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white" />
-                    </div>
-                    <div>
-                      <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">Potassium (K)</label>
-                      <input type="number" min="0" max="300" step="0.1" value={editingFarm.potassium !== null && editingFarm.potassium !== undefined ? editingFarm.potassium : ''} onChange={(e) => setEditingFarm({ ...editingFarm, potassium: e.target.value })} className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white" />
-                    </div>
-                    <div>
-                      <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">Soil Acidity (pH)</label>
-                      <input type="number" min="0" max="14" step="0.1" value={editingFarm.soil_ph !== null && editingFarm.soil_ph !== undefined ? editingFarm.soil_ph : ''} onChange={(e) => setEditingFarm({ ...editingFarm, soil_ph: e.target.value })} className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white" />
+                <div className="border-t border-slate-100 dark:border-slate-800 pt-4 mt-4 space-y-4">
+                  <h4 className="text-sm font-bold text-slate-800 dark:text-white flex items-center justify-between">
+                    <span>Soil Test Data (Optional)</span>
+                    <span className="text-[10px] font-normal text-slate-500">Unfilled values are dynamically estimated</span>
+                  </h4>
+                  
+                  {/* Primary Nutrients */}
+                  <div>
+                    <span className="text-[10px] font-bold uppercase text-emerald-600 dark:text-emerald-400 block mb-1.5">Primary Nutrients & pH</span>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 mb-0.5">Nitrogen (N - kg/ha)</label>
+                        <input type="number" min="0" max="1000" step="0.1" value={editingFarm.nitrogen ?? ''} onChange={(e) => setEditingFarm({ ...editingFarm, nitrogen: e.target.value })} className="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white" placeholder="e.g. 180" />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 mb-0.5">Phosphorus (P - kg/ha)</label>
+                        <input type="number" min="0" max="1000" step="0.1" value={editingFarm.phosphorus ?? ''} onChange={(e) => setEditingFarm({ ...editingFarm, phosphorus: e.target.value })} className="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white" placeholder="e.g. 22" />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 mb-0.5">Potassium (K - kg/ha)</label>
+                        <input type="number" min="0" max="1000" step="0.1" value={editingFarm.potassium ?? ''} onChange={(e) => setEditingFarm({ ...editingFarm, potassium: e.target.value })} className="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white" placeholder="e.g. 240" />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 mb-0.5">Soil Acidity (pH)</label>
+                        <input type="number" min="0" max="14" step="0.1" value={editingFarm.soil_ph ?? ''} onChange={(e) => setEditingFarm({ ...editingFarm, soil_ph: e.target.value })} className="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white" placeholder="e.g. 7.2" />
+                      </div>
                     </div>
                   </div>
-                  <div className="grid grid-cols-3 gap-3">
-                    <div>
-                      <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">Soil Richness (Carbon %)</label>
-                      <input type="number" min="0" step="0.01" value={editingFarm.organic_carbon !== null && editingFarm.organic_carbon !== undefined ? editingFarm.organic_carbon : ''} onChange={(e) => setEditingFarm({ ...editingFarm, organic_carbon: e.target.value })} className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white" />
+
+                  {/* Secondary Nutrients */}
+                  <div>
+                    <span className="text-[10px] font-bold uppercase text-blue-600 dark:text-blue-400 block mb-1.5">Secondary Nutrients</span>
+                    <div className="grid grid-cols-3 gap-2.5">
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 mb-0.5">Sulphur (S - kg/ha)</label>
+                        <input type="number" min="0" max="500" step="0.1" value={editingFarm.sulphur ?? ''} onChange={(e) => setEditingFarm({ ...editingFarm, sulphur: e.target.value })} className="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white" placeholder="e.g. 14" />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 mb-0.5">Calcium (Ca - kg/ha)</label>
+                        <input type="number" min="0" max="2000" step="0.1" value={editingFarm.calcium ?? ''} onChange={(e) => setEditingFarm({ ...editingFarm, calcium: e.target.value })} className="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white" placeholder="e.g. 450" />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 mb-0.5">Magnesium (Mg - kg/ha)</label>
+                        <input type="number" min="0" max="1000" step="0.1" value={editingFarm.magnesium ?? ''} onChange={(e) => setEditingFarm({ ...editingFarm, magnesium: e.target.value })} className="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white" placeholder="e.g. 160" />
+                      </div>
                     </div>
-                    <div>
-                      <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">Soil Salt Level (EC)</label>
-                      <input type="number" min="0" step="0.01" value={editingFarm.electrical_conductivity !== null && editingFarm.electrical_conductivity !== undefined ? editingFarm.electrical_conductivity : ''} onChange={(e) => setEditingFarm({ ...editingFarm, electrical_conductivity: e.target.value })} className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white" />
+                  </div>
+
+                  {/* Micronutrients */}
+                  <div>
+                    <span className="text-[10px] font-bold uppercase text-purple-600 dark:text-purple-400 block mb-1.5">Micronutrients (ppm)</span>
+                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 mb-0.5">Zinc (Zn)</label>
+                        <input type="number" min="0" max="100" step="0.01" value={editingFarm.zinc ?? ''} onChange={(e) => setEditingFarm({ ...editingFarm, zinc: e.target.value })} className="w-full px-2 py-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white" placeholder="e.g. 0.8" />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 mb-0.5">Boron (B)</label>
+                        <input type="number" min="0" max="100" step="0.01" value={editingFarm.boron ?? ''} onChange={(e) => setEditingFarm({ ...editingFarm, boron: e.target.value })} className="w-full px-2 py-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white" placeholder="e.g. 0.5" />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 mb-0.5">Iron (Fe)</label>
+                        <input type="number" min="0" max="200" step="0.01" value={editingFarm.iron ?? ''} onChange={(e) => setEditingFarm({ ...editingFarm, iron: e.target.value })} className="w-full px-2 py-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white" placeholder="e.g. 6.5" />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 mb-0.5">Manganese (Mn)</label>
+                        <input type="number" min="0" max="200" step="0.01" value={editingFarm.manganese ?? ''} onChange={(e) => setEditingFarm({ ...editingFarm, manganese: e.target.value })} className="w-full px-2 py-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white" placeholder="e.g. 3.5" />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 mb-0.5">Copper (Cu)</label>
+                        <input type="number" min="0" max="100" step="0.01" value={editingFarm.copper ?? ''} onChange={(e) => setEditingFarm({ ...editingFarm, copper: e.target.value })} className="w-full px-2 py-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white" placeholder="e.g. 0.5" />
+                      </div>
                     </div>
-                    <div>
-                      <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">Test Date</label>
-                      <input type="date" value={editingFarm.last_soil_test_date || ''} onChange={(e) => setEditingFarm({ ...editingFarm, last_soil_test_date: e.target.value })} className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white" />
+                  </div>
+
+                  {/* Physical & Organic Properties */}
+                  <div>
+                    <span className="text-[10px] font-bold uppercase text-amber-600 dark:text-amber-400 block mb-1.5">Organic & Physical Properties</span>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 mb-0.5">Organic Carbon (%)</label>
+                        <input type="number" min="0" max="100" step="0.01" value={editingFarm.organic_carbon ?? ''} onChange={(e) => setEditingFarm({ ...editingFarm, organic_carbon: e.target.value })} className="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white" placeholder="e.g. 0.55" />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 mb-0.5">EC (dS/m)</label>
+                        <input type="number" min="0" max="100" step="0.01" value={editingFarm.electrical_conductivity ?? ''} onChange={(e) => setEditingFarm({ ...editingFarm, electrical_conductivity: e.target.value })} className="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white" placeholder="e.g. 0.35" />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 mb-0.5">Soil Moisture (%)</label>
+                        <input type="number" min="0" max="100" step="0.1" value={editingFarm.soil_moisture ?? ''} onChange={(e) => setEditingFarm({ ...editingFarm, soil_moisture: e.target.value })} className="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white" placeholder="e.g. 24.5" />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 mb-0.5">Test Date</label>
+                        <input type="date" value={editingFarm.last_soil_test_date || ''} onChange={(e) => setEditingFarm({ ...editingFarm, last_soil_test_date: e.target.value })} className="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white" />
+                      </div>
                     </div>
                   </div>
                 </div>

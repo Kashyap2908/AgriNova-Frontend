@@ -1,11 +1,12 @@
-import React, { useContext } from 'react';
+import React, { useContext, useEffect } from 'react';
 import { AuthContext } from '../context/auth-context';
 import { FarmContext } from '../context/farm-context';
+import { calculateTotalLandAcres } from '../utils/areaConverter';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { 
   User, Phone, Globe, MapPin, Scale, Layers, Droplets, PlusSquare, 
-  Map, CheckCircle2, ArrowRight, ShieldCheck, Sprout, Settings, Compass
+  Map, CheckCircle2, ArrowRight, ShieldCheck, Sprout, Settings, Compass, RefreshCw
 } from 'lucide-react';
 
 const StatCard = ({ title, value, subtitle, icon: Icon, color }) => (
@@ -31,13 +32,26 @@ const StatCard = ({ title, value, subtitle, icon: Icon, color }) => (
 
 const Dashboard = () => {
   const { user } = useContext(AuthContext);
-  const { farms, selectedFarm } = useContext(FarmContext);
+  const { farms, selectedFarm, isFarmsLoaded, refreshFarms } = useContext(FarmContext);
+
+  useEffect(() => {
+    refreshFarms();
+  }, []);
 
   const today = new Date().toLocaleDateString('en-US', { 
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
   });
 
-  const totalAcres = farms.reduce((sum, f) => sum + (parseFloat(f.area) || 0), 0);
+  const totalAcres = calculateTotalLandAcres(farms);
+
+  if (!isFarmsLoaded) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 py-16 flex flex-col items-center justify-center min-h-[50vh] text-center space-y-4">
+        <RefreshCw className="w-8 h-8 text-primary animate-spin" />
+        <p className="text-slate-500 dark:text-slate-400 text-sm font-semibold">Loading farm metrics directly from database...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 pb-16 max-w-7xl mx-auto px-4 sm:px-6">

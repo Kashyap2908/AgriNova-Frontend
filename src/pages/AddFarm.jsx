@@ -12,6 +12,8 @@ const AddFarm = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [saving, setSaving] = useState(false);
 
+  const [isAdvancedSoilOpen, setIsAdvancedSoilOpen] = useState(false);
+
   const [formData, setFormData] = useState({
     // Step 1: Farm Information
     name: '',
@@ -33,8 +35,17 @@ const AddFarm = () => {
     phosphorus: '',
     potassium: '',
     soil_ph: '',
+    sulphur: '',
+    calcium: '',
+    magnesium: '',
+    zinc: '',
+    boron: '',
+    iron: '',
+    manganese: '',
+    copper: '',
     organic_carbon: '',
     electrical_conductivity: '',
+    soil_moisture: '',
     last_soil_test_date: ''
   });
 
@@ -86,12 +97,21 @@ const AddFarm = () => {
       irrigation: formData.irrigationType,
       waterAvailability: formData.waterAvailability,
       location: `${formData.village.trim()}, ${formData.district.trim()}, ${formData.state.trim()}`,
-      nitrogen: formData.nitrogen ? Number(formData.nitrogen) : null,
-      phosphorus: formData.phosphorus ? Number(formData.phosphorus) : null,
-      potassium: formData.potassium ? Number(formData.potassium) : null,
-      soil_ph: formData.soil_ph ? Number(formData.soil_ph) : null,
-      organic_carbon: formData.organic_carbon ? Number(formData.organic_carbon) : null,
-      electrical_conductivity: formData.electrical_conductivity ? Number(formData.electrical_conductivity) : null,
+      nitrogen: formData.nitrogen !== '' ? Number(formData.nitrogen) : null,
+      phosphorus: formData.phosphorus !== '' ? Number(formData.phosphorus) : null,
+      potassium: formData.potassium !== '' ? Number(formData.potassium) : null,
+      soil_ph: formData.soil_ph !== '' ? Number(formData.soil_ph) : null,
+      sulphur: formData.sulphur !== '' ? Number(formData.sulphur) : null,
+      calcium: formData.calcium !== '' ? Number(formData.calcium) : null,
+      magnesium: formData.magnesium !== '' ? Number(formData.magnesium) : null,
+      zinc: formData.zinc !== '' ? Number(formData.zinc) : null,
+      boron: formData.boron !== '' ? Number(formData.boron) : null,
+      iron: formData.iron !== '' ? Number(formData.iron) : null,
+      manganese: formData.manganese !== '' ? Number(formData.manganese) : null,
+      copper: formData.copper !== '' ? Number(formData.copper) : null,
+      organic_carbon: formData.organic_carbon !== '' ? Number(formData.organic_carbon) : null,
+      electrical_conductivity: formData.electrical_conductivity !== '' ? Number(formData.electrical_conductivity) : null,
+      soil_moisture: formData.soil_moisture !== '' ? Number(formData.soil_moisture) : null,
       last_soil_test_date: formData.last_soil_test_date || null
     };
 
@@ -463,42 +483,140 @@ const AddFarm = () => {
                   </select>
                 </div>
 
-                {/* New Soil Test Data Fields */}
-                <div className="border-t border-slate-100 dark:border-slate-800 pt-6 mt-6">
-                  <h4 className="text-sm font-extrabold text-slate-800 dark:text-white mb-4">Laboratory Soil Test Data</h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Nitrogen (N) <span className="text-slate-400 font-normal">(Optional)</span></label>
-                      <input type="number" name="nitrogen" min="0" max="200" step="0.1" value={formData.nitrogen} onChange={handleChange} placeholder="0-200" className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20" />
+                {/* Advanced Soil Information (Optional) Accordion */}
+                <div className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden mt-6 bg-slate-50/50 dark:bg-slate-900/30">
+                  <button
+                    type="button"
+                    onClick={() => setIsAdvancedSoilOpen(!isAdvancedSoilOpen)}
+                    className="w-full px-5 py-4 flex items-center justify-between text-left hover:bg-slate-100/50 dark:hover:bg-slate-800/40 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-xl bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300">
+                        <Layers className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h4 className="text-base font-extrabold text-slate-900 dark:text-white">
+                          Advanced Soil Information (Optional)
+                        </h4>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">
+                          Click to enter Soil Health Card nutrient test values
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Phosphorus (P) <span className="text-slate-400 font-normal">(Optional)</span></label>
-                      <input type="number" name="phosphorus" min="0" max="200" step="0.1" value={formData.phosphorus} onChange={handleChange} placeholder="0-200" className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20" />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Potassium (K) <span className="text-slate-400 font-normal">(Optional)</span></label>
-                      <input type="number" name="potassium" min="0" max="300" step="0.1" value={formData.potassium} onChange={handleChange} placeholder="0-300" className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20" />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Soil Acidity (pH) <span className="text-slate-400 font-normal">(Optional)</span></label>
-                      <input type="number" name="soil_ph" min="0" max="14" step="0.1" value={formData.soil_ph} onChange={handleChange} placeholder="0-14" className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20" />
-                    </div>
-                  </div>
+                    <span className="text-xs font-bold text-primary px-3 py-1 bg-primary/10 rounded-full">
+                      {isAdvancedSoilOpen ? "Hide" : "Show Fields"}
+                    </span>
+                  </button>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Soil Richness (Carbon %)</label>
-                      <input type="number" name="organic_carbon" min="0" step="0.01" value={formData.organic_carbon} onChange={handleChange} placeholder="Optional" className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20" />
+                  {isAdvancedSoilOpen && (
+                    <div className="p-5 border-t border-slate-200 dark:border-slate-800 space-y-6 bg-white dark:bg-slate-900">
+                      {/* Guidance banner */}
+                      <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/40 text-amber-900 dark:text-amber-200 text-xs sm:text-sm font-medium leading-relaxed">
+                        If you know these values from your Soil Health Card, enter them for more accurate fertilizer recommendations. Otherwise, leave them blank.
+                      </div>
+
+                      {/* Primary Nutrients */}
+                      <div>
+                        <h5 className="text-xs font-extrabold uppercase tracking-wider text-emerald-700 dark:text-emerald-400 mb-3">
+                          Primary Nutrients (kg/ha)
+                        </h5>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                          <div>
+                            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Nitrogen (N)</label>
+                            <input type="number" name="nitrogen" min="0" max="1000" step="0.1" value={formData.nitrogen} onChange={handleChange} placeholder="e.g. 245" className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20" />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Phosphorus (P)</label>
+                            <input type="number" name="phosphorus" min="0" max="1000" step="0.1" value={formData.phosphorus} onChange={handleChange} placeholder="e.g. 18" className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20" />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Potassium (K)</label>
+                            <input type="number" name="potassium" min="0" max="1000" step="0.1" value={formData.potassium} onChange={handleChange} placeholder="e.g. 280" className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20" />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Secondary Nutrients */}
+                      <div>
+                        <h5 className="text-xs font-extrabold uppercase tracking-wider text-blue-700 dark:text-blue-400 mb-3">
+                          Secondary Nutrients (kg/ha)
+                        </h5>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                          <div>
+                            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Sulphur (S)</label>
+                            <input type="number" name="sulphur" min="0" max="500" step="0.1" value={formData.sulphur} onChange={handleChange} placeholder="e.g. 12.5" className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20" />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Calcium (Ca)</label>
+                            <input type="number" name="calcium" min="0" max="2000" step="0.1" value={formData.calcium} onChange={handleChange} placeholder="e.g. 450" className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20" />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Magnesium (Mg)</label>
+                            <input type="number" name="magnesium" min="0" max="1000" step="0.1" value={formData.magnesium} onChange={handleChange} placeholder="e.g. 180" className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20" />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Micronutrients */}
+                      <div>
+                        <h5 className="text-xs font-extrabold uppercase tracking-wider text-purple-700 dark:text-purple-400 mb-3">
+                          Micronutrients (ppm)
+                        </h5>
+                        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                          <div>
+                            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Zinc (Zn)</label>
+                            <input type="number" name="zinc" min="0" max="100" step="0.01" value={formData.zinc} onChange={handleChange} placeholder="e.g. 0.8" className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20" />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Boron (B)</label>
+                            <input type="number" name="boron" min="0" max="100" step="0.01" value={formData.boron} onChange={handleChange} placeholder="e.g. 0.5" className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20" />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Iron (Fe)</label>
+                            <input type="number" name="iron" min="0" max="200" step="0.01" value={formData.iron} onChange={handleChange} placeholder="e.g. 5.5" className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20" />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Manganese</label>
+                            <input type="number" name="manganese" min="0" max="200" step="0.01" value={formData.manganese} onChange={handleChange} placeholder="e.g. 3.5" className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20" />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Copper (Cu)</label>
+                            <input type="number" name="copper" min="0" max="100" step="0.01" value={formData.copper} onChange={handleChange} placeholder="e.g. 0.5" className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20" />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Other Soil Properties */}
+                      <div>
+                        <h5 className="text-xs font-extrabold uppercase tracking-wider text-teal-700 dark:text-teal-400 mb-3">
+                          Other Soil Properties
+                        </h5>
+                        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                          <div>
+                            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Organic Carbon (%)</label>
+                            <input type="number" name="organic_carbon" min="0" max="10" step="0.01" value={formData.organic_carbon} onChange={handleChange} placeholder="e.g. 0.55" className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20" />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">EC (dS/m)</label>
+                            <input type="number" name="electrical_conductivity" min="0" max="50" step="0.01" value={formData.electrical_conductivity} onChange={handleChange} placeholder="e.g. 0.4" className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20" />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Soil Moisture (%)</label>
+                            <input type="number" name="soil_moisture" min="0" max="100" step="0.1" value={formData.soil_moisture} onChange={handleChange} placeholder="e.g. 22" className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20" />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Soil pH (0-14)</label>
+                            <input type="number" name="soil_ph" min="0" max="14" step="0.1" value={formData.soil_ph} onChange={handleChange} placeholder="e.g. 7.2" className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20" />
+                          </div>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Last Soil Test Date</label>
+                        <input type="date" name="last_soil_test_date" value={formData.last_soil_test_date} onChange={handleChange} className="w-full sm:w-1/2 px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20" />
+                      </div>
                     </div>
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Soil Salt Level (EC)</label>
-                      <input type="number" name="electrical_conductivity" min="0" step="0.01" value={formData.electrical_conductivity} onChange={handleChange} placeholder="Optional" className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20" />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Last Test Date</label>
-                      <input type="date" name="last_soil_test_date" value={formData.last_soil_test_date} onChange={handleChange} className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20" />
-                    </div>
-                  </div>
+                  )}
                 </div>
               </motion.div>
             )}

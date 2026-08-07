@@ -386,9 +386,11 @@ export const recommendFertilizerApi = async (dataOrFarmId, payloadExtra = {}) =>
   } else if (typeof dataOrFarmId === 'number' || typeof dataOrFarmId === 'string') {
     payload = { farm_id: dataOrFarmId, ...payloadExtra };
   }
-  const response = await api.post('/fertilizer/recommend/', payload);
+  const response = await api.post('/fertilizer/plan/', payload);
   return response.data;
 };
+
+export const fetchFertilizerPlanApi = recommendFertilizerApi;
 
 export const fetchFertilizerHistoryApi = async (farmId = null) => {
   let url = '/fertilizer/history/';
@@ -401,4 +403,10 @@ export const fetchFertilizerMasterApi = async () => {
   const response = await api.get('/fertilizer/master/');
   return response.data;
 };
+
+export const fetchCropsApi = async () => {
+  const response = await api.get('/fertilizer/crops/');
+  return response.data;
+};
+
 

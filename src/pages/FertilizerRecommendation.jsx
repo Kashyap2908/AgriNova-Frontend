@@ -1,13 +1,15 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useRef } from 'react';
 import { FarmContext } from '../context/farm-context';
-import { recommendFertilizerApi, fetchFertilizerHistoryApi, fetchFertilizerMasterApi } from '../services/api';
+import { recommendFertilizerApi, fetchFertilizerHistoryApi, fetchFertilizerMasterApi, fetchCropsApi } from '../services/api';
+import { generatePlanPDF } from '../utils/pdfGenerator';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   FlaskConical, Sparkles, CheckCircle2, AlertTriangle, ShieldAlert, CloudSun,
   Calendar, IndianRupee, ArrowRight, RefreshCw, FileText, ChevronRight, TestTube,
   Info, Leaf, Scale, Clock, Layers, History, BookOpen, AlertCircle, Zap, Target,
   Award, TrendingUp, Check, Filter, Search, ShoppingBag, Droplets, Thermometer,
-  ShieldCheck, Sprout, ArrowUpRight
+  ShieldCheck, Sprout, ArrowUpRight, DollarSign, Bug, Shield, Compass, Sun, Wind, Download,
+  Layers3, HelpCircle, ChevronDown, CheckCheck
 } from 'lucide-react';
 
 const PREVIOUS_CROP_OPTIONS = [
@@ -24,41 +26,40 @@ const PREVIOUS_CROP_OPTIONS = [
   { value: 'Maize', label: 'Maize / Corn (Heavy Feeder)' },
 ];
 
-const SOIL_TYPES = ['Loamy', 'Black', 'Red', 'Alluvial', 'Sandy', 'Clay', 'Laterite'];
-const CROPS = ['Wheat', 'Rice', 'Maize', 'Cotton', 'Sugarcane', 'Potato', 'Chickpea', 'Mustard', 'Soybean', 'Groundnut', 'Tomato', 'Onion', 'Chilli'];
-const STATES = ['Punjab', 'Haryana', 'Uttar Pradesh', 'Madhya Pradesh', 'Maharashtra', 'Gujarat', 'Rajasthan', 'Karnataka', 'Tamil Nadu', 'Andhra Pradesh', 'Bihar'];
-const SEASONS = ['Kharif', 'Rabi', 'Zaid / Summer'];
+const DEFAULT_CROPS_LIST = [
+  'Apple', 'Banana', 'Bajra', 'Black Gram (Urad)', 'Black Pepper', 'Bottle Gourd', 
+  'Brinjal', 'Cabbage', 'Cardamom', 'Castor', 'Cauliflower', 'Chickpea', 'Chilli', 
+  'Citrus', 'Coffee', 'Coriander', 'Cotton', 'Cucumber', 'Cumin', 'Fennel', 'Fenugreek', 
+  'Garlic', 'Ginger', 'Gram', 'Grapes', 'Green Gram (Moong)', 'Groundnut', 'Guava', 
+  'Jowar', 'Lentil (Masoor)', 'Maize', 'Mango', 'Muskmelon', 'Mustard', 'Okra', 
+  'Onion', 'Papaya', 'Pea', 'Pomegranate', 'Potato', 'Pumpkin', 'Ragi', 'Rice', 
+  'Sesame', 'Soybean', 'Sugarcane', 'Sunflower', 'Tea', 'Tomato', 'Tur (Pigeonpea)', 
+  'Turmeric', 'Watermelon', 'Wheat'
+];
+
+const SEASONS = ['Kharif', 'Rabi', 'Zaid / Summer', 'All Season'];
 
 const FertilizerRecommendation = () => {
   const { selectedFarm, farms } = useContext(FarmContext);
-  
-  // Input Selection Mode: 'farm' or 'custom'
-  const [inputMode, setInputMode] = useState('farm');
-  const [activeFarmId, setActiveFarmId] = useState(selectedFarm?.id || (farms?.[0]?.id || ''));
-  const [previousCrop, setPreviousCrop] = useState('');
-  const [forceSmartMode, setForceSmartMode] = useState(false);
 
-  // Custom Form Fields
-  const [customForm, setCustomForm] = useState({
-    crop: 'Wheat',
-    soil_type: 'Loamy',
-    state: 'Punjab',
-    season: 'Kharif',
-    farm_area: '1.0',
-    previous_crop: '',
-    nitrogen: '',
-    phosphorus: '',
-    potassium: '',
-    ph: ''
-  });
+  const [activeFarmId, setActiveFarmId] = useState(selectedFarm?.id || (farms?.[0]?.id || ''));
+  const [selectedCrop, setSelectedCrop] = useState('Wheat');
+  const [previousCrop, setPreviousCrop] = useState('');
+  const [season, setSeason] = useState('Kharif');
+
+  // Searchable Crop List state
+  const [cropsList, setCropsList] = useState(DEFAULT_CROPS_LIST);
+  const [cropSearch, setCropSearch] = useState('');
+  const [isCropDropdownOpen, setIsCropDropdownOpen] = useState(false);
+  const cropDropdownRef = useRef(null);
 
   const [loading, setLoading] = useState(false);
-  const [recommendation, setRecommendation] = useState(null);
-  const [selectedSolutionIndex, setSelectedSolutionIndex] = useState(0);
+  const [plan, setPlan] = useState(null);
+  const [selectedPlanIndex, setSelectedPlanIndex] = useState(0);
   const [history, setHistory] = useState([]);
   const [masterCatalog, setMasterCatalog] = useState([]);
   const [catalogSearch, setCatalogSearch] = useState('');
-  const [activeTab, setActiveTab] = useState('recommendation'); // 'recommendation' | 'history' | 'catalog'
+  const [activeTab, setActiveTab] = useState('planner'); // 'planner' | 'history' | 'catalog'
   const [errorMsg, setErrorMsg] = useState('');
 
   useEffect(() => {
@@ -68,11 +69,37 @@ const FertilizerRecommendation = () => {
   }, [selectedFarm]);
 
   useEffect(() => {
-    if (activeFarmId && inputMode === 'farm') {
+    loadCrops();
+    loadMasterCatalog();
+  }, []);
+
+  useEffect(() => {
+    if (activeFarmId) {
       loadHistory(activeFarmId);
     }
-    loadMasterCatalog();
-  }, [activeFarmId, inputMode]);
+  }, [activeFarmId]);
+
+  // Click outside listener for searchable crop dropdown
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (cropDropdownRef.current && !cropDropdownRef.current.contains(event.target)) {
+        setIsCropDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const loadCrops = async () => {
+    try {
+      const res = await fetchCropsApi();
+      if (res?.success && Array.isArray(res.data) && res.data.length > 0) {
+        setCropsList(res.data);
+      }
+    } catch (err) {
+      console.warn("Using default crops list:", err);
+    }
+  };
 
   const loadHistory = async (fId) => {
     try {
@@ -97,812 +124,828 @@ const FertilizerRecommendation = () => {
   };
 
   const currentFarmObj = farms?.find(f => f.id === Number(activeFarmId)) || selectedFarm;
-  const isFarmSoilPresent = Boolean(
-    currentFarmObj?.nitrogen !== null && currentFarmObj?.nitrogen !== undefined && Number(currentFarmObj?.nitrogen) > 0 &&
-    currentFarmObj?.phosphorus !== null && currentFarmObj?.phosphorus !== undefined && Number(currentFarmObj?.phosphorus) > 0 &&
-    currentFarmObj?.potassium !== null && currentFarmObj?.potassium !== undefined && Number(currentFarmObj?.potassium) > 0
-  );
 
-  const isCustomSoilPresent = Boolean(
-    customForm.nitrogen && customForm.phosphorus && customForm.potassium &&
-    Number(customForm.nitrogen) > 0 && Number(customForm.phosphorus) > 0 && Number(customForm.potassium) > 0
-  );
-
-  const isSoilDataActive = inputMode === 'farm' ? isFarmSoilPresent : isCustomSoilPresent;
-
-  const handleGenerateRecommendation = async () => {
-    setErrorMsg('');
+  const handleGeneratePlan = async () => {
+    if (!activeFarmId) {
+      setErrorMsg("Please select a registered farm.");
+      return;
+    }
     setLoading(true);
-    setRecommendation(null);
-    setSelectedSolutionIndex(0);
-
+    setErrorMsg('');
     try {
-      let payload = {};
-      if (inputMode === 'farm') {
-        if (!activeFarmId) {
-          setErrorMsg("Please select a farm first.");
-          setLoading(false);
-          return;
-        }
-        payload = {
-          farm_id: Number(activeFarmId),
-          previous_crop: previousCrop
-        };
-      } else {
-        payload = {
-          crop: customForm.crop,
-          soil_type: customForm.soil_type,
-          state: customForm.state,
-          season: customForm.season,
-          farm_area: Number(customForm.farm_area || 1.0),
-          previous_crop: customForm.previous_crop,
-          nitrogen: customForm.nitrogen ? Number(customForm.nitrogen) : null,
-          phosphorus: customForm.phosphorus ? Number(customForm.phosphorus) : null,
-          potassium: customForm.potassium ? Number(customForm.potassium) : null,
-          ph: customForm.ph ? Number(customForm.ph) : null
-        };
-      }
+      const payload = {
+        farm_id: activeFarmId,
+        crop: selectedCrop,
+        previous_crop: previousCrop,
+        season: season,
+      };
 
-      const res = await recommendFertilizerApi(payload);
-      if (res?.success) {
-        setRecommendation(res.data);
-        if (inputMode === 'farm') {
+      const response = await recommendFertilizerApi(payload);
+
+      if (response?.success && response?.data) {
+        setPlan(response.data);
+        setSelectedPlanIndex(0);
+        if (activeFarmId) {
           loadHistory(activeFarmId);
         }
       } else {
-        setErrorMsg(res?.message || "Failed to generate recommendation.");
+        setErrorMsg(response?.message || "Failed to generate nutrition & protection plan.");
       }
     } catch (err) {
-      console.error(err);
-      setErrorMsg(err.response?.data?.message || "Error generating smart fertilizer recommendation.");
+      console.error("Plan generation error:", err);
+      setErrorMsg(err.response?.data?.message || "Network or server error while generating plan.");
     } finally {
       setLoading(false);
     }
   };
 
-  const activeSolution = recommendation?.top_3_options?.[selectedSolutionIndex] || recommendation?.primary_recommendation;
-  const activeSchedule = activeSolution?.application_schedule || recommendation?.application_schedule;
+  const handleDownloadPDF = () => {
+    if (!plan) return;
+    generatePlanPDF(plan);
+  };
 
-  const filteredCatalog = masterCatalog.filter(f =>
-    f.name?.toLowerCase().includes(catalogSearch.toLowerCase()) ||
-    f.type?.toLowerCase().includes(catalogSearch.toLowerCase())
+  const filteredCrops = cropsList.filter(c =>
+    c.toLowerCase().includes(cropSearch.toLowerCase())
   );
 
+  const filteredCatalog = masterCatalog.filter(item => {
+    if (!catalogSearch) return true;
+    const q = catalogSearch.toLowerCase();
+    return (
+      item.name.toLowerCase().includes(q) ||
+      item.type.toLowerCase().includes(q) ||
+      item.brand.toLowerCase().includes(q) ||
+      item.suitable_crops.toLowerCase().includes(q)
+    );
+  });
+
+  const activeSelectedPlan = plan?.top_fertilizer_plans?.[selectedPlanIndex] || plan?.top_fertilizer_plans?.[0] || {};
+
   return (
-    <div className="max-w-7xl mx-auto space-y-8 pb-16 font-sans text-slate-100 selection:bg-emerald-500 selection:text-slate-950">
-      
-      {/* CREATIVE HERO HEADER CARD */}
-      <div className="relative bg-gradient-to-br from-emerald-950 via-slate-900 to-teal-950 rounded-3xl p-6 sm:p-10 border border-emerald-500/20 shadow-2xl overflow-hidden backdrop-blur-xl">
-        <div className="absolute top-0 right-0 -mt-16 -mr-16 w-96 h-96 bg-emerald-500/15 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-0 -mb-16 -ml-16 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
-
-        <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-          <div className="space-y-3">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold uppercase tracking-widest shadow-inner">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              AgriNova Hybrid AI Engine v2.4
+    <div className="min-h-screen bg-slate-900 text-slate-100 p-4 md:p-8">
+      {/* Header Banner */}
+      <div className="max-w-7xl mx-auto mb-8">
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-emerald-950 via-slate-900 to-cyan-950 border border-emerald-500/20 p-6 md:p-8 shadow-2xl">
+          <div className="absolute top-0 right-0 -mt-8 -mr-8 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+            <div>
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold uppercase tracking-wider mb-3">
+                <Sparkles className="w-3.5 h-3.5" /> Next-Gen Crop Protection & Nutrition System
+              </div>
+              <h1 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight">
+                Smart Crop Nutrition & Protection Planner
+              </h1>
+              <p className="text-slate-400 mt-2 max-w-2xl text-sm md:text-base">
+                Production-ready agricultural recommendation engine powered by verified ICAR/KVK agronomic standards, dynamic linear programming, real-time weather cache, and present-day market prices.
+              </p>
             </div>
-            <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-white">
-              Smart Fertilizer <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-300">Optimizer</span>
-            </h1>
-            <p className="text-slate-400 text-sm sm:text-base max-w-2xl font-medium leading-relaxed">
-              Precision NPK deficiency solver & agronomic rule engine. Supports Soil Health Cards and Smart Estimator for cards-free farms.
-            </p>
-          </div>
 
-          {/* CREATIVE TAB SWITCHER */}
-          <div className="flex bg-slate-950/80 p-1.5 rounded-2xl border border-slate-800 shadow-2xl backdrop-blur-md">
-            <button
-              onClick={() => setActiveTab('recommendation')}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold transition-all duration-300 ${
-                activeTab === 'recommendation'
-                  ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 shadow-lg shadow-emerald-500/25 scale-[1.02]'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-900'
-              }`}
-            >
-              <FlaskConical className="w-4 h-4" /> Optimizer Plan
-            </button>
-            <button
-              onClick={() => setActiveTab('history')}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold transition-all duration-300 ${
-                activeTab === 'history'
-                  ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 shadow-lg shadow-emerald-500/25 scale-[1.02]'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-900'
-              }`}
-            >
-              <History className="w-4 h-4" /> History Log
-            </button>
-            <button
-              onClick={() => setActiveTab('catalog')}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold transition-all duration-300 ${
-                activeTab === 'catalog'
-                  ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 shadow-lg shadow-emerald-500/25 scale-[1.02]'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-900'
-              }`}
-            >
-              <BookOpen className="w-4 h-4" /> Master Catalog
-            </button>
+            {/* Navigation Tabs */}
+            <div className="flex bg-slate-950/80 p-1.5 rounded-2xl border border-slate-800 shadow-inner">
+              <button
+                onClick={() => setActiveTab('planner')}
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-xs md:text-sm transition-all ${
+                  activeTab === 'planner'
+                    ? 'bg-emerald-500 text-slate-950 shadow-lg shadow-emerald-500/20'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <FlaskConical className="w-4 h-4" /> Planner
+              </button>
+              <button
+                onClick={() => setActiveTab('history')}
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-xs md:text-sm transition-all ${
+                  activeTab === 'history'
+                    ? 'bg-emerald-500 text-slate-950 shadow-lg shadow-emerald-500/20'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <History className="w-4 h-4" /> History
+              </button>
+              <button
+                onClick={() => setActiveTab('catalog')}
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-xs md:text-sm transition-all ${
+                  activeTab === 'catalog'
+                    ? 'bg-emerald-500 text-slate-950 shadow-lg shadow-emerald-500/20'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <BookOpen className="w-4 h-4" /> Master Catalog
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* ERROR DISPLAY ALERT */}
-      {errorMsg && (
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-red-500/10 border border-red-500/30 rounded-2xl p-4 text-red-400 flex items-center gap-3 backdrop-blur-md"
-        >
-          <AlertCircle className="w-5 h-5 shrink-0 text-red-400" />
-          <p className="text-sm font-medium">{errorMsg}</p>
-        </motion.div>
-      )}
-
-      {/* TAB 1: RECOMMENDATION OPTIMIZER */}
-      {activeTab === 'recommendation' && (
-        <div className="space-y-8">
-          
-          {/* TOP SECTION: CONFIG & INPUTS (Full Width) */}
-          <div className="bg-slate-900/80 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl backdrop-blur-xl space-y-6">
-            
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-800/80 pb-5">
-              <div>
-                <h2 className="text-lg font-black text-white flex items-center gap-2">
-                  <FlaskConical className="w-5 h-5 text-emerald-400" /> Recommendation Parameters & Field Inputs
-                </h2>
-                <p className="text-xs text-slate-400 mt-1">Select a registered farm or enter custom soil/crop metrics below.</p>
-              </div>
-
-              {/* Input Mode Selector */}
-              <div className="flex bg-slate-950 p-1.5 rounded-2xl border border-slate-800 w-full sm:w-auto">
-                <button
-                  type="button"
-                  onClick={() => setInputMode('farm')}
-                  className={`px-5 py-2 text-xs font-bold rounded-xl transition-all duration-200 ${
-                    inputMode === 'farm'
-                      ? 'bg-slate-800 text-emerald-400 border border-emerald-500/30 shadow-md'
-                      : 'text-slate-400 hover:text-white'
-                  }`}
-                >
-                  🌱 Registered Farm
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setInputMode('custom')}
-                  className={`px-5 py-2 text-xs font-bold rounded-xl transition-all duration-200 ${
-                    inputMode === 'custom'
-                      ? 'bg-slate-800 text-emerald-400 border border-emerald-500/30 shadow-md'
-                      : 'text-slate-400 hover:text-white'
-                  }`}
-                >
-                  ⚡ Custom Entry
-                </button>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
-              
-              {/* DYNAMIC MODE STATUS BADGE CARD (4 Cols) */}
-              <div className={`md:col-span-4 p-5 rounded-2xl border transition-all duration-300 h-full flex flex-col justify-between ${
-                isSoilDataActive
-                  ? 'bg-gradient-to-br from-emerald-950/60 to-slate-900 border-emerald-500/40 text-emerald-400 shadow-lg shadow-emerald-500/5'
-                  : 'bg-gradient-to-br from-amber-950/60 to-slate-900 border-amber-500/40 text-amber-400 shadow-lg shadow-amber-500/5'
-              }`}>
+      {/* Main Content Area */}
+      <div className="max-w-7xl mx-auto space-y-8">
+        {activeTab === 'planner' && (
+          <div className="space-y-8">
+            {/* INPUT PANEL CARD */}
+            <div className="bg-slate-950/60 backdrop-blur-xl border border-slate-800 rounded-3xl p-6 md:p-8 shadow-xl">
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-slate-800 pb-5 mb-6 gap-4">
                 <div>
-                  <div className="flex items-center gap-2.5 font-bold text-sm">
-                    {isSoilDataActive ? (
-                      <>
-                        <Target className="w-5 h-5 text-emerald-400 shrink-0" />
-                        <span>🎯 Mode 1: Precision Mode</span>
-                      </>
-                    ) : (
-                      <>
-                        <Zap className="w-5 h-5 text-amber-400 shrink-0" />
-                        <span>⚡ Mode 2: Smart Mode</span>
-                      </>
-                    )}
-                  </div>
-                  <p className="text-xs text-slate-300 mt-3 leading-relaxed">
-                    {isSoilDataActive
-                      ? 'Soil Health Card NPK values detected. Engine calculates exact field nutrient deficiency (90–98% accuracy).'
-                      : 'No Soil Card values added during Add Farm. Smart AI automatically estimates nutrients using crop requirements & regional agronomics (75–90% accuracy).'
-                    }
-                  </p>
+                  <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                    <TestTube className="w-5 h-5 text-emerald-400" /> Agronomic Planning Inputs
+                  </h2>
+                  <p className="text-xs text-slate-400 mt-1">Select an active farm profile to automatically load stored soil & location parameters</p>
+                </div>
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold">
+                  <CheckCircle2 className="w-4 h-4" /> Using Stored Farm Soil Values
                 </div>
               </div>
 
-              {/* INPUT FIELDS AREA (8 Cols) */}
-              <div className="md:col-span-8 space-y-4">
-                {/* FARM SELECTION MODE */}
-                {inputMode === 'farm' && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
-                        Choose Registered Farm
-                      </label>
-                      <select
-                        value={activeFarmId}
-                        onChange={(e) => setActiveFarmId(e.target.value)}
-                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-emerald-500 transition shadow-inner"
-                      >
-                        <option value="">Select a farm...</option>
-                        {farms?.map((f) => (
-                          <option key={f.id} value={f.id}>
-                            {f.farm_name} ({f.current_crop || f.crop || 'Wheat'} • {f.farm_area || f.area_acres || 1.0} Acres)
-                          </option>
-                        ))}
-                      </select>
-                    </div>
+              {/* FARM AUTOMATED INPUT FORM */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                
+                {/* 1. SELECT FARM */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Select Farm</label>
+                  <select
+                    value={activeFarmId}
+                    onChange={(e) => setActiveFarmId(e.target.value)}
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-emerald-500"
+                  >
+                    {farms?.map(f => (
+                      <option key={f.id} value={f.id}>
+                        {f.name} ({f.area} {f.areaUnit || 'Acres'} - {f.soilType || 'Black Soil'})
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-                    <div>
-                      <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
-                        Preceding / Previous Crop
-                      </label>
-                      <select
-                        value={previousCrop}
-                        onChange={(e) => setPreviousCrop(e.target.value)}
-                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-emerald-500 transition"
-                      >
-                        {PREVIOUS_CROP_OPTIONS.map((opt) => (
-                          <option key={opt.value} value={opt.value}>{opt.label}</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    {currentFarmObj && (
-                      <div className="sm:col-span-2 bg-slate-950/80 rounded-2xl p-4 border border-slate-800/80 flex flex-wrap justify-between items-center gap-4 text-xs text-slate-300 shadow-inner">
-                        <div>
-                          <span className="text-slate-500">Selected Crop: </span>
-                          <span className="font-bold text-emerald-400">{currentFarmObj.current_crop || currentFarmObj.crop || 'Wheat'}</span>
-                        </div>
-                        <div>
-                          <span className="text-slate-500">Soil Type: </span>
-                          <span className="font-semibold text-slate-200">{currentFarmObj.soil_type || 'Loamy'}</span>
-                        </div>
-                        <div>
-                          <span className="text-slate-500">Area: </span>
-                          <span className="font-semibold text-slate-200">{currentFarmObj.farm_area || currentFarmObj.area_acres || 1.0} Acres</span>
-                        </div>
-                        <div>
-                          <span className="text-slate-500">Status: </span>
-                          <span className={`font-bold ${isFarmSoilPresent && !forceSmartMode ? 'text-emerald-400' : 'text-amber-400'}`}>
-                            {isFarmSoilPresent && !forceSmartMode ? 'Present (N, P, K)' : 'Missing / Smart Mode'}
-                          </span>
-                        </div>
-                      </div>
-                    )}
+                {/* 2. SEARCHABLE TARGET CROP SELECTOR */}
+                <div className="relative" ref={cropDropdownRef}>
+                  <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
+                    Target Crop ({cropsList.length} Supported)
+                  </label>
+                  <div
+                    onClick={() => setIsCropDropdownOpen(!isCropDropdownOpen)}
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white flex items-center justify-between cursor-pointer hover:border-slate-700"
+                  >
+                    <span className="font-semibold">{selectedCrop}</span>
+                    <ChevronDown className="w-4 h-4 text-slate-400" />
                   </div>
-                )}
 
-                {/* CUSTOM FIELD INPUT MODE */}
-                {inputMode === 'custom' && (
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                      <div>
-                        <label className="block text-[11px] font-bold text-slate-400 uppercase mb-1">Crop</label>
-                        <select
-                          value={customForm.crop}
-                          onChange={(e) => setCustomForm({ ...customForm, crop: e.target.value })}
-                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-emerald-500"
-                        >
-                          {CROPS.map(c => <option key={c} value={c}>{c}</option>)}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-[11px] font-bold text-slate-400 uppercase mb-1">Soil Type</label>
-                        <select
-                          value={customForm.soil_type}
-                          onChange={(e) => setCustomForm({ ...customForm, soil_type: e.target.value })}
-                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-emerald-500"
-                        >
-                          {SOIL_TYPES.map(s => <option key={s} value={s}>{s}</option>)}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-[11px] font-bold text-slate-400 uppercase mb-1">State</label>
-                        <select
-                          value={customForm.state}
-                          onChange={(e) => setCustomForm({ ...customForm, state: e.target.value })}
-                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-emerald-500"
-                        >
-                          {STATES.map(s => <option key={s} value={s}>{s}</option>)}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-[11px] font-bold text-slate-400 uppercase mb-1">Area (Acres)</label>
+                  {isCropDropdownOpen && (
+                    <div className="absolute z-50 mt-2 w-full bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl p-3 space-y-2 max-h-72 flex flex-col">
+                      <div className="relative">
+                        <Search className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
                         <input
-                          type="number"
-                          step="0.5"
-                          min="0.1"
-                          value={customForm.farm_area}
-                          onChange={(e) => setCustomForm({ ...customForm, farm_area: e.target.value })}
-                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-emerald-500"
+                          type="text"
+                          placeholder="Search 50+ crops..."
+                          value={cropSearch}
+                          onChange={(e) => setCropSearch(e.target.value)}
+                          className="w-full pl-9 pr-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500"
+                          autoFocus
                         />
                       </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-[11px] font-bold text-slate-400 uppercase mb-1">Previous Crop</label>
-                      <select
-                        value={customForm.previous_crop}
-                        onChange={(e) => setCustomForm({ ...customForm, previous_crop: e.target.value })}
-                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-emerald-500"
-                      >
-                        {PREVIOUS_CROP_OPTIONS.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
-                      </select>
-                    </div>
-
-                    {/* Optional Soil NPK */}
-                    <div className="border-t border-slate-800/80 pt-3 space-y-2">
-                      <div className="flex justify-between items-center">
-                        <span className="text-xs font-bold text-slate-300">Soil Health NPK (Optional)</span>
-                        <span className="text-[10px] bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded-full font-bold border border-emerald-500/20">Mode 1 Trigger</span>
-                      </div>
-                      <div className="grid grid-cols-3 gap-3">
-                        <div>
-                          <label className="block text-[10px] text-slate-400 mb-1">N (kg/ha)</label>
-                          <input
-                            type="number"
-                            placeholder="e.g. 45"
-                            value={customForm.nitrogen}
-                            onChange={(e) => setCustomForm({ ...customForm, nitrogen: e.target.value })}
-                            className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-slate-200 focus:border-emerald-500"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-[10px] text-slate-400 mb-1">P (kg/ha)</label>
-                          <input
-                            type="number"
-                            placeholder="e.g. 20"
-                            value={customForm.phosphorus}
-                            onChange={(e) => setCustomForm({ ...customForm, phosphorus: e.target.value })}
-                            className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-slate-200 focus:border-emerald-500"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-[10px] text-slate-400 mb-1">K (kg/ha)</label>
-                          <input
-                            type="number"
-                            placeholder="e.g. 30"
-                            value={customForm.potassium}
-                            onChange={(e) => setCustomForm({ ...customForm, potassium: e.target.value })}
-                            className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-slate-200 focus:border-emerald-500"
-                          />
-                        </div>
+                      <div className="overflow-y-auto space-y-1 pr-1 custom-scrollbar">
+                        {filteredCrops.length > 0 ? (
+                          filteredCrops.map(c => (
+                            <button
+                              key={c}
+                              type="button"
+                              onClick={() => {
+                                setSelectedCrop(c);
+                                setIsCropDropdownOpen(false);
+                                setCropSearch('');
+                              }}
+                              className={`w-full text-left px-3 py-2 rounded-xl text-xs font-semibold flex items-center justify-between transition-colors ${
+                                selectedCrop === c ? 'bg-emerald-500/20 text-emerald-400 font-bold' : 'text-slate-300 hover:bg-slate-800'
+                              }`}
+                            >
+                              <span>{c}</span>
+                              {selectedCrop === c && <CheckCheck className="w-4 h-4 text-emerald-400" />}
+                            </button>
+                          ))
+                        ) : (
+                          <div className="p-3 text-center text-xs text-slate-500">No crops found matching "{cropSearch}"</div>
+                        )}
                       </div>
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
+
+                {/* 3. PREVIOUS CROP */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Previous Season Crop</label>
+                  <select
+                    value={previousCrop}
+                    onChange={(e) => setPreviousCrop(e.target.value)}
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-emerald-500"
+                  >
+                    {PREVIOUS_CROP_OPTIONS.map(opt => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* 4. GROWING SEASON */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Growing Season</label>
+                  <select
+                    value={season}
+                    onChange={(e) => setSeason(e.target.value)}
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-emerald-500"
+                  >
+                    {SEASONS.map(s => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
+              {/* ACTION BUTTON & ERROR MESSAGE */}
+              <div className="mt-8 flex flex-col sm:flex-row justify-between items-center gap-4 border-t border-slate-800/80 pt-6">
+                {errorMsg ? (
+                  <div className="text-xs text-rose-400 bg-rose-500/10 border border-rose-500/30 px-4 py-2 rounded-xl flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 shrink-0" /> {errorMsg}
+                  </div>
+                ) : (
+                  <div className="text-xs text-slate-400 flex items-center gap-2">
+                    <Info className="w-4 h-4 text-emerald-400" /> Preserves farm area unit ({currentFarmObj?.areaUnit || currentFarmObj?.area_unit || 'Acres'})
+                  </div>
+                )}
+
+                <button
+                  onClick={handleGeneratePlan}
+                  disabled={loading}
+                  className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-cyan-500 text-slate-950 font-black text-sm tracking-wide shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2.5 disabled:opacity-50 cursor-pointer"
+                >
+                  {loading ? (
+                    <>
+                      <RefreshCw className="w-5 h-5 animate-spin" /> Optimizing Nutrition Plan...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-5 h-5" /> Generate Smart Nutrition Plan
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
 
-            {/* Submit Button (Full Width) */}
-            <button
-              onClick={handleGenerateRecommendation}
-              disabled={loading}
-              className="w-full py-4 rounded-2xl bg-gradient-to-r from-emerald-400 via-teal-400 to-emerald-500 text-slate-950 font-black text-base hover:from-emerald-300 hover:to-teal-300 transition-all duration-300 shadow-xl shadow-emerald-500/20 flex items-center justify-center gap-2.5 disabled:opacity-50 hover:scale-[1.005]"
-            >
-              {loading ? (
-                <>
-                  <RefreshCw className="w-5 h-5 animate-spin" />
-                  <span>Analyzing Agronomic Datasets...</span>
-                </>
-              ) : (
-                <>
-                  <Sparkles className="w-5 h-5" />
-                  <span>Generate AI Recommendation</span>
-                </>
-              )}
-            </button>
-
-          </div>
-
-          {/* BOTTOM SECTION: DASHBOARD RESULTS (Full Width Below) */}
-          <div className="space-y-6">
-            {!recommendation && !loading && (
-              <div className="bg-slate-900/50 border border-slate-800/80 rounded-3xl p-12 text-center flex flex-col items-center justify-center space-y-4 min-h-[320px] backdrop-blur-xl">
-                <div className="w-20 h-20 rounded-3xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shadow-inner">
-                  <FlaskConical className="w-10 h-10" />
-                </div>
-                <h3 className="text-2xl font-bold text-slate-200">No Plan Generated Yet</h3>
-                <p className="text-slate-400 text-sm max-w-md leading-relaxed">
-                  Select a farm or enter field parameters above and click "Generate AI Recommendation" to receive your complete fertilizer plan.
-                </p>
-              </div>
-            )}
-
-            {loading && (
-              <div className="bg-slate-900/60 border border-slate-800 rounded-3xl p-12 text-center flex flex-col items-center justify-center space-y-4 min-h-[320px] backdrop-blur-xl">
-                <div className="relative">
-                  <div className="w-16 h-16 rounded-full border-4 border-emerald-500/20 border-t-emerald-400 animate-spin" />
-                  <Sparkles className="w-6 h-6 text-emerald-400 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
-                </div>
-                <p className="text-slate-300 text-sm font-bold">Running Multi-Factor Optimizer & Agronomic Dataset Solver...</p>
-              </div>
-            )}
-
-            {recommendation && !loading && (
+            {/* RESULTS VIEW */}
+            {plan && (
               <motion.div
-                initial={{ opacity: 0, y: 15 }}
+                initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4 }}
-                className="space-y-6"
+                className="space-y-8"
               >
-                
-                {/* MODE & CONFIDENCE HERO BANNER */}
-                <div className="relative bg-gradient-to-r from-slate-900 via-slate-900 to-emerald-950/80 border border-emerald-500/30 rounded-3xl p-6 sm:p-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 shadow-2xl overflow-hidden backdrop-blur-xl">
-                  <div className="space-y-2">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 font-bold text-xs border border-emerald-500/30">
-                      {recommendation.mode === 'PRECISION' ? <Target className="w-3.5 h-3.5" /> : <Zap className="w-3.5 h-3.5" />}
-                      {recommendation.mode_badge}
-                    </div>
-                    <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-                      Optimal Plan for {recommendation.crop} ({recommendation.farm_area_acres} Acres)
-                    </h2>
-                    <p className="text-xs text-slate-400 font-medium">
-                      Baseline: {recommendation.soil_nutrients_kg_ha?.baseline_source || 'Soil Health Data'}
-                    </p>
-                  </div>
-
-                  <div className="flex items-center gap-4 bg-slate-950/80 px-5 py-3 rounded-2xl border border-slate-800 shadow-xl">
-                    <Award className="w-8 h-8 text-amber-400 shrink-0" />
+                {/* SECTION 1: CROP & FARM SUMMARY HEADER */}
+                <div className="bg-slate-950/60 backdrop-blur-xl border border-slate-800 rounded-3xl p-6 md:p-8 shadow-xl relative overflow-hidden">
+                  <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
                     <div>
-                      <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Confidence Score</div>
-                      <div className="text-2xl font-black text-emerald-400">{recommendation.confidence_score}%</div>
+                      <div className="flex items-center gap-3 mb-2">
+                        <span className="px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 text-xs font-bold uppercase">
+                          {plan.crop_summary?.crop} Plan ({plan.crop_summary?.area_display})
+                        </span>
+                        <span className="px-3 py-1 rounded-full bg-cyan-500/20 border border-cyan-500/40 text-cyan-400 text-xs font-bold">
+                          {plan.soil_summary?.mode === 'PRECISION' ? '🔬 Laboratory Soil Health Card' : '🌾 ICAR Regional Baseline'}
+                        </span>
+                      </div>
+                      <h2 className="text-2xl md:text-3xl font-extrabold text-white">
+                        Agronomic Crop Nutrition & Protection Blueprint
+                      </h2>
+                      <p className="text-slate-400 text-xs md:text-sm mt-1">
+                        State: <span className="text-slate-200 font-semibold">{plan.crop_summary?.state}</span> | Soil Type: <span className="text-slate-200 font-semibold">{plan.crop_summary?.soil_type}</span> | Season: <span className="text-slate-200 font-semibold">{plan.crop_summary?.season}</span> | Previous Crop: <span className="text-slate-200 font-semibold">{plan.crop_summary?.previous_crop}</span>
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-4">
+                      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                          <IndianRupee className="w-6 h-6" />
+                        </div>
+                        <div>
+                          <div className="text-[10px] text-slate-400 uppercase tracking-wider font-bold">Grand Total Plan Cost</div>
+                          <div className="text-2xl font-black text-white">{plan.cost_summary?.grand_total_display}</div>
+                          <div className="text-xs text-emerald-400 font-semibold">
+                            {plan.cost_summary?.total_nutrition_cost_display} Nutrition + {plan.cost_summary?.total_protection_cost_display} Protection
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* DOWNLOAD SCHEDULE PDF BUTTON */}
+                      <button
+                        onClick={handleDownloadPDF}
+                        className="px-5 py-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500 hover:text-slate-950 font-bold text-xs flex items-center gap-2 transition-all shadow-md cursor-pointer shrink-0"
+                      >
+                        <Download className="w-5 h-5" /> Download Field PDF
+                      </button>
                     </div>
                   </div>
                 </div>
 
-                {/* PREVIOUS CROP CREDIT ALERT */}
-                {recommendation.previous_crop_adjustment?.credit_type === 'LEGUME_N_FIXATION_CREDIT' && (
-                  <div className="bg-gradient-to-r from-emerald-950/80 to-slate-900 border border-emerald-500/40 rounded-2xl p-4 flex items-center gap-3 text-emerald-300 text-xs shadow-lg">
-                    <Leaf className="w-5 h-5 text-emerald-400 shrink-0" />
+                {/* SECTION 2: NUTRIENT ANALYSIS MATRIX */}
+                <div className="bg-slate-950/60 backdrop-blur-xl border border-slate-800 rounded-3xl p-6 md:p-8 shadow-xl">
+                  <div className="flex items-center justify-between border-b border-slate-800 pb-4 mb-6">
                     <div>
-                      <span className="font-bold text-emerald-400">Legume Nitrogen Credit Applied! </span>
-                      {recommendation.previous_crop_adjustment.explanation}
+                      <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                        <FlaskConical className="w-5 h-5 text-emerald-400" /> Soil Nutrient Status & Deficit Analysis
+                      </h3>
+                      <p className="text-xs text-slate-400 mt-1">
+                        Compares verified soil values against {plan.crop_summary?.crop} target yield requirements (ICAR standard)
+                      </p>
+                    </div>
+                    <span className="text-xs px-3 py-1 bg-slate-900 border border-slate-800 rounded-xl text-slate-400 font-semibold">
+                      Baseline: {plan.soil_summary?.soil_type}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-4 mb-6">
+                    {plan.nutrient_matrix && Object.values(plan.nutrient_matrix).map(item => (
+                      <div key={item.label} className="bg-slate-900/80 border border-slate-800 rounded-2xl p-3.5 flex flex-col justify-between">
+                        <div>
+                          <div className="flex justify-between items-start">
+                            <span className="text-[11px] font-bold text-slate-400 uppercase">{item.label}</span>
+                            <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${
+                              item.source === 'Farmer Input' 
+                                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' 
+                                : 'bg-slate-800 text-slate-400'
+                            }`}>
+                              {item.source === 'Farmer Input' ? 'Verified' : 'Estimated'}
+                            </span>
+                          </div>
+                          <div className="text-lg font-extrabold text-white mt-1">
+                            {item.available_nutrient} <span className="text-[10px] text-slate-400 font-normal">{item.unit}</span>
+                          </div>
+                        </div>
+                        <div className="mt-3 pt-2 border-t border-slate-800/60 flex justify-between items-center text-[10px]">
+                          <span className="text-slate-400">Class:</span>
+                          <span className="font-bold text-emerald-400">{item.classification}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* NUTRIENT MATRIX TABLE */}
+                  <div className="overflow-x-auto rounded-2xl border border-slate-800">
+                    <table className="w-full text-left text-xs">
+                      <thead className="bg-slate-900 text-slate-300 uppercase text-[10px] font-bold tracking-wider">
+                        <tr>
+                          <th className="p-3.5">Nutrient</th>
+                          <th className="p-3.5">Available Status</th>
+                          <th className="p-3.5">Source</th>
+                          <th className="p-3.5">Classification</th>
+                          <th className="p-3.5">Crop Target Demand</th>
+                          <th className="p-3.5">Deficit Supply Needed</th>
+                          <th className="p-3.5">Agronomic Recommendation</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-800/60 text-slate-300">
+                        {plan.nutrient_matrix && Object.values(plan.nutrient_matrix).map(n => (
+                          <tr key={n.label} className="hover:bg-slate-900/40">
+                            <td className="p-3.5 font-bold text-white">{n.label}</td>
+                            <td className="p-3.5">{n.available_nutrient} {n.unit}</td>
+                            <td className="p-3.5">
+                              <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${n.source === 'Farmer Input' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-800 text-slate-400'}`}>
+                                {n.source}
+                              </span>
+                            </td>
+                            <td className="p-3.5 font-bold text-emerald-400">{n.classification}</td>
+                            <td className="p-3.5">{n.crop_requirement} {n.unit}</td>
+                            <td className="p-3.5 font-bold">
+                              {n.deficit > 0 ? (
+                                <span className="text-amber-400">+{n.deficit} {n.unit}</span>
+                              ) : (
+                                <span className="text-emerald-400">Sufficient</span>
+                              )}
+                            </td>
+                            <td className="p-3.5 text-slate-400">{n.recommended_action}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* SECTION 3: MULTIPLE STRATEGY CARDS */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                      <Layers className="w-5 h-5 text-emerald-400" /> Multiple Fertilizer Plan Options
+                    </h3>
+                    <p className="text-xs text-slate-400">Select a strategy card below to view custom application schedule</p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {plan.top_fertilizer_plans?.map((p, idx) => {
+                      const isSelected = selectedPlanIndex === idx;
+                      return (
+                        <div
+                          key={p.strategy}
+                          onClick={() => setSelectedPlanIndex(idx)}
+                          className={`rounded-3xl p-6 border transition-all cursor-pointer relative overflow-hidden flex flex-col justify-between ${
+                            isSelected
+                              ? 'bg-slate-950 border-emerald-500 shadow-2xl ring-2 ring-emerald-500/30'
+                              : 'bg-slate-950/40 border-slate-800 hover:border-slate-700 opacity-80 hover:opacity-100'
+                          }`}
+                        >
+                          {isSelected && (
+                            <div className="absolute top-0 right-0 bg-emerald-500 text-slate-950 text-[10px] font-black uppercase px-3 py-1 rounded-bl-xl flex items-center gap-1">
+                              <CheckCircle2 className="w-3.5 h-3.5" /> Selected Plan
+                            </div>
+                          )}
+
+                          <div>
+                            <div className="inline-block px-2.5 py-1 rounded-lg bg-slate-900 text-emerald-400 font-bold text-[10px] uppercase mb-3">
+                              {p.tag}
+                            </div>
+                            <h4 className="text-lg font-black text-white">{p.title}</h4>
+                            <p className="text-xs text-slate-400 mt-2 leading-relaxed">{p.description}</p>
+
+                            <div className="mt-4 space-y-1.5">
+                              {p.advantages?.map((adv, aIdx) => (
+                                <div key={aIdx} className="flex items-center gap-2 text-xs text-slate-300">
+                                  <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                                  <span>{adv}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          <div className="mt-6 pt-4 border-t border-slate-800/80 flex justify-between items-end">
+                            <div>
+                              <div className="text-[10px] text-slate-400 uppercase font-bold">Est. Nutrition Cost</div>
+                              <div className="text-xl font-black text-white">{p.cost?.total_cost_display}</div>
+                            </div>
+                            <div className="text-right">
+                              <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-400 font-bold text-xs">
+                                {p.score}% Match
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* SECTION 4: SELECTED PLAN FERTILIZER BREAKDOWN TABLE */}
+                <div className="bg-slate-950/60 backdrop-blur-xl border border-slate-800 rounded-3xl p-6 md:p-8 shadow-xl">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-slate-800 pb-4 mb-6 gap-4">
+                    <div>
+                      <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                        <ShoppingBag className="w-5 h-5 text-emerald-400" /> Selected Plan Breakdown ({activeSelectedPlan.title})
+                      </h3>
+                      <p className="text-xs text-slate-400 mt-1">Exact quantities, commercial bags, and estimated market prices for your farm</p>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-xs text-slate-400 font-bold">Nutrition Cost Head</div>
+                      <div className="text-xl font-extrabold text-emerald-400">{activeSelectedPlan.cost?.total_cost_display}</div>
                     </div>
                   </div>
-                )}
 
-                {/* TOP 3 COMBINATION SOLUTIONS TABS */}
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <h3 className="text-xs font-extrabold text-slate-400 uppercase tracking-wider">
-                      Recommended Formulations (Top Ranked Blends)
-                    </h3>
-                    <span className="text-[10px] text-slate-500">Click to compare options</span>
+                  <div className="overflow-x-auto rounded-2xl border border-slate-800">
+                    <table className="w-full text-left text-xs">
+                      <thead className="bg-slate-900 text-slate-300 uppercase text-[10px] font-bold tracking-wider">
+                        <tr>
+                          <th className="p-3.5">Fertilizer Product</th>
+                          <th className="p-3.5">Grade / NPK</th>
+                          <th className="p-3.5">Dose (kg/ha)</th>
+                          <th className="p-3.5">Total Required Quantity</th>
+                          <th className="p-3.5">Market Price</th>
+                          <th className="p-3.5">Estimated Cost</th>
+                          <th className="p-3.5">Application Method</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-800/60 text-slate-300">
+                        {activeSelectedPlan.items?.map((item, idx) => (
+                          <tr key={idx} className="hover:bg-slate-900/40">
+                            <td className="p-3.5 font-bold text-white">
+                              {item.name} <span className="text-[10px] font-normal text-slate-400">({item.type})</span>
+                            </td>
+                            <td className="p-3.5 font-mono text-emerald-400">{item.npk_ratio}</td>
+                            <td className="p-3.5">{item.dose_per_ha} kg</td>
+                            <td className="p-3.5 font-bold text-white">{item.quantity_display?.total_text}</td>
+                            <td className="p-3.5">₹{item.cost_per_kg}/kg {item.price_per_bag ? `(₹${item.price_per_bag}/bag)` : ''}</td>
+                            <td className="p-3.5 font-bold text-emerald-400">{item.cost_display}</td>
+                            <td className="p-3.5 text-slate-400">{item.application_method}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
-                  
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    {recommendation.top_3_options?.map((opt, idx) => (
-                      <button
-                        key={idx}
-                        onClick={() => setSelectedSolutionIndex(idx)}
-                        className={`p-4 rounded-2xl border text-left transition-all duration-300 relative overflow-hidden ${
-                          selectedSolutionIndex === idx
-                            ? 'bg-gradient-to-b from-emerald-950/80 to-slate-900 border-emerald-500 shadow-xl shadow-emerald-500/10 ring-1 ring-emerald-500 scale-[1.02]'
-                            : 'bg-slate-900/60 border-slate-800 hover:border-slate-700 hover:bg-slate-900/80'
-                        }`}
-                      >
-                        <div className="flex justify-between items-center mb-1.5">
-                          <span className="text-[10px] font-black px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 uppercase tracking-wider">
-                            {opt.tag || `Option ${idx + 1}`}
-                          </span>
-                          <span className="text-xs font-bold text-slate-300">{opt.confidence_score}%</span>
+                </div>
+
+                {/* SECTION 5: STAGE-WISE APPLICATION TIMELINE */}
+                <div className="bg-slate-950/60 backdrop-blur-xl border border-slate-800 rounded-3xl p-6 md:p-8 shadow-xl">
+                  <div className="border-b border-slate-800 pb-4 mb-6">
+                    <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                      <Clock className="w-5 h-5 text-emerald-400" /> Stage-Wise Application Schedule
+                    </h3>
+                    <p className="text-xs text-slate-400 mt-1">Split application schedule to maximize nutrient use efficiency (NUE) and prevent volatilization</p>
+                  </div>
+
+                  <div className="space-y-6 relative before:absolute before:left-3.5 before:top-3 before:bottom-3 before:w-0.5 before:bg-emerald-500/30 pl-8">
+                    {plan.selected_plan_schedule?.map((stg, idx) => (
+                      <div key={idx} className="relative bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
+                        <div className="absolute -left-11 top-5 w-6 h-6 rounded-full bg-emerald-500 border-4 border-slate-950 text-slate-950 flex items-center justify-center font-black text-[10px]">
+                          {idx + 1}
                         </div>
-                        <h4 className="text-xs font-bold text-white line-clamp-1">{opt.title}</h4>
-                        <div className="text-xs font-black text-emerald-400 mt-2 flex items-baseline gap-1">
-                          ₹{opt.total_cost_inr} <span className="text-[10px] font-normal text-slate-400">(₹{opt.cost_per_acre_inr}/acre)</span>
+
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pb-3 border-b border-slate-800/80">
+                          <div>
+                            <h4 className="text-base font-extrabold text-white">{stg.stage}</h4>
+                            <span className="text-xs text-emerald-400 font-semibold">{stg.timing}</span>
+                          </div>
+                          <div className="text-xs bg-slate-950 px-3 py-1 rounded-xl border border-slate-800 text-slate-400 font-mono">
+                            Splits: N:{stg.nutrient_splits?.N_split_pct}% P:{stg.nutrient_splits?.P_split_pct}% K:{stg.nutrient_splits?.K_split_pct}%
+                          </div>
                         </div>
-                      </button>
+
+                        <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          {stg.fertilizers?.map((f, fIdx) => (
+                            <div key={fIdx} className="bg-slate-950 p-3 rounded-xl border border-slate-800/80 flex items-center justify-between">
+                              <div>
+                                <div className="text-xs font-bold text-white">{f.name}</div>
+                                <div className="text-[10px] text-slate-400 mt-0.5">{f.quantity_display?.total_text}</div>
+                              </div>
+                              <span className="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-lg">
+                                {f.dose_per_ha} kg/ha
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+
+                        <div className="mt-3 text-xs text-slate-400 flex items-center gap-2 italic">
+                          <Info className="w-3.5 h-3.5 text-emerald-400 shrink-0" /> {stg.instructions}
+                        </div>
+                      </div>
                     ))}
                   </div>
                 </div>
 
-                {/* ACTIVE SOLUTION METRICS BREAKDOWN CARDS */}
-                {activeSolution && (
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                    <div className="bg-slate-900/70 border border-slate-800 rounded-2xl p-4 shadow-xl backdrop-blur-md">
-                      <div className="flex items-center gap-2 text-slate-400 text-xs mb-1 font-semibold">
-                        <IndianRupee className="w-4 h-4 text-emerald-400" /> Total Cost
-                      </div>
-                      <div className="text-2xl font-black text-emerald-400">₹{activeSolution.total_cost_inr}</div>
-                      <div className="text-[10px] text-slate-500 mt-0.5">₹{activeSolution.cost_per_acre_inr} / acre</div>
+                {/* SECTION 6: INTEGRATED CROP PROTECTION PLAN */}
+                <div className="bg-slate-950/60 backdrop-blur-xl border border-slate-800 rounded-3xl p-6 md:p-8 shadow-xl">
+                  <div className="flex justify-between items-center border-b border-slate-800 pb-4 mb-6">
+                    <div>
+                      <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                        <Shield className="w-5 h-5 text-emerald-400" /> Integrated Crop Protection Plan
+                      </h3>
+                      <p className="text-xs text-slate-400 mt-1">Preventive weed, pest, and disease control guidelines matched to crop growth stages</p>
                     </div>
-
-                    <div className="bg-slate-900/70 border border-slate-800 rounded-2xl p-4 shadow-xl backdrop-blur-md">
-                      <div className="flex items-center gap-2 text-slate-400 text-xs mb-1 font-semibold">
-                        <ShoppingBag className="w-4 h-4 text-teal-400" /> Total Bags
-                      </div>
-                      <div className="text-2xl font-black text-white">
-                        {activeSolution.items?.reduce((acc, i) => acc + i.total_bags, 0)} Bags
-                      </div>
-                      <div className="text-[10px] text-slate-500 mt-0.5">Standard 45kg/50kg</div>
-                    </div>
-
-                    <div className="bg-slate-900/70 border border-slate-800 rounded-2xl p-4 shadow-xl backdrop-blur-md">
-                      <div className="flex items-center gap-2 text-slate-400 text-xs mb-1 font-semibold">
-                        <Scale className="w-4 h-4 text-blue-400" /> Total Weight
-                      </div>
-                      <div className="text-2xl font-black text-white">
-                        {activeSolution.items?.reduce((acc, i) => acc + i.total_quantity_kg, 0).toFixed(1)} kg
-                      </div>
-                      <div className="text-[10px] text-slate-500 mt-0.5">For {recommendation.farm_area_acres} Acres</div>
-                    </div>
-
-                    <div className="bg-slate-900/70 border border-slate-800 rounded-2xl p-4 shadow-xl backdrop-blur-md">
-                      <div className="flex items-center gap-2 text-slate-400 text-xs mb-1 font-semibold">
-                        <TrendingUp className="w-4 h-4 text-amber-400" /> Yield Boost
-                      </div>
-                      <div className="text-2xl font-black text-amber-400">+{recommendation.expected_yield_improvement}</div>
-                      <div className="text-[10px] text-slate-500 mt-0.5">Estimated Yield Gain</div>
+                    <div className="text-right">
+                      <div className="text-xs text-slate-400 font-bold">Protection Cost Head</div>
+                      <div className="text-xl font-extrabold text-emerald-400">{plan.cost_summary?.total_protection_cost_display}</div>
                     </div>
                   </div>
-                )}
 
-                {/* FORMULATION DOSAGE BREAKDOWN TABLE */}
-                {activeSolution && (
-                  <div className="bg-slate-900/70 border border-slate-800 rounded-3xl p-6 space-y-4 shadow-xl backdrop-blur-xl">
-                    <h3 className="text-sm font-extrabold text-slate-200 flex items-center gap-2">
-                      <FlaskConical className="w-4 h-4 text-emerald-400" />
-                      Formulation Dosage Breakdown ({activeSolution.title})
-                    </h3>
-
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-left text-xs text-slate-300">
-                        <thead className="bg-slate-950 text-slate-400 uppercase text-[10px] font-extrabold tracking-wider border-b border-slate-800">
-                          <tr>
-                            <th className="p-3">Fertilizer Name</th>
-                            <th className="p-3">Dose / Acre</th>
-                            <th className="p-3">Total Qty</th>
-                            <th className="p-3">Bags Needed</th>
-                            <th className="p-3">Est. Cost</th>
-                            <th className="p-3">Application Method</th>
+                  <div className="overflow-x-auto rounded-2xl border border-slate-800">
+                    <table className="w-full text-left text-xs">
+                      <thead className="bg-slate-900 text-slate-300 uppercase text-[10px] font-bold tracking-wider">
+                        <tr>
+                          <th className="p-3.5">Category</th>
+                          <th className="p-3.5">Target Problem</th>
+                          <th className="p-3.5">Recommended Product</th>
+                          <th className="p-3.5">Dose / Acre</th>
+                          <th className="p-3.5">Application Method</th>
+                          <th className="p-3.5">Est. Cost / Acre</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-800/60 text-slate-300">
+                        {[
+                          ...(plan.protection_plan?.weed_management || []),
+                          ...(plan.protection_plan?.disease_prevention || []),
+                          ...(plan.protection_plan?.pest_management || []),
+                          ...(plan.protection_plan?.micronutrient_spray || []),
+                          ...(plan.protection_plan?.growth_promoter || [])
+                        ].map((p, idx) => (
+                          <tr key={idx} className="hover:bg-slate-900/40">
+                            <td className="p-3.5 font-bold text-emerald-400">{p.category}</td>
+                            <td className="p-3.5 font-semibold text-white">{p.problem}</td>
+                            <td className="p-3.5">
+                              <b>{p.recommended_product}</b> <span className="text-[10px] text-slate-400">({p.active_ingredient})</span>
+                            </td>
+                            <td className="p-3.5">{p.dose_per_acre}</td>
+                            <td className="p-3.5 text-slate-400">{p.application_method}</td>
+                            <td className="p-3.5 font-bold text-white">{p.cost_display}</td>
                           </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-800/60">
-                          {activeSolution.items?.map((item, i) => (
-                            <tr key={i} className="hover:bg-slate-800/40 transition">
-                              <td className="p-3 font-bold text-white flex items-center gap-2">
-                                <span className="w-2 h-2 rounded-full bg-emerald-400" />
-                                {item.fertilizer_name}
-                              </td>
-                              <td className="p-3 text-emerald-400 font-extrabold">{item.dose_per_acre_kg} kg</td>
-                              <td className="p-3 font-semibold">{item.total_quantity_kg} kg</td>
-                              <td className="p-3 font-bold text-amber-400">{item.total_bags} bags ({item.bag_size_kg}kg)</td>
-                              <td className="p-3 font-extrabold text-slate-100">₹{item.item_cost_inr}</td>
-                              <td className="p-3 text-slate-400">{item.application_method}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
-                )}
+                </div>
 
-                {/* TIMELINE APPLICATION SCHEDULE */}
-                {activeSchedule && (
-                  <div className="bg-slate-900/70 border border-slate-800 rounded-3xl p-6 space-y-5 shadow-xl backdrop-blur-xl">
-                    <h3 className="text-sm font-extrabold text-slate-200 flex items-center gap-2">
-                      <Clock className="w-4 h-4 text-teal-400" /> Stage-wise Split Application Schedule
-                    </h3>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-5 relative">
-                      {activeSchedule.map((stg, i) => (
-                        <div key={i} className="bg-slate-950/90 border border-slate-800 rounded-2xl p-5 space-y-3 flex flex-col justify-between shadow-inner relative overflow-hidden">
-                          <div className="space-y-2">
-                            <div className="flex justify-between items-center">
-                              <span className="text-xs font-black text-emerald-400 uppercase tracking-wider">{stg.stage_name}</span>
-                              <span className="text-[10px] text-slate-400 bg-slate-800 px-2 py-0.5 rounded-full font-semibold">{stg.recommended_timing}</span>
-                            </div>
-                            <p className="text-[11px] text-slate-300 leading-relaxed font-medium">{stg.application_instructions}</p>
-                          </div>
-
-                          <div className="border-t border-slate-800/80 pt-3 space-y-2 mt-2">
-                            {stg.fertilizer_split && stg.fertilizer_split.length > 0 ? (
-                              stg.fertilizer_split.map((spl, j) => (
-                                <div key={j} className="flex justify-between items-center text-[11px] bg-slate-900/60 p-2 rounded-xl border border-slate-800/60">
-                                  <span className="text-slate-300 font-semibold">{spl.fertilizer_name}:</span>
-                                  <span className="font-extrabold text-emerald-400">{spl.stage_dose_per_acre_kg} kg/acre</span>
-                                </div>
-                              ))
-                            ) : (
-                              <div className="text-[11px] text-emerald-400/90 font-semibold italic flex items-center gap-1.5 pt-1">
-                                <Check className="w-4 h-4 text-emerald-400 shrink-0" />
-                                <span>No top-dressing required for this stage. Full dose covered in basal application.</span>
-                              </div>
-                            )}
-                          </div>
+                {/* SECTION 7: WEATHER ADVISORY BOX */}
+                {plan.weather_advisory?.current_summary && (
+                  <div className="bg-gradient-to-r from-blue-950/60 to-slate-950/80 border border-blue-500/30 rounded-3xl p-6 md:p-8 shadow-xl">
+                    <div className="flex items-center gap-3 mb-3">
+                      <Sun className="w-6 h-6 text-amber-400" />
+                      <h3 className="text-lg font-bold text-white">Real-Time Weather Integration Advisory</h3>
+                    </div>
+                    <p className="text-xs text-slate-300 leading-relaxed mb-4">
+                      {plan.weather_advisory.current_summary}
+                    </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {plan.weather_advisory.advisories?.map((adv, idx) => (
+                        <div key={idx} className="bg-slate-900/80 p-3.5 rounded-2xl border border-slate-800">
+                          <div className="text-xs font-bold text-amber-400">{adv.title}</div>
+                          <div className="text-xs text-slate-400 mt-1">{adv.message}</div>
                         </div>
                       ))}
                     </div>
                   </div>
                 )}
 
-                {/* WEATHER ADVISORY & SAFETY PRECAUTIONS */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {recommendation.weather_advice && recommendation.weather_advice.length > 0 && (
-                    <div className="bg-slate-900/70 border border-slate-800 rounded-3xl p-6 space-y-4 shadow-xl backdrop-blur-xl">
-                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-                        <h3 className="text-xs font-extrabold text-amber-400 uppercase tracking-wider flex items-center gap-2">
-                          <CloudSun className="w-4 h-4" /> Live Weather Intelligence Advisory
-                        </h3>
-                        {recommendation.weather_summary && (
-                          <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-300">
-                            <span className="bg-slate-950 px-2 py-0.5 rounded-md border border-slate-800">
-                              🌡️ {recommendation.weather_summary.temperature_c}°C
-                            </span>
-                            <span className="bg-slate-950 px-2 py-0.5 rounded-md border border-slate-800">
-                              💧 {recommendation.weather_summary.humidity_pct}%
-                            </span>
-                            <span className="bg-slate-950 px-2 py-0.5 rounded-md border border-slate-800">
-                              🌧️ {recommendation.weather_summary.rainfall_mm} mm
-                            </span>
-                          </div>
-                        )}
-                      </div>
+                {/* SECTION 8: COST BREAKDOWN SUMMARY */}
+                <div className="bg-slate-950/60 backdrop-blur-xl border border-slate-800 rounded-3xl p-6 md:p-8 shadow-xl">
+                  <div className="border-b border-slate-800 pb-4 mb-6">
+                    <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                      <IndianRupee className="w-5 h-5 text-emerald-400" /> Complete Cost Breakdown Summary
+                    </h3>
+                    <p className="text-xs text-slate-400 mt-1">Itemized cost heads for farm operational budget planning</p>
+                  </div>
 
-                      <ul className="space-y-2 text-xs text-slate-300">
-                        {recommendation.weather_advice.map((adv, idx) => (
-                          <li key={idx} className="flex items-start gap-2.5 bg-slate-950/60 p-2.5 rounded-xl border border-slate-800/60">
-                            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                            <span>{adv}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-
-                  {recommendation.precautions && recommendation.precautions.length > 0 && (
-                    <div className="bg-slate-900/70 border border-slate-800 rounded-3xl p-6 space-y-4 shadow-xl backdrop-blur-xl">
-                      <h3 className="text-xs font-extrabold text-blue-400 uppercase tracking-wider flex items-center gap-2">
-                        <ShieldAlert className="w-4 h-4" /> Soil & Field Handling Precautions
-                      </h3>
-                      <ul className="space-y-2 text-xs text-slate-300">
-                        {recommendation.precautions.map((prc, idx) => (
-                          <li key={idx} className="flex items-start gap-2.5 bg-slate-950/60 p-2.5 rounded-xl border border-slate-800/60">
-                            <Info className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
-                            <span>{prc}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
+                  <div className="overflow-x-auto rounded-2xl border border-slate-800 mb-6">
+                    <table className="w-full text-left text-xs">
+                      <thead className="bg-slate-900 text-slate-300 uppercase text-[10px] font-bold tracking-wider">
+                        <tr>
+                          <th className="p-3.5">Cost Head</th>
+                          <th className="p-3.5">Category</th>
+                          <th className="p-3.5">Amount (₹)</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-800/60 text-slate-300">
+                        <tr>
+                          <td className="p-3.5 font-semibold text-white">Fertilizer Cost</td>
+                          <td className="p-3.5 text-slate-400">Nutrition</td>
+                          <td className="p-3.5 font-bold">{plan.cost_summary?.fertilizer_cost_display}</td>
+                        </tr>
+                        <tr>
+                          <td className="p-3.5 font-semibold text-white">Micronutrient & Secondary Cost</td>
+                          <td className="p-3.5 text-slate-400">Nutrition</td>
+                          <td className="p-3.5 font-bold">{plan.cost_summary?.micronutrient_cost_display}</td>
+                        </tr>
+                        <tr>
+                          <td className="p-3.5 font-semibold text-white">Herbicide Cost</td>
+                          <td className="p-3.5 text-slate-400">Protection</td>
+                          <td className="p-3.5 font-bold">{plan.cost_summary?.herbicide_cost_display}</td>
+                        </tr>
+                        <tr>
+                          <td className="p-3.5 font-semibold text-white">Fungicide Cost</td>
+                          <td className="p-3.5 text-slate-400">Protection</td>
+                          <td className="p-3.5 font-bold">{plan.cost_summary?.fungicide_cost_display}</td>
+                        </tr>
+                        <tr>
+                          <td className="p-3.5 font-semibold text-white">Insecticide Cost</td>
+                          <td className="p-3.5 text-slate-400">Protection</td>
+                          <td className="p-3.5 font-bold">{plan.cost_summary?.insecticide_cost_display}</td>
+                        </tr>
+                        <tr>
+                          <td className="p-3.5 font-semibold text-white">Growth Regulator Cost</td>
+                          <td className="p-3.5 text-slate-400">Protection</td>
+                          <td className="p-3.5 font-bold">{plan.cost_summary?.growth_regulator_cost_display}</td>
+                        </tr>
+                        <tr>
+                          <td className="p-3.5 font-semibold text-white">Application Labour & Misc</td>
+                          <td className="p-3.5 text-slate-400">Operational</td>
+                          <td className="p-3.5 font-bold">{plan.cost_summary?.application_cost_display}</td>
+                        </tr>
+                        <tr className="bg-slate-900 font-extrabold text-white">
+                          <td className="p-4 text-sm text-emerald-400">GRAND TOTAL PLAN COST</td>
+                          <td className="p-4 text-xs text-slate-400">Nutrition + Protection</td>
+                          <td className="p-4 text-base text-emerald-400">{plan.cost_summary?.grand_total_display}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
 
-                {/* DEEP AI EXPLANATION */}
-                {recommendation.ai_explanation && (
-                  <div className="bg-gradient-to-br from-slate-900 via-slate-900 to-emerald-950/60 border border-emerald-500/30 rounded-3xl p-6 sm:p-8 space-y-4 shadow-2xl backdrop-blur-xl">
-                    <h3 className="text-base font-extrabold text-white flex items-center gap-2">
-                      <Sparkles className="w-5 h-5 text-emerald-400" /> AI Agronomic Explanation
+                {/* SECTION 9: AI EXPLANATION & SCIENTIFIC RATIONALE */}
+                <div className="bg-slate-950/60 backdrop-blur-xl border border-slate-800 rounded-3xl p-6 md:p-8 shadow-xl">
+                  <div className="border-b border-slate-800 pb-4 mb-4">
+                    <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                      <Sparkles className="w-5 h-5 text-emerald-400" /> Scientific AI Plan Rationale
                     </h3>
-                    
-                    <div className="space-y-3 text-xs text-slate-300 leading-relaxed font-medium">
-                      <div className="bg-slate-950/80 p-4 rounded-2xl border border-slate-800/80 space-y-1">
-                        <span className="text-emerald-400 font-extrabold uppercase text-[10px] tracking-wider block">Nutrient Gap Analysis</span>
-                        <p>{recommendation.ai_explanation.nutrient_gap_analysis}</p>
-                      </div>
-                      <div className="bg-slate-950/80 p-4 rounded-2xl border border-slate-800/80 space-y-1">
-                        <span className="text-teal-400 font-extrabold uppercase text-[10px] tracking-wider block">Fertilizer Combination Logic</span>
-                        <p>{recommendation.ai_explanation.fertilizer_matching_logic}</p>
-                      </div>
-                    </div>
                   </div>
-                )}
+                  <div className="bg-slate-900/80 p-5 rounded-2xl border border-slate-800 text-xs text-slate-300 leading-relaxed white-space-pre-line">
+                    {plan.ai_explanation?.full_explanation}
+                  </div>
+                </div>
 
+                {/* SECTION 10: SAFETY WARNINGS & PRECAUTIONS */}
+                <div className="bg-amber-950/20 border border-amber-500/30 rounded-3xl p-6 md:p-8 shadow-xl">
+                  <div className="flex items-center gap-3 mb-4">
+                    <ShieldAlert className="w-6 h-6 text-amber-400" />
+                    <h3 className="text-lg font-bold text-amber-300">Agrochemical Handling & Safety Precautions</h3>
+                  </div>
+                  <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-amber-200/80 list-disc list-inside">
+                    <li>Always wear protective mask, gloves, and boots during agrochemical mixing and spraying.</li>
+                    <li>Do NOT mix phosphatic fertilizers directly with Zinc Sulphate in the same spray tank.</li>
+                    <li>Apply Nitrogen fertilizers only when adequate soil moisture is present to minimize volatilization.</li>
+                    <li>Follow recommended Pre-Harvest Interval (PHI) after applying insecticides/fungicides.</li>
+                  </ul>
+                </div>
               </motion.div>
             )}
           </div>
+        )}
 
-        </div>
-      )}
-
-      {/* TAB 2: HISTORY */}
-      {activeTab === 'history' && (
-        <div className="bg-slate-900/80 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 backdrop-blur-xl">
-          <h2 className="text-xl font-bold text-white flex items-center gap-2">
-            <History className="w-5 h-5 text-emerald-400" /> Recommendation History Log
-          </h2>
-
-          {history.length === 0 ? (
-            <p className="text-slate-400 text-sm py-12 text-center">No past recommendations found for this farm.</p>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs text-slate-300">
-                <thead className="bg-slate-950 text-slate-400 uppercase text-[10px] font-extrabold tracking-wider border-b border-slate-800">
-                  <tr>
-                    <th className="p-3.5">Date</th>
-                    <th className="p-3.5">Farm</th>
-                    <th className="p-3.5">Crop</th>
-                    <th className="p-3.5">Mode</th>
-                    <th className="p-3.5">Recommended Fertilizer</th>
-                    <th className="p-3.5">Total Qty</th>
-                    <th className="p-3.5">Est. Cost</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-800/60">
-                  {history.map((rec) => (
-                    <tr key={rec.id} className="hover:bg-slate-800/40 transition">
-                      <td className="p-3.5 text-slate-400">{new Date(rec.created_at).toLocaleDateString()}</td>
-                      <td className="p-3.5 font-bold text-white">{rec.farm_name}</td>
-                      <td className="p-3.5 text-emerald-400 font-extrabold">{rec.crop}</td>
-                      <td className="p-3.5">
-                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase ${
-                          rec.recommendation_type === 'SOIL_BASED' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                        }`}>
-                          {rec.recommendation_type === 'SOIL_BASED' ? 'Precision' : 'Smart'}
-                        </span>
-                      </td>
-                      <td className="p-3.5 font-bold">{rec.recommended_fertilizer}</td>
-                      <td className="p-3.5 font-semibold">{rec.total_quantity_kg} kg</td>
-                      <td className="p-3.5 font-black text-emerald-400">₹{rec.estimated_cost_inr}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* TAB 3: CATALOG */}
-      {activeTab === 'catalog' && (
-        <div className="bg-slate-900/80 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 backdrop-blur-xl">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <h2 className="text-xl font-bold text-white flex items-center gap-2">
-              <BookOpen className="w-5 h-5 text-emerald-400" /> Fertilizer Reference Catalog
-            </h2>
-
-            <div className="relative w-full sm:w-80">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
-              <input
-                type="text"
-                placeholder="Search fertilizer name or type..."
-                value={catalogSearch}
-                onChange={(e) => setCatalogSearch(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-emerald-500 shadow-inner"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {filteredCatalog.map((item, idx) => (
-              <div key={idx} className="bg-slate-950/80 border border-slate-800 rounded-2xl p-5 space-y-3 hover:border-emerald-500/40 transition shadow-lg">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h4 className="text-sm font-extrabold text-white">{item.name}</h4>
-                    <span className="text-[10px] text-slate-400 bg-slate-800 px-2 py-0.5 rounded-full font-semibold">{item.type}</span>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-base font-black text-emerald-400">₹{item.price_per_kg}/kg</div>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-3 gap-2 bg-slate-900/90 p-3 rounded-xl text-center text-xs border border-slate-800/80">
-                  <div>
-                    <div className="text-[10px] text-slate-500 uppercase font-bold">N%</div>
-                    <div className="font-extrabold text-emerald-400">{item.N_pct}%</div>
-                  </div>
-                  <div>
-                    <div className="text-[10px] text-slate-500 uppercase font-bold">P%</div>
-                    <div className="font-extrabold text-teal-400">{item.P_pct}%</div>
-                  </div>
-                  <div>
-                    <div className="text-[10px] text-slate-500 uppercase font-bold">K%</div>
-                    <div className="font-extrabold text-blue-400">{item.K_pct}%</div>
-                  </div>
-                </div>
-
-                <p className="text-[11px] text-slate-400 leading-relaxed">
-                  <strong className="text-slate-300 font-bold">Method:</strong> {item.application_method}
-                </p>
+        {/* TAB 2: HISTORY */}
+        {activeTab === 'history' && (
+          <div className="bg-slate-950/60 backdrop-blur-xl border border-slate-800 rounded-3xl p-6 md:p-8 shadow-xl space-y-6">
+            <div className="flex justify-between items-center border-b border-slate-800 pb-4">
+              <div>
+                <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                  <History className="w-5 h-5 text-emerald-400" /> Recommendation History
+                </h2>
+                <p className="text-xs text-slate-400 mt-1">Past generated nutrition plans for {currentFarmObj?.name || 'Active Farm'}</p>
               </div>
-            ))}
-          </div>
-        </div>
-      )}
+            </div>
 
+            {history.length > 0 ? (
+              <div className="space-y-4">
+                {history.map((item) => (
+                  <div key={item.id} className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-base font-extrabold text-white">{item.crop}</span>
+                        <span className="text-xs px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-semibold">
+                          {item.growth_stage}
+                        </span>
+                      </div>
+                      <div className="text-xs text-slate-400">
+                        Recommended: <span className="text-white font-bold">{item.recommended_fertilizer}</span> ({item.total_quantity_kg} kg) • Est. Cost: <span className="text-emerald-400 font-bold">₹{item.estimated_cost_inr}</span>
+                      </div>
+                      <div className="text-[10px] text-slate-500 mt-1">
+                        Created: {new Date(item.created_at).toLocaleString()}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs font-bold px-3 py-1 rounded-xl bg-slate-950 border border-slate-800 text-slate-300">
+                        Score: {item.confidence_score}%
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12 text-slate-500 text-sm">
+                No past recommendation history found for this farm.
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* TAB 3: MASTER CATALOG */}
+        {activeTab === 'catalog' && (
+          <div className="bg-slate-950/60 backdrop-blur-xl border border-slate-800 rounded-3xl p-6 md:p-8 shadow-xl space-y-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-slate-800 pb-4 gap-4">
+              <div>
+                <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                  <BookOpen className="w-5 h-5 text-emerald-400" /> Commercial Fertilizer Catalog ({masterCatalog.length} Products)
+                </h2>
+                <p className="text-xs text-slate-400 mt-1">Comprehensive database of commercial NPK, secondary, and micronutrient formulations</p>
+              </div>
+              <div className="relative w-full sm:w-64">
+                <Search className="w-4 h-4 absolute left-3.5 top-3 text-slate-500" />
+                <input
+                  type="text"
+                  placeholder="Search products, brands..."
+                  value={catalogSearch}
+                  onChange={(e) => setCatalogSearch(e.target.value)}
+                  className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-9 pr-4 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredCatalog.map((item, idx) => (
+                <div key={idx} className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between">
+                  <div>
+                    <div className="flex justify-between items-start mb-2">
+                      <span className="text-xs px-2.5 py-0.5 rounded-lg bg-emerald-500/10 text-emerald-400 font-bold border border-emerald-500/20">
+                        {item.type}
+                      </span>
+                      <span className="text-xs font-black text-white">₹{item.cost_per_kg}/kg</span>
+                    </div>
+                    <h4 className="text-base font-extrabold text-white">{item.name}</h4>
+                    <p className="text-xs text-slate-400 mt-1">Brand: <span className="text-slate-200">{item.brand}</span></p>
+
+                    <div className="mt-3 flex flex-wrap gap-1.5 text-[10px] font-mono">
+                      {item.N_pct > 0 && <span className="bg-slate-950 px-2 py-0.5 rounded border border-slate-800 text-slate-300">N: {item.N_pct}%</span>}
+                      {item.P_pct > 0 && <span className="bg-slate-950 px-2 py-0.5 rounded border border-slate-800 text-slate-300">P: {item.P_pct}%</span>}
+                      {item.K_pct > 0 && <span className="bg-slate-950 px-2 py-0.5 rounded border border-slate-800 text-slate-300">K: {item.K_pct}%</span>}
+                      {item.S_pct > 0 && <span className="bg-slate-950 px-2 py-0.5 rounded border border-slate-800 text-slate-300">S: {item.S_pct}%</span>}
+                      {item.Zn_pct > 0 && <span className="bg-slate-950 px-2 py-0.5 rounded border border-slate-800 text-slate-300">Zn: {item.Zn_pct}%</span>}
+                      {item.B_pct > 0 && <span className="bg-slate-950 px-2 py-0.5 rounded border border-slate-800 text-slate-300">B: {item.B_pct}%</span>}
+                    </div>
+                  </div>
+
+                  <div className="mt-4 pt-3 border-t border-slate-800/80 text-[11px] text-slate-400">
+                    <div><b>Application:</b> {item.application_method}</div>
+                    <div><b>Crops:</b> {item.suitable_crops}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
