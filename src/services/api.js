@@ -399,6 +399,11 @@ export const fetchFertilizerHistoryApi = async (farmId = null) => {
   return response.data;
 };
 
+export const deleteFertilizerHistoryApi = async (id) => {
+  const response = await api.delete(`/fertilizer/history/${id}/`);
+  return response.data;
+};
+
 export const fetchFertilizerMasterApi = async () => {
   const response = await api.get('/fertilizer/master/');
   return response.data;

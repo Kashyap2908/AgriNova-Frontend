@@ -283,50 +283,62 @@ const ProfitAnalysis = () => {
         </div>
       </div>
 
-      {/* Main KPI Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
+      {/* Main KPI Cards Grid (3-3 cards per row) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
         {/* Total Investment */}
-        <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} className="saas-card p-5 border-l-4 border-l-slate-500 min-w-0">
-          <span className="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-1 truncate">Total Investment</span>
-          <p className="text-xl sm:text-2xl font-black text-slate-800 dark:text-white truncate">₹{financial_summary.total_investment.toLocaleString()}</p>
-          <span className="text-[11px] text-slate-400 font-semibold mt-1 block truncate">Input Costs</span>
+        <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} className="saas-card p-6 border-l-4 border-l-slate-500 flex flex-col justify-between h-full min-h-[135px]">
+          <div>
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-1">Total Investment</span>
+            <p className="text-2xl sm:text-3xl font-black text-slate-800 dark:text-white break-words leading-tight">₹{financial_summary.total_investment.toLocaleString()}</p>
+          </div>
+          <span className="text-xs text-slate-400 font-semibold mt-2 block">Input Costs</span>
         </motion.div>
 
         {/* Gross Income */}
-        <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="saas-card p-5 border-l-4 border-l-blue-500 min-w-0">
-          <span className="text-xs font-bold uppercase tracking-wider text-blue-500 block mb-1 truncate">Gross Income</span>
-          <p className="text-xl sm:text-2xl font-black text-slate-800 dark:text-white truncate">₹{financial_summary.gross_income.toLocaleString()}</p>
-          <span className="text-[11px] text-slate-400 font-semibold mt-1 block truncate">Harvest Value</span>
+        <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="saas-card p-6 border-l-4 border-l-blue-500 flex flex-col justify-between h-full min-h-[135px]">
+          <div>
+            <span className="text-xs font-bold uppercase tracking-wider text-blue-500 block mb-1">Gross Income</span>
+            <p className="text-2xl sm:text-3xl font-black text-slate-800 dark:text-white break-words leading-tight">₹{financial_summary.gross_income.toLocaleString()}</p>
+          </div>
+          <span className="text-xs text-slate-400 font-semibold mt-2 block">Harvest Value</span>
         </motion.div>
 
         {/* Net Profit */}
-        <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className={`saas-card p-5 border-l-4 min-w-0 ${financial_summary.net_profit >= 0 ? 'border-l-emerald-500 bg-emerald-500/5' : 'border-l-rose-500 bg-rose-500/5'}`}>
-          <span className="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 block mb-1 truncate">Net Profit</span>
-          <p className={`text-xl sm:text-2xl font-black truncate ${financial_summary.net_profit >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600'}`}>
-            ₹{financial_summary.net_profit.toLocaleString()}
-          </p>
-          <span className="text-[11px] text-slate-400 font-semibold mt-1 block truncate">Gross − Investment</span>
+        <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className={`saas-card p-6 border-l-4 flex flex-col justify-between h-full min-h-[135px] ${financial_summary.net_profit >= 0 ? 'border-l-emerald-500 bg-emerald-500/5' : 'border-l-rose-500 bg-rose-500/5'}`}>
+          <div>
+            <span className="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 block mb-1">Net Profit</span>
+            <p className={`text-2xl sm:text-3xl font-black break-words leading-tight ${financial_summary.net_profit >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600'}`}>
+              ₹{financial_summary.net_profit.toLocaleString()}
+            </p>
+          </div>
+          <span className="text-xs text-slate-400 font-semibold mt-2 block">Gross − Investment</span>
         </motion.div>
 
         {/* ROI */}
-        <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="saas-card p-5 border-l-4 border-l-teal-500 min-w-0">
-          <span className="text-xs font-bold uppercase tracking-wider text-teal-600 dark:text-teal-400 block mb-1 truncate">Return on Investment</span>
-          <p className="text-xl sm:text-2xl font-black text-teal-600 dark:text-teal-400 truncate">{financial_summary.roi}%</p>
-          <span className="text-[11px] text-slate-400 font-semibold mt-1 block truncate">ROI %</span>
+        <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="saas-card p-6 border-l-4 border-l-teal-500 flex flex-col justify-between h-full min-h-[135px]">
+          <div>
+            <span className="text-xs font-bold uppercase tracking-wider text-teal-600 dark:text-teal-400 block mb-1">Return on Investment</span>
+            <p className="text-2xl sm:text-3xl font-black text-teal-600 dark:text-teal-400 break-words leading-tight">{financial_summary.roi}%</p>
+          </div>
+          <span className="text-xs text-slate-400 font-semibold mt-2 block">ROI %</span>
         </motion.div>
 
         {/* Profit Margin */}
-        <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="saas-card p-5 border-l-4 border-l-indigo-500 min-w-0">
-          <span className="text-xs font-bold uppercase tracking-wider text-indigo-500 block mb-1 truncate">Profit Margin</span>
-          <p className="text-xl sm:text-2xl font-black text-indigo-600 dark:text-indigo-400 truncate">{financial_summary.profit_margin}%</p>
-          <span className="text-[11px] text-slate-400 font-semibold mt-1 block truncate">Margin %</span>
+        <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="saas-card p-6 border-l-4 border-l-indigo-500 flex flex-col justify-between h-full min-h-[135px]">
+          <div>
+            <span className="text-xs font-bold uppercase tracking-wider text-indigo-500 block mb-1">Profit Margin</span>
+            <p className="text-2xl sm:text-3xl font-black text-indigo-600 dark:text-indigo-400 break-words leading-tight">{financial_summary.profit_margin}%</p>
+          </div>
+          <span className="text-xs text-slate-400 font-semibold mt-2 block">Margin %</span>
         </motion.div>
 
         {/* Break-even Price */}
-        <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }} className="saas-card p-5 border-l-4 border-l-amber-500 min-w-0">
-          <span className="text-xs font-bold uppercase tracking-wider text-amber-500 block mb-1 truncate">Break-even Price</span>
-          <p className="text-xl sm:text-2xl font-black text-amber-600 dark:text-amber-400 truncate">₹{financial_summary.break_even_price.toLocaleString()}</p>
-          <span className="text-[11px] text-slate-400 font-semibold mt-1 block truncate">per Quintal</span>
+        <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }} className="saas-card p-6 border-l-4 border-l-amber-500 flex flex-col justify-between h-full min-h-[135px]">
+          <div>
+            <span className="text-xs font-bold uppercase tracking-wider text-amber-500 block mb-1">Break-even Price</span>
+            <p className="text-2xl sm:text-3xl font-black text-amber-600 dark:text-amber-400 break-words leading-tight">₹{financial_summary.break_even_price.toLocaleString()}</p>
+          </div>
+          <span className="text-xs text-slate-400 font-semibold mt-2 block">per Quintal</span>
         </motion.div>
       </div>
 

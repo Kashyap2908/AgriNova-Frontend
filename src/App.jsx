@@ -46,20 +46,6 @@ const LandingNavigation = () => {
             Agri<span className="text-primary">Nova</span>
           </h1>
         </Link>
-        <nav>
-          <ul className="flex items-center space-x-2 sm:space-x-4 text-sm font-semibold text-white/90">
-            <li>
-              <Link to="/login" className="flex items-center gap-2 px-5 py-2.5 rounded-xl hover:bg-white/10 transition-all">
-                <LogIn className="w-4 h-4" /> Sign In
-              </Link>
-            </li>
-            <li>
-              <Link to="/register" className="flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-xl shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40 hover:-translate-y-0.5 transition-all duration-300">
-                <UserPlus className="w-4 h-4" /> Sign Up
-              </Link>
-            </li>
-          </ul>
-        </nav>
       </div>
     </motion.header>
   );

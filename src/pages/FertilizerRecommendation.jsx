@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
 import { FarmContext } from '../context/farm-context';
-import { recommendFertilizerApi, fetchFertilizerHistoryApi, fetchFertilizerMasterApi, fetchCropsApi } from '../services/api';
+import { recommendFertilizerApi, fetchFertilizerHistoryApi, deleteFertilizerHistoryApi, fetchFertilizerMasterApi, fetchCropsApi } from '../services/api';
 import { generatePlanPDF } from '../utils/pdfGenerator';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -9,7 +9,7 @@ import {
   Info, Leaf, Scale, Clock, Layers, History, BookOpen, AlertCircle, Zap, Target,
   Award, TrendingUp, Check, Filter, Search, ShoppingBag, Droplets, Thermometer,
   ShieldCheck, Sprout, ArrowUpRight, DollarSign, Bug, Shield, Compass, Sun, Wind, Download,
-  Layers3, HelpCircle, ChevronDown, CheckCheck
+  Layers3, HelpCircle, ChevronDown, CheckCheck, Trash2
 } from 'lucide-react';
 
 const PREVIOUS_CROP_OPTIONS = [
@@ -61,6 +61,27 @@ const FertilizerRecommendation = () => {
   const [catalogSearch, setCatalogSearch] = useState('');
   const [activeTab, setActiveTab] = useState('planner'); // 'planner' | 'history' | 'catalog'
   const [errorMsg, setErrorMsg] = useState('');
+  const [deleteConfirmItem, setDeleteConfirmItem] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDeleteHistory = async (id) => {
+    if (!id) return;
+    setIsDeleting(true);
+    try {
+      const res = await deleteFertilizerHistoryApi(id);
+      if (res?.success) {
+        setHistory(prev => prev.filter(item => item.id !== id));
+        setDeleteConfirmItem(null);
+      } else {
+        setErrorMsg(res?.error || "Failed to delete history item.");
+      }
+    } catch (err) {
+      console.error("Failed to delete history item:", err);
+      setErrorMsg("An error occurred while deleting the history entry.");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   useEffect(() => {
     if (selectedFarm?.id) {
@@ -903,6 +924,13 @@ const FertilizerRecommendation = () => {
                       <span className="text-xs font-bold px-3 py-1 rounded-xl bg-slate-950 border border-slate-800 text-slate-300">
                         Score: {item.confidence_score}%
                       </span>
+                      <button
+                        onClick={() => setDeleteConfirmItem(item)}
+                        className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition-colors border border-transparent hover:border-rose-500/20"
+                        title="Delete History Record"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -912,6 +940,47 @@ const FertilizerRecommendation = () => {
                 No past recommendation history found for this farm.
               </div>
             )}
+
+            {/* DELETE CONFIRMATION MODAL */}
+            <AnimatePresence>
+              {deleteConfirmItem && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    className="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-4"
+                  >
+                    <div className="flex items-center gap-3 text-rose-500">
+                      <div className="p-3 bg-rose-500/10 rounded-2xl">
+                        <AlertTriangle className="w-6 h-6" />
+                      </div>
+                      <h3 className="text-lg font-bold text-white">Delete Recommendation History</h3>
+                    </div>
+                    <p className="text-sm text-slate-300">
+                      Are you sure you want to delete the recommendation record for <strong className="text-white">{deleteConfirmItem.crop}</strong>? This action cannot be undone.
+                    </p>
+                    <div className="flex justify-end gap-3 pt-2">
+                      <button
+                        onClick={() => setDeleteConfirmItem(null)}
+                        disabled={isDeleting}
+                        className="px-4 py-2 text-xs font-semibold text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-xl transition-colors"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={() => handleDeleteHistory(deleteConfirmItem.id)}
+                        disabled={isDeleting}
+                        className="px-4 py-2 text-xs font-bold text-white bg-rose-600 hover:bg-rose-500 rounded-xl transition-colors flex items-center gap-2"
+                      >
+                        {isDeleting ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                        {isDeleting ? 'Deleting...' : 'Delete Permanently'}
+                      </button>
+                    </div>
+                  </motion.div>
+                </div>
+              )}
+            </AnimatePresence>
           </div>
         )}
 

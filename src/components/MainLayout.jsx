@@ -1,4 +1,4 @@
-import React, { useContext, useState, useEffect } from 'react';
+import React, { useContext, useState, useEffect, useRef } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { AuthContext } from '../context/auth-context';
 import { FarmContext } from '../context/farm-context';
@@ -42,6 +42,9 @@ const MainLayout = () => {
   const [farmDropdownOpen, setFarmDropdownOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
 
+  const farmRef = useRef(null);
+  const profileRef = useRef(null);
+
   const avatarPhoto = user?.avatar || user?.profile_photo || null;
   const fullNameVal = user?.fullName || user?.full_name || '';
   const usernameVal = user?.username || '';
@@ -57,6 +60,19 @@ const MainLayout = () => {
     if (document.documentElement.classList.contains('dark')) {
       setIsDark(true);
     }
+  }, []);
+
+  useEffect(() => {
+    const handleOutside = (e) => {
+      if (farmRef.current && !farmRef.current.contains(e.target)) {
+        setFarmDropdownOpen(false);
+      }
+      if (profileRef.current && !profileRef.current.contains(e.target)) {
+        setProfileDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleOutside);
+    return () => document.removeEventListener('mousedown', handleOutside);
   }, []);
 
   const toggleTheme = () => {
@@ -169,7 +185,7 @@ const MainLayout = () => {
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
         
         {/* Topbar */}
-        <header className="print:hidden h-20 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border-b border-white/50 dark:border-slate-700/30 flex items-center justify-between px-4 sm:px-8 z-30 flex-shrink-0 shadow-[0_4px_30px_rgba(0,0,0,0.02)]">
+        <header className="print:hidden h-20 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border-b border-white/50 dark:border-slate-700/30 flex items-center justify-between px-4 sm:px-8 relative z-[100] flex-shrink-0 shadow-[0_4px_30px_rgba(0,0,0,0.02)]">
           <div className="flex items-center gap-4">
             <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="p-2 -ml-2 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
               <Menu className="w-6 h-6" />
@@ -183,10 +199,10 @@ const MainLayout = () => {
             
 
             {/* Farm Selector Dropdown */}
-            <div className="relative">
+            <div className="relative" ref={farmRef}>
               <button 
                 onClick={() => setFarmDropdownOpen(!farmDropdownOpen)}
-                className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-xl font-semibold text-sm transition-colors"
+                className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-xl font-semibold text-sm transition-colors cursor-pointer"
               >
                 <span className="max-w-[100px] sm:max-w-[150px] truncate">{selectedFarm?.name || 'Select Farm'}</span>
                 <ChevronDown className="w-4 h-4" />
@@ -196,7 +212,7 @@ const MainLayout = () => {
                 {farmDropdownOpen && (
                   <motion.div 
                     initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }}
-                    className="absolute top-full right-0 mt-2 w-60 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-100 dark:border-slate-700 overflow-hidden z-50"
+                    className="absolute top-full right-0 mt-2 w-60 bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-slate-100 dark:border-slate-700 overflow-hidden z-[120]"
                   >
                     <div className="p-2 border-b border-slate-100 dark:border-slate-700 font-bold text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wider px-3">
                       Select Active Farm
@@ -205,7 +221,7 @@ const MainLayout = () => {
                       <button 
                         key={farm.id}
                         onClick={() => { changeFarm(farm.id); setFarmDropdownOpen(false); }}
-                        className={`w-full text-left px-4 py-2.5 text-sm flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors
+                        className={`w-full text-left px-4 py-2.5 text-sm flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors cursor-pointer
                           ${selectedFarm?.id === farm.id ? 'text-primary font-bold bg-primary/5' : 'text-slate-700 dark:text-slate-300'}`}
                       >
                         <span className="truncate">{farm.name}</span>
@@ -234,14 +250,14 @@ const MainLayout = () => {
             </div>
 
             <div className="flex items-center gap-2 sm:gap-3 border-l border-slate-200 dark:border-slate-800 pl-3 sm:pl-6">
-              <button onClick={toggleTheme} className="p-2 text-slate-400 hover:text-amber-500 bg-slate-100 dark:bg-slate-800 rounded-full transition-colors">
+              <button onClick={toggleTheme} className="p-2 text-slate-400 hover:text-amber-500 bg-slate-100 dark:bg-slate-800 rounded-full transition-colors cursor-pointer">
                 {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
               </button>
               <NotificationBell />
-              <div className="relative ml-1">
+              <div className="relative ml-1" ref={profileRef}>
                 <button 
                   onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-                  className="w-9 h-9 rounded-full bg-gradient-to-r from-primary to-emerald-400 border-2 border-white dark:border-slate-800 shadow-sm overflow-hidden"
+                  className="w-9 h-9 rounded-full bg-gradient-to-r from-primary to-emerald-400 border-2 border-white dark:border-slate-800 shadow-sm overflow-hidden cursor-pointer"
                 >
                   {avatarPhoto ? (
                     <img src={avatarPhoto} alt={displayName} className="w-full h-full object-cover" />
@@ -256,7 +272,7 @@ const MainLayout = () => {
                   {profileDropdownOpen && (
                     <motion.div 
                       initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }}
-                      className="absolute top-full right-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-100 dark:border-slate-700 overflow-hidden z-50"
+                      className="absolute top-full right-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-slate-100 dark:border-slate-700 overflow-hidden z-[120]"
                     >
                       <div className="p-3 border-b border-slate-100 dark:border-slate-700">
                         <p className="text-sm font-bold text-slate-800 dark:text-white truncate">{displayName}</p>
@@ -281,7 +297,7 @@ const MainLayout = () => {
         </header>
 
         {/* Scrollable Main View */}
-        <main className="flex-1 overflow-y-auto no-scrollbar p-4 sm:p-8 relative">
+        <main className="flex-1 overflow-y-auto no-scrollbar p-4 sm:p-8 relative z-0">
           <Outlet />
         </main>
 
