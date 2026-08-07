@@ -92,10 +92,11 @@ export const AuthProvider = ({ children }) => {
         const loggedInUser = await refreshUserProfile();
 
         if (loggedInUser) {
-          if (!loggedInUser.profile_completed) {
-            navigate('/complete-profile');
-          } else {
+          const isCompleted = Boolean(loggedInUser.profile_completed || loggedInUser.profileCompleted);
+          if (isCompleted) {
             navigate('/dashboard');
+          } else {
+            navigate('/complete-profile');
           }
           return { success: true };
         } else {

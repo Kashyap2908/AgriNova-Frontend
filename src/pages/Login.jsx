@@ -1,5 +1,5 @@
 import React, { useState, useContext, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/auth-context';
 import { motion } from 'framer-motion';
 import { Mail, Lock, Eye, EyeOff, LogIn, Leaf, Sun, Moon, Globe } from 'lucide-react';
@@ -86,13 +86,25 @@ const Login = () => {
   const [isDark, setIsDark] = useState(false);
   const [error, setError] = useState('');
   
-  const { login } = useContext(AuthContext);
+  const { user, login } = useContext(AuthContext);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (document.documentElement.classList.contains('dark')) {
       setIsDark(true);
     }
   }, []);
+
+  useEffect(() => {
+    if (user) {
+      const isCompleted = Boolean(user.profile_completed || user.profileCompleted);
+      if (isCompleted) {
+        navigate('/dashboard', { replace: true });
+      } else {
+        navigate('/complete-profile', { replace: true });
+      }
+    }
+  }, [user, navigate]);
 
   const toggleTheme = () => {
     setIsDark(!isDark);
